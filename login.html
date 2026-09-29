@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Login — HAND IN HAND ACADEMY</title>
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="icon" type="image/png" href="img/logo.png">
+</head>
+<body class="auth-page">
+  <a href="index.html" class="logo-corner"><img src="img/logo.png" alt="Logo" class="logo-img"></a>
+  <header class="topbar">
+    <nav class="topnav">
+      <a href="index.html" class="toplink">Home</a>
+      <a href="tuitions.html" class="toplink">Tuitions</a>
+      <a href="boards.html" class="toplink">Boards</a>
+      <a href="reviews.html" class="toplink">Reviews</a>
+      <div class="nav-more"><a href="#" class="toplink">More ▾</a><div class="nav-more-menu"><a href="about.html">About Us</a><a href="contact.html">Contact Us</a><a href="blog.html">Blog</a></div></div>
+      <a href="fees.html" class="toplink">Fees</a>
+      <a href="register.html" class="toplink topbtn">Join Now</a>
+    </nav>
+  </header>
+
+  <main class="model-wrap">
+    <div class="model-card">
+      <h2 class="model-title">Login to Your Account</h2>
+      <form id="loginModelForm" method="GET" action="dashboard.html" novalidate>
+        <div class="model-input-group">
+          <input type="email" id="email" class="model-input" placeholder="Enter Your Email Address" required autocomplete="email">
+          <div class="model-error" id="email-error"></div>
+        </div>
+        <div class="model-input-group">
+          <input type="password" id="password" class="model-input" placeholder="Enter Your Password" required minlength="8" autocomplete="current-password">
+          <div class="model-error" id="password-error"></div>
+        </div>
+        <div class="remember-row">
+          <label class="remember-wrap"><input type="checkbox" id="remember"> Remember me</label>
+          <a href="#" class="forgot-link">Forgot password?</a>
+        </div>
+        <div class="model-message" id="form-message"></div>
+        <button type="submit" class="model-submit">Login</button>
+        <p class="auth-switch">Don't have an account? <a href="register.html">Create account</a></p>
+      </form>
+    </div>
+  </main>
+
+  <footer class="bottombar">
+    <a class="contact-line" href="mailto:info@handinhandacademy.com">info@handinhandacademy.com</a><span class="contact-sep">|</span>
+    <a class="contact-line" href="tel:+919876543210">+91 98765 43210</a>
+  </footer>
+
+<script>
+(function(){
+  const form = document.getElementById('loginModelForm');
+  const emailI = document.getElementById('email');
+  const pwdI = document.getElementById('password');
+  const msg = document.getElementById('form-message');
+  function showErr(id, text){ const el=document.getElementById(id); if(!el) return; el.textContent=text; el.classList.toggle('show', !!text); }
+  function clearAll(){ document.querySelectorAll('.model-error').forEach(e=>{ e.textContent=''; e.classList.remove('show'); }); document.querySelectorAll('.model-input').forEach(e=>e.classList.remove('input-error')); }
+  form.addEventListener('submit', function(e){
+    clearAll(); let valid=true;
+    const emailVal=emailI.value.trim();
+    if(!emailVal){ showErr('email-error','Email is required.'); emailI.classList.add('input-error'); valid=false; }
+    else if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailVal)){ showErr('email-error','Enter a valid email address.'); emailI.classList.add('input-error'); valid=false; }
+    const pwdVal=pwdI.value;
+    if(!pwdVal){ showErr('password-error','Password is required.'); pwdI.classList.add('input-error'); valid=false; }
+    else if(pwdVal.length<8){ showErr('password-error','Min 8 characters required.'); pwdI.classList.add('input-error'); valid=false; }
+    else if(!/[A-Z]/.test(pwdVal) || !/[0-9]/.test(pwdVal)){ showErr('password-error','Min 8 chars + 1 uppercase + 1 number required.'); pwdI.classList.add('input-error'); valid=false; }
+    if(!valid){ e.preventDefault(); msg.textContent='Please correct the errors above.'; msg.className='model-message error show'; return false; }
+    msg.textContent='✓ Login successful! Redirecting to dashboard...'; msg.className='model-message success show';
+  });
+})();
+</script>
+</body>
+</html>
