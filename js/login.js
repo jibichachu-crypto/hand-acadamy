@@ -27,19 +27,28 @@ document.addEventListener("DOMContentLoaded", function () {
       showError("password-error", "Password is required.");
       valid = false;
     } else if (password.length < 8) {
-      showError("password-error", "Minimum 8 characters required.");
+      showError(
+        "password-error",
+        "Minimum 8 characters required."
+      );
       valid = false;
     }
 
     if (!valid) {
-      showMessage("Please correct the errors above.", "error");
+      showMessage(
+        "Please correct the errors above.",
+        "error"
+      );
       return;
     }
 
-    showMessage("Checking your login...", "normal");
+    showMessage(
+      "Checking your login...",
+      "normal"
+    );
 
     try {
-      const response = await fetch("http://localhost:8080/login", {
+      const response = await fetch("/login", {
         method: "POST",
         credentials: "include",
         headers: {
