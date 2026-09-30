@@ -23,6 +23,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     let valid = true;
 
+    // Name
     if (!name) {
       showError("name-error", "Name is required.");
       valid = false;
@@ -34,6 +35,7 @@ document.addEventListener("DOMContentLoaded", function () {
       valid = false;
     }
 
+    // Email
     if (!email) {
       showError("email-error", "Email is required.");
       valid = false;
@@ -42,13 +44,17 @@ document.addEventListener("DOMContentLoaded", function () {
       valid = false;
     }
 
+    // Phone
     if (!phone) {
       showError("phone-error", "Phone number is required.");
       valid = false;
     } else if (!/^\d{7,15}$/.test(phone)) {
       showError("phone-error", "Enter a valid phone number.");
       valid = false;
-    } else if (countryCode === "+91" && !/^[6-9]\d{9}$/.test(phone)) {
+    } else if (
+      countryCode === "+91" &&
+      !/^[6-9]\d{9}$/.test(phone)
+    ) {
       showError(
         "phone-error",
         "Enter a valid 10-digit Indian mobile number."
@@ -56,16 +62,19 @@ document.addEventListener("DOMContentLoaded", function () {
       valid = false;
     }
 
+    // Grade
     if (!grade) {
       showError("grade-error", "Please select a grade.");
       valid = false;
     }
 
+    // Syllabus
     if (!syllabus) {
       showError("syllabus-error", "Please select a syllabus.");
       valid = false;
     }
 
+    // Password
     if (!password) {
       showError("password-error", "Password is required.");
       valid = false;
@@ -81,6 +90,7 @@ document.addEventListener("DOMContentLoaded", function () {
       valid = false;
     }
 
+    // Confirm password
     if (!confirmPassword) {
       showError("confirm-error", "Please confirm your password.");
       valid = false;
@@ -89,38 +99,55 @@ document.addEventListener("DOMContentLoaded", function () {
       valid = false;
     }
 
+    // Terms
     if (!terms) {
-      showError("agree-error", "You must agree to Terms & Privacy Policy.");
+      showError(
+        "agree-error",
+        "You must agree to Terms & Privacy Policy."
+      );
       valid = false;
     }
 
+    // Stop if validation failed
     if (!valid) {
-      showMessage("Please correct the errors above.", "error");
+      showMessage(
+        "Please correct the errors above.",
+        "error"
+      );
       return;
     }
 
-    showMessage("Creating your account...", "normal");
+    showMessage(
+      "Creating your account...",
+      "normal"
+    );
 
     try {
-      const response = await fetch("http://localhost:8080/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          name: name,
-          email: email,
-          phone: countryCode + phone,
-          password: password
-        })
-      });
+      const response = await fetch(
+        "http://localhost:8080/register",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            name: name,
+            email: email,
+            phone: countryCode + phone,
+            password: password
+          })
+        }
+      );
 
       const data = await response.json().catch(function () {
         return {};
       });
 
       if (!response.ok) {
-        showMessage(data.message || "Registration failed.", "error");
+        showMessage(
+          data.message || "Registration failed.",
+          "error"
+        );
         return;
       }
 
@@ -151,17 +178,18 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
   function clearErrors() {
-    document.querySelectorAll(".model-error").forEach(function (element) {
-      element.textContent = "";
-      element.classList.remove("show");
-    });
+    document
+      .querySelectorAll(".model-error")
+      .forEach(function (element) {
+        element.textContent = "";
+        element.classList.remove("show");
+      });
   }
 
   function showMessage(text, type) {
     if (!message) return;
 
     message.textContent = text;
-
     message.className = "model-message";
 
     if (type === "success") {
