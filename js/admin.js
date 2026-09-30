@@ -63,7 +63,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     /* Redirect even if request fails */
                 }
 
-                window.location.replace("login.html");
+                window.location.replace("admin-login.html");
             }
         );
     }
