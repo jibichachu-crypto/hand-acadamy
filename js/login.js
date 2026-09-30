@@ -68,9 +68,7 @@ document.addEventListener("DOMContentLoaded", function () {
         "success"
       );
 
-      setTimeout(function () {
-        window.location.href = "dashboard.html";
-      }, 800);
+      window.location.replace("dashboard.html");
 
     } catch (error) {
       showMessage(
