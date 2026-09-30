@@ -4,22 +4,29 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <meta http-equiv="Content-Security-Policy"
-        content="default-src 'none';
-                 img-src 'self';
-                 style-src 'self';
-                 script-src 'self';
-                 base-uri 'none';
-                 form-action 'none';
-                 object-src 'none';
-                 frame-ancestors 'none';
-                 referrer no-referrer;">
+  <meta
+    http-equiv="Content-Security-Policy"
+    content="default-src 'none';
+             img-src 'self';
+             style-src 'self';
+             script-src 'self';
+             connect-src 'self' http://localhost:8080;
+             base-uri 'none';
+             form-action 'none';
+             object-src 'none';
+             frame-ancestors 'none';
+             referrer no-referrer;"
+  >
 
-  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta
+    http-equiv="X-Content-Type-Options"
+    content="nosniff"
+  >
 
   <title>Dashboard — HAND IN HAND ACADEMY</title>
 
   <link rel="stylesheet" href="css/base.css">
+  <link rel="icon" type="image/png" href="img/logo.png">
 </head>
 
 <body class="dashboard">
@@ -31,8 +38,13 @@
   </a>
 
   <nav class="dash-nav">
-    <a href="dashboard.html" class="dash-link active">Dashboard</a>
-    <a href="logout.html" class="dash-link">Logout</a>
+    <a href="dashboard.html" class="dash-link active">
+      Dashboard
+    </a>
+
+    <a href="logout.html" class="dash-link">
+      Logout
+    </a>
   </nav>
 
 </header>
@@ -47,7 +59,6 @@
       📊 Dashboard
     </a>
 
-    <!-- UPDATED: My Courses opens separate page -->
     <a href="my-courses.html" class="side-link">
       📚 My Courses
     </a>
@@ -82,9 +93,10 @@
 
     <div class="welcome">
       <h2>Welcome back, Learner! 👋</h2>
-      <p>Continue your learning journey — Learn. Grow. Succeed.</p>
+      <p>
+        Continue your learning journey — Learn. Grow. Succeed.
+      </p>
     </div>
-
 
     <!-- MY COURSES -->
 
@@ -93,8 +105,6 @@
       <h3 class="section-title">My Courses</h3>
 
       <div class="courses">
-
-        <!-- CARD 1 -->
 
         <article class="course-card">
 
@@ -119,9 +129,6 @@
 
         </article>
 
-
-        <!-- CARD 2 -->
-
         <article class="course-card">
 
           <span class="course-tag">
@@ -145,9 +152,6 @@
 
         </article>
 
-
-        <!-- CARD 3 -->
-
         <article class="course-card">
 
           <span class="course-tag">
@@ -159,7 +163,8 @@
           </h4>
 
           <p class="course-desc">
-            Focused coaching for Plus One & Plus Two, covering the complete syllabus.
+            Focused coaching for Plus One & Plus Two,
+            covering the complete syllabus.
           </p>
 
           <button
@@ -175,7 +180,6 @@
 
     </section>
 
-
     <!-- FOUNDATIONS OF LEARNING -->
 
     <section
@@ -184,9 +188,7 @@
 
       <div class="section-header">
 
-        <h3
-          class="section-title"
-          style="margin:0;">
+        <h3 class="section-title">
           Foundations of Learning
         </h3>
 
@@ -269,7 +271,6 @@
 
     </section>
 
-
     <!-- ACADEMIC LEARNING -->
 
     <section
@@ -278,9 +279,7 @@
 
       <div class="section-header">
 
-        <h3
-          class="section-title"
-          style="margin:0;">
+        <h3 class="section-title">
           Academic Learning - LKG to 10th
         </h3>
 
@@ -299,53 +298,18 @@
 
       <div class="class-list">
 
-        <button type="button" class="class-button">
-          LKG
-        </button>
-
-        <button type="button" class="class-button">
-          UKG
-        </button>
-
-        <button type="button" class="class-button">
-          1st Class
-        </button>
-
-        <button type="button" class="class-button">
-          2nd Class
-        </button>
-
-        <button type="button" class="class-button">
-          3rd Class
-        </button>
-
-        <button type="button" class="class-button">
-          4th Class
-        </button>
-
-        <button type="button" class="class-button">
-          5th Class
-        </button>
-
-        <button type="button" class="class-button">
-          6th Class
-        </button>
-
-        <button type="button" class="class-button">
-          7th Class
-        </button>
-
-        <button type="button" class="class-button">
-          8th Class
-        </button>
-
-        <button type="button" class="class-button">
-          9th Class
-        </button>
-
-        <button type="button" class="class-button">
-          10th Class
-        </button>
+        <button type="button" class="class-button">LKG</button>
+        <button type="button" class="class-button">UKG</button>
+        <button type="button" class="class-button">1st Class</button>
+        <button type="button" class="class-button">2nd Class</button>
+        <button type="button" class="class-button">3rd Class</button>
+        <button type="button" class="class-button">4th Class</button>
+        <button type="button" class="class-button">5th Class</button>
+        <button type="button" class="class-button">6th Class</button>
+        <button type="button" class="class-button">7th Class</button>
+        <button type="button" class="class-button">8th Class</button>
+        <button type="button" class="class-button">9th Class</button>
+        <button type="button" class="class-button">10th Class</button>
 
       </div>
 
@@ -375,7 +339,6 @@
 
     </section>
 
-
     <!-- HIGHER SECONDARY -->
 
     <section
@@ -384,9 +347,7 @@
 
       <div class="section-header">
 
-        <h3
-          class="section-title"
-          style="margin:0;">
+        <h3 class="section-title">
           Higher Secondary - Plus One & Plus Two
         </h3>
 
@@ -461,7 +422,10 @@
 
 </div>
 
-<script src="js/dashboard.js"></script>
+<script
+  src="js/dashboard.js"
+  defer>
+</script>
 
 </body>
 </html>
