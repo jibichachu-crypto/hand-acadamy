@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'none';
+                 img-src 'self';
+                 style-src 'self';
+                 script-src 'self';
+                 base-uri 'none';
+                 form-action 'none';
+                 object-src 'none';
+                 frame-ancestors 'none';
+                 referrer no-referrer;">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <title>Settings — HAND IN HAND ACADEMY</title>
+  <link rel="stylesheet" href="css/base.css">
+</head>
+<body class="dashboard">
+<header class="dash-topbar">
+  <a href="index.html" class="dash-brand">HAND IN HAND ACADEMY</a>
+  <nav class="dash-nav">
+    <a href="dashboard.html" class="dash-link">Dashboard</a>
+    <a href="logout.html" class="dash-link">Logout</a>
+  </nav>
+</header>
+<div class="dash-layout">
+  <aside class="dash-sidebar">
+    <div class="side-title">Main</div>
+    <a href="dashboard.html" class="side-link">📊 Dashboard</a>
+    <a href="dashboard.html#courses" class="side-link">📚 My Courses</a>
+    <a href="#certificates" class="side-link">🎓 Certificates</a>
+    <div class="side-title">Account</div>
+    <a href="profile.html" class="side-link">👤 Profile</a>
+    <a href="settings.html" class="side-link active">⚙ Settings</a>
+    <div class="side-title">Support</div>
+    <a href="index.html#contact" class="side-link">✉ Contact</a>
+    <a href="logout.html" class="side-link">🚪 Logout</a>
+  </aside>
+
+  <main class="dash-main">
+    <div class="welcome">
+      <h2>Settings ⚙️</h2>
+      <p>Manage your account settings and preferences</p>
+    </div>
+
+    <div class="settings-grid">
+      <!-- Password Change -->
+      <div class="settings-card">
+        <h3 class="section-title">Change Password</h3>
+        <form id="passwordForm" novalidate>
+          <div class="model-input-group">
+            <label class="form-label">Current Password</label>
+            <input type="password" id="currentPwd" class="model-input" placeholder="Enter current password" required>
+            <div class="model-error" id="currentPwd-error"></div>
+          </div>
+          <div class="model-input-group">
+            <label class="form-label">New Password</label>
+            <input type="password" id="newPwd" class="model-input" placeholder="Min 8 chars, 1 uppercase, 1 number" required>
+            <div class="model-error" id="newPwd-error"></div>
+          </div>
+          <div class="model-input-group">
+            <label class="form-label">Confirm New Password</label>
+            <input type="password" id="confirmNewPwd" class="model-input" placeholder="Confirm new password" required>
+            <div class="model-error" id="confirmNewPwd-error"></div>
+          </div>
+          <div class="model-message" id="pwdMessage"></div>
+          <button type="submit" class="model-submit">Update Password</button>
+        </form>
+      </div>
+
+      <!-- Notifications -->
+      <div class="settings-card">
+        <h3 class="section-title">Notifications</h3>
+        <div class="setting-item">
+          <div class="setting-info">
+            <strong>Email Notifications</strong>
+            <small>Receive course updates via email</small>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="emailNotif" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="setting-item">
+          <div class="setting-info">
+            <strong>SMS Notifications</strong>
+            <small>Receive updates via SMS</small>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="smsNotif">
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="setting-item">
+          <div class="setting-info">
+            <strong>Course Reminders</strong>
+            <small>Daily learning reminders</small>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="courseReminder" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+        <div class="model-message success show" id="notifMessage" style="margin-top:1rem; display:none;"></div>
+      </div>
+
+      <!-- Danger Zone -->
+      <div class="settings-card danger-zone">
+        <h3 class="section-title" style="color:#DC2626;">Danger Zone</h3>
+        <div class="setting-item">
+          <div class="setting-info">
+            <strong>Delete Account</strong>
+            <small>Permanently delete your account and data</small>
+          </div>
+          <button type="button" class="danger-button" id="deleteAccountBtn">Delete Account</button>
+        </div>
+        <div class="setting-item">
+          <div class="setting-info">
+            <strong>Clear All Data</strong>
+            <small>Clear applications and local data</small>
+          </div>
+          <button type="button" class="secondary-danger-button" id="clearDataBtn">Clear Data</button>
+        </div>
+        <div class="model-message" id="dangerMessage"></div>
+      </div>
+
+      <!-- App Info -->
+      <div class="settings-card">
+        <h3 class="section-title">About</h3>
+        <div class="info-row"><span>Version</span><strong>1.0.0</strong></div>
+        <div class="info-row"><span>Last Login</span><strong id="lastLogin">Today</strong></div>
+        <div class="info-row"><span>Member Since</span><strong id="memberSince">2024</strong></div>
+        <div class="info-row"><span>Storage Used</span><strong id="storageUsed">0 KB</strong></div>
+      </div>
+    </div>
+  </main>
+</div>
+<script src="js/settings.js"></script>
+</body>
+</html>

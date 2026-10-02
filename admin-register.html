@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Admin Register - Hand In Hand Academy</title>
+
+    <meta name="referrer" content="no-referrer">
+
+    <meta http-equiv="Content-Security-Policy"
+          content="default-src 'none';
+                   img-src 'self';
+                   style-src 'self';
+                   script-src 'self';
+                   connect-src 'self';
+                   base-uri 'none';
+                   form-action 'none';
+                   object-src 'none';">
+
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+
+    <link rel="stylesheet" href="css/admin-auth.css">
+</head>
+
+<body>
+
+    <main class="auth-page">
+
+        <section class="auth-card">
+
+            <div class="auth-brand">
+                HIH
+            </div>
+
+            <div class="auth-heading">
+                <span>Administration</span>
+                <h1>Admin Register</h1>
+                <p>Create the academy administrator account.</p>
+            </div>
+
+            <form id="adminRegisterForm" novalidate>
+
+                <div class="form-group">
+                    <label for="adminName">Name</label>
+
+                    <input
+                        type="text"
+                        id="adminName"
+                        name="name"
+                        maxlength="100"
+                        autocomplete="name"
+                        required>
+                </div>
+
+
+                <div class="form-group">
+                    <label for="adminEmail">Email</label>
+
+                    <input
+                        type="email"
+                        id="adminEmail"
+                        name="email"
+                        maxlength="255"
+                        autocomplete="email"
+                        required>
+                </div>
+
+
+                <div class="form-group">
+                    <label for="adminPhone">Phone</label>
+
+                    <input
+                        type="tel"
+                        id="adminPhone"
+                        name="phone"
+                        maxlength="20"
+                        autocomplete="tel"
+                        required>
+                </div>
+
+
+                <div class="form-group">
+                    <label for="adminPassword">Password</label>
+
+                    <input
+                        type="password"
+                        id="adminPassword"
+                        name="password"
+                        maxlength="128"
+                        autocomplete="new-password"
+                        required>
+                </div>
+
+
+                <div class="form-group">
+                    <label for="adminConfirmPassword">
+                        Confirm Password
+                    </label>
+
+                    <input
+                        type="password"
+                        id="adminConfirmPassword"
+                        name="confirm_password"
+                        maxlength="128"
+                        autocomplete="new-password"
+                        required>
+                </div>
+
+
+                <div
+                    id="adminRegisterMessage"
+                    class="auth-message"
+                    hidden>
+                </div>
+
+
+                <button
+                    type="submit"
+                    class="auth-submit">
+                    Create Admin Account
+                </button>
+
+            </form>
+
+
+            <div class="auth-footer">
+                <span>Already have an admin account?</span>
+
+                <a href="admin-login.html">
+                    Admin Login
+                </a>
+            </div>
+
+        </section>
+
+    </main>
+
+    <script src="js/admin-register.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <meta
+    http-equiv="Content-Security-Policy"
+    content="default-src 'none';
+             img-src 'self';
+             style-src 'self';
+             script-src 'self';
+             connect-src 'self' http://localhost:8080;
+             base-uri 'none';
+             form-action 'none';
+             object-src 'none';
+             frame-ancestors 'none';
+             referrer no-referrer;"
+  >
+
+  <meta
+    http-equiv="X-Content-Type-Options"
+    content="nosniff"
+  >
+
+  <title>Dashboard — HAND IN HAND ACADEMY</title>
+
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="icon" type="image/png" href="img/logo.png">
+</head>
+
+<body class="dashboard">
+
+<header class="dash-topbar">
+
+  <a href="index.html" class="dash-brand">
+    HAND IN HAND ACADEMY
+  </a>
+
+  <nav class="dash-nav">
+    <a href="dashboard.html" class="dash-link active">
+      Dashboard
+    </a>
+
+    <a href="logout.html" class="dash-link">
+      Logout
+    </a>
+  </nav>
+
+</header>
+
+<div class="dash-layout">
+
+  <aside class="dash-sidebar">
+
+    <div class="side-title">Main</div>
+
+    <a href="dashboard.html" class="side-link active">
+      📊 Dashboard
+    </a>
+
+    <a href="my-courses.html" class="side-link">
+      📚 My Courses
+    </a>
+
+    <a href="#certificates" class="side-link">
+      🎓 Certificates
+    </a>
+
+    <div class="side-title">Account</div>
+
+    <a href="profile.html" class="side-link">
+      👤 Profile
+    </a>
+
+    <a href="settings.html" class="side-link">
+      ⚙ Settings
+    </a>
+
+    <div class="side-title">Support</div>
+
+    <a href="index.html#contact" class="side-link">
+      ✉ Contact
+    </a>
+
+    <a href="logout.html" class="side-link">
+      🚪 Logout
+    </a>
+
+  </aside>
+
+  <main class="dash-main">
+
+    <div class="welcome">
+      <h2>Welcome back, Learner! 👋</h2>
+      <p>
+        Continue your learning journey — Learn. Grow. Succeed.
+      </p>
+    </div>
+
+    <!-- MY COURSES -->
+
+    <section id="courses">
+
+      <h3 class="section-title">My Courses</h3>
+
+      <div class="courses">
+
+        <article class="course-card">
+
+          <span class="course-tag">
+            Kids & Beginners
+          </span>
+
+          <h4 class="course-title">
+            Foundations of Learning
+          </h4>
+
+          <p class="course-desc">
+            Basic learning program for kids and beginners.
+          </p>
+
+          <button
+            type="button"
+            class="course-button"
+            id="foundationButton">
+            Select Course
+          </button>
+
+        </article>
+
+        <article class="course-card">
+
+          <span class="course-tag">
+            LKG to 10th
+          </span>
+
+          <h4 class="course-title">
+            Academic Learning
+          </h4>
+
+          <p class="course-desc">
+            Select your class and apply for academic learning.
+          </p>
+
+          <button
+            type="button"
+            class="course-button"
+            id="academicButton">
+            Select Class
+          </button>
+
+        </article>
+
+        <article class="course-card">
+
+          <span class="course-tag">
+            Plus One & Plus Two • 11th & 12th
+          </span>
+
+          <h4 class="course-title">
+            Higher Secondary
+          </h4>
+
+          <p class="course-desc">
+            Focused coaching for Plus One & Plus Two,
+            covering the complete syllabus.
+          </p>
+
+          <button
+            type="button"
+            class="course-button"
+            id="plusTwoButton">
+            Select Course
+          </button>
+
+        </article>
+
+      </div>
+
+    </section>
+
+    <!-- FOUNDATIONS OF LEARNING -->
+
+    <section
+      id="foundationList"
+      class="course-section hidden">
+
+      <div class="section-header">
+
+        <h3 class="section-title">
+          Foundations of Learning
+        </h3>
+
+        <button
+          type="button"
+          class="close-section-btn"
+          data-close="foundationList">
+          ✕ Close
+        </button>
+
+      </div>
+
+      <p class="selection-text">
+        Select your course
+      </p>
+
+      <div class="course-list">
+
+        <button
+          type="button"
+          class="foundation-course-button">
+          Malayalam
+        </button>
+
+        <button
+          type="button"
+          class="foundation-course-button">
+          English
+        </button>
+
+        <button
+          type="button"
+          class="foundation-course-button">
+          Mathematics
+        </button>
+
+        <button
+          type="button"
+          class="foundation-course-button">
+          General Science
+        </button>
+
+        <button
+          type="button"
+          class="foundation-course-button">
+          അടിസ്ഥാന പാഠാവലി
+        </button>
+
+        <button
+          type="button"
+          class="foundation-course-button">
+          Hindi
+        </button>
+
+      </div>
+
+      <div
+        id="selectedFoundationArea"
+        class="selected-class-area hidden">
+
+        <p>
+          Selected Course:
+          <strong id="selectedFoundationName"></strong>
+        </p>
+
+        <button
+          type="button"
+          id="applyFoundationButton"
+          class="apply-button">
+          Apply
+        </button>
+
+      </div>
+
+      <div
+        id="successFoundationMessage"
+        class="success-message hidden">
+        ✅ Applied Successfully
+      </div>
+
+    </section>
+
+    <!-- ACADEMIC LEARNING -->
+
+    <section
+      id="academicSelection"
+      class="course-section hidden">
+
+      <div class="section-header">
+
+        <h3 class="section-title">
+          Academic Learning - LKG to 10th
+        </h3>
+
+        <button
+          type="button"
+          class="close-section-btn"
+          data-close="academicSelection">
+          ✕ Close
+        </button>
+
+      </div>
+
+      <p class="selection-text">
+        Select your class
+      </p>
+
+      <div class="class-list">
+
+        <button type="button" class="class-button">LKG</button>
+        <button type="button" class="class-button">UKG</button>
+        <button type="button" class="class-button">1st Class</button>
+        <button type="button" class="class-button">2nd Class</button>
+        <button type="button" class="class-button">3rd Class</button>
+        <button type="button" class="class-button">4th Class</button>
+        <button type="button" class="class-button">5th Class</button>
+        <button type="button" class="class-button">6th Class</button>
+        <button type="button" class="class-button">7th Class</button>
+        <button type="button" class="class-button">8th Class</button>
+        <button type="button" class="class-button">9th Class</button>
+        <button type="button" class="class-button">10th Class</button>
+
+      </div>
+
+      <div
+        id="selectedClassArea"
+        class="selected-class-area hidden">
+
+        <p>
+          Selected Class:
+          <strong id="selectedClassName"></strong>
+        </p>
+
+        <button
+          type="button"
+          id="applyButton"
+          class="apply-button">
+          Apply
+        </button>
+
+      </div>
+
+      <div
+        id="successMessage"
+        class="success-message hidden">
+        ✅ Applied Successfully
+      </div>
+
+    </section>
+
+    <!-- HIGHER SECONDARY -->
+
+    <section
+      id="plusTwoList"
+      class="course-section hidden">
+
+      <div class="section-header">
+
+        <h3 class="section-title">
+          Higher Secondary - Plus One & Plus Two
+        </h3>
+
+        <button
+          type="button"
+          class="close-section-btn"
+          data-close="plusTwoList">
+          ✕ Close
+        </button>
+
+      </div>
+
+      <p class="selection-text">
+        Choose your stream - Select one course to apply
+      </p>
+
+      <div class="course-list">
+
+        <button
+          type="button"
+          class="plus-two-course-button">
+          Biology Science
+        </button>
+
+        <button
+          type="button"
+          class="plus-two-course-button">
+          Commerce
+        </button>
+
+        <button
+          type="button"
+          class="plus-two-course-button">
+          Humanities
+        </button>
+
+        <button
+          type="button"
+          class="plus-two-course-button">
+          Computer Science
+        </button>
+
+      </div>
+
+      <div
+        id="selectedPlusTwoArea"
+        class="selected-class-area hidden">
+
+        <p>
+          Selected Course:
+          <strong id="selectedPlusTwoName"></strong>
+        </p>
+
+        <button
+          type="button"
+          id="applyPlusTwoButton"
+          class="apply-button">
+          Apply
+        </button>
+
+      </div>
+
+      <div
+        id="successPlusTwoMessage"
+        class="success-message hidden">
+        ✅ Applied Successfully
+      </div>
+
+    </section>
+
+  </main>
+
+</div>
+
+<script
+  src="js/dashboard.js"
+  defer>
+</script>
+
+</body>
+</html>

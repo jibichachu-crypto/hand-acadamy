@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="UTF-8">
+
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1">
+
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'none';
+                 img-src 'self';
+                 style-src 'self';
+                 script-src 'self';
+                 base-uri 'none';
+                 form-action 'none';
+                 object-src 'none';
+                 frame-ancestors 'none';
+                 referrer no-referrer;">
+
+  <meta http-equiv="X-Content-Type-Options"
+        content="nosniff">
+
+  <title>My Courses — HAND IN HAND ACADEMY</title>
+
+  <link rel="stylesheet"
+        href="css/base.css">
+
+</head>
+
+
+<body class="dashboard">
+
+
+<header class="dash-topbar">
+
+  <a href="index.html"
+     class="dash-brand">
+    HAND IN HAND ACADEMY
+  </a>
+
+  <nav class="dash-nav">
+
+    <a href="dashboard.html"
+       class="dash-link">
+      Dashboard
+    </a>
+
+    <a href="logout.html"
+       class="dash-link">
+      Logout
+    </a>
+
+  </nav>
+
+</header>
+
+
+<div class="dash-layout">
+
+
+  <!-- SIDEBAR -->
+
+  <aside class="dash-sidebar">
+
+    <div class="side-title">
+      Main
+    </div>
+
+    <a href="dashboard.html"
+       class="side-link">
+      📊 Dashboard
+    </a>
+
+    <a href="my-courses.html"
+       class="side-link active">
+      📚 My Courses
+    </a>
+
+    <a href="dashboard.html#certificates"
+       class="side-link">
+      🎓 Certificates
+    </a>
+
+
+    <div class="side-title">
+      Account
+    </div>
+
+    <a href="profile.html"
+       class="side-link">
+      👤 Profile
+    </a>
+
+    <a href="settings.html"
+       class="side-link">
+      ⚙ Settings
+    </a>
+
+
+    <div class="side-title">
+      Support
+    </div>
+
+    <a href="index.html#contact"
+       class="side-link">
+      ✉ Contact
+    </a>
+
+    <a href="logout.html"
+       class="side-link">
+      🚪 Logout
+    </a>
+
+  </aside>
+
+
+  <!-- MAIN -->
+
+  <main class="dash-main">
+
+
+    <div class="welcome">
+
+      <h2>
+        My Courses 📚
+      </h2>
+
+      <p>
+        View your applied courses and continue your learning.
+      </p>
+
+    </div>
+
+
+    <!-- APPLIED / ENROLLED COURSES -->
+
+    <section class="course-section">
+
+      <h3 class="section-title">
+        Enrolled Courses
+      </h3>
+
+
+      <!--
+        Dashboard applications will be
+        displayed here automatically.
+      -->
+
+      <div
+        id="applicationsList"
+        class="applications-list">
+
+      </div>
+
+    </section>
+
+
+    <!-- MY PROGRESS -->
+
+    <section class="course-section">
+
+      <h3 class="section-title">
+        My Progress
+      </h3>
+
+      <div class="my-progress-card">
+
+        <p>
+          Your learning progress will appear here.
+        </p>
+
+        <div class="progress-bar">
+
+          <div
+            class="progress-fill"
+            style="width:0%;">
+          </div>
+
+        </div>
+
+        <span class="progress-text">
+          0% Complete
+        </span>
+
+      </div>
+
+    </section>
+
+
+    <!-- ASSIGNMENTS -->
+
+    <section class="course-section">
+
+      <h3 class="section-title">
+        Assignments &amp; Tests
+      </h3>
+
+      <div class="my-progress-card">
+
+        <p>
+          Assignments and tests for your enrolled
+          courses will appear here.
+        </p>
+
+      </div>
+
+    </section>
+
+
+    <!-- COURSE MATERIALS -->
+
+    <section class="course-section">
+
+      <h3 class="section-title">
+        Course Materials
+      </h3>
+
+      <div class="my-progress-card">
+
+        <p>
+          Your course materials will appear here
+          after enrollment.
+        </p>
+
+      </div>
+
+    </section>
+
+
+  </main>
+
+</div>
+
+
+<script src="js/my-courses.js"></script>
+
+</body>
+
+</html>

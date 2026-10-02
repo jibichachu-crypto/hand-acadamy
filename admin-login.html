@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Admin Login - Hand In Hand Academy</title>
+
+    <meta name="referrer" content="no-referrer">
+
+    <meta http-equiv="Content-Security-Policy"
+          content="default-src 'none';
+                   img-src 'self';
+                   style-src 'self';
+                   script-src 'self';
+                   connect-src 'self';
+                   base-uri 'none';
+                   form-action 'none';
+                   object-src 'none';">
+
+    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+
+    <link rel="stylesheet" href="css/admin-auth.css">
+</head>
+
+<body>
+
+    <main class="auth-page">
+
+        <section class="auth-card">
+
+            <div class="auth-brand">
+                HIH
+            </div>
+
+            <div class="auth-heading">
+
+                <span>Administration</span>
+
+                <h1>Admin Login</h1>
+
+                <p>
+                    Sign in to access the administration panel.
+                </p>
+
+            </div>
+
+
+            <form id="adminLoginForm" novalidate>
+
+                <div class="form-group">
+
+                    <label for="adminLogin">
+                        Email or Phone
+                    </label>
+
+                    <input
+                        type="text"
+                        id="adminLogin"
+                        name="login"
+                        maxlength="255"
+                        autocomplete="username"
+                        required>
+
+                </div>
+
+
+                <div class="form-group">
+
+                    <label for="adminLoginPassword">
+                        Password
+                    </label>
+
+                    <input
+                        type="password"
+                        id="adminLoginPassword"
+                        name="password"
+                        maxlength="128"
+                        autocomplete="current-password"
+                        required>
+
+                </div>
+
+
+                <div
+                    id="adminLoginMessage"
+                    class="auth-message"
+                    hidden>
+                </div>
+
+
+                <button
+                    type="submit"
+                    class="auth-submit">
+                    Admin Login
+                </button>
+
+            </form>
+
+
+            <div class="auth-footer">
+
+                <span>
+                    Don't have an admin account?
+                </span>
+
+                <a href="admin-register.html">
+                    Admin Register
+                </a>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <script src="js/admin-login.js"></script>
+
+</body>
+</html>
