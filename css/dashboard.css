@@ -107,6 +107,10 @@ body.dashboard {
   white-space: nowrap;
 }
 
+.dashboard .dash-nav {
+  margin-left: auto;
+}
+
 .dashboard .dash-link {
   text-decoration: none;
   white-space: nowrap;
@@ -212,8 +216,6 @@ body.dashboard {
   padding: 32px;
 
   margin-left: 250px;
-
-  overflow-y: visible;
 }
 
 
