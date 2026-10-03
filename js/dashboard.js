@@ -9,7 +9,7 @@
 
 
       /* =========================
-         LOGIN / SESSION CHECK
+         SESSION CHECK
       ========================== */
 
       try {
@@ -23,22 +23,20 @@
           }
         );
 
-
         if (!response.ok) {
 
-          window.location.href = "login.html";
+          window.location.href =
+            "login.html";
 
           return;
-
         }
-
 
       } catch (error) {
 
-        window.location.href = "login.html";
+        window.location.href =
+          "login.html";
 
         return;
-
       }
 
 
@@ -46,9 +44,8 @@
          ELEMENTS
       ========================== */
 
-      const courses = document.getElementById(
-        "courses"
-      );
+      const courses =
+        document.getElementById("courses");
 
       const foundationButton =
         document.getElementById(
@@ -82,7 +79,7 @@
         );
 
 
-      const foundationCourseButtons =
+      const foundationButtons =
         document.querySelectorAll(
           ".foundation-course-button"
         );
@@ -92,7 +89,7 @@
           ".class-button"
         );
 
-      const plusTwoCourseButtons =
+      const plusTwoButtons =
         document.querySelectorAll(
           ".plus-two-course-button"
         );
@@ -191,215 +188,175 @@
       function hideAllSections() {
 
         if (foundationList) {
-
           foundationList.classList.add(
             "hidden"
           );
-
         }
 
         if (academicSelection) {
-
           academicSelection.classList.add(
             "hidden"
           );
-
         }
 
         if (plusTwoList) {
-
           plusTwoList.classList.add(
             "hidden"
           );
-
         }
 
         if (contactSection) {
-
           contactSection.classList.add(
             "hidden"
           );
-
         }
-
       }
 
 
       /* =========================
-         RESET
+         RESET SELECTIONS
       ========================== */
 
       function resetSelections() {
 
         selectedFoundation = "";
-
         selectedClass = "";
-
         selectedPlusTwo = "";
 
 
-        foundationCourseButtons.forEach(
+        foundationButtons.forEach(
           function (button) {
-
             button.classList.remove(
               "active"
             );
-
           }
         );
 
 
         classButtons.forEach(
           function (button) {
-
             button.classList.remove(
               "active"
             );
-
           }
         );
 
 
-        plusTwoCourseButtons.forEach(
+        plusTwoButtons.forEach(
           function (button) {
-
             button.classList.remove(
               "active"
             );
-
           }
         );
 
 
         if (selectedFoundationArea) {
-
           selectedFoundationArea.classList.add(
             "hidden"
           );
-
         }
 
         if (selectedClassArea) {
-
           selectedClassArea.classList.add(
             "hidden"
           );
-
         }
 
         if (selectedPlusTwoArea) {
-
           selectedPlusTwoArea.classList.add(
             "hidden"
           );
-
         }
 
 
         if (selectedFoundationName) {
-
           selectedFoundationName.textContent =
             "";
-
         }
 
         if (selectedClassName) {
-
           selectedClassName.textContent =
             "";
-
         }
 
         if (selectedPlusTwoName) {
-
           selectedPlusTwoName.textContent =
             "";
-
         }
+      }
+
+
+      /* =========================
+         RESET MESSAGES
+      ========================== */
+
+      function resetMessages() {
+
+        [
+          successFoundationMessage,
+          successMessage,
+          successPlusTwoMessage
+        ].forEach(
+          function (element) {
+
+            if (!element) return;
+
+            element.classList.add(
+              "hidden"
+            );
+
+            element.textContent = "";
+
+          }
+        );
 
       }
 
 
-      function resetSuccessMessages() {
-
-        if (successFoundationMessage) {
-
-          successFoundationMessage.classList.add(
-            "hidden"
-          );
-
-          successFoundationMessage.textContent =
-            "";
-
-        }
-
-        if (successMessage) {
-
-          successMessage.classList.add(
-            "hidden"
-          );
-
-          successMessage.textContent =
-            "";
-
-        }
-
-        if (successPlusTwoMessage) {
-
-          successPlusTwoMessage.classList.add(
-            "hidden"
-          );
-
-          successPlusTwoMessage.textContent =
-            "";
-
-        }
-
-      }
-
+      /* =========================
+         RESET MAIN BUTTONS
+      ========================== */
 
       function resetMainButtons() {
 
         if (foundationButton) {
-
           foundationButton.textContent =
             "Select Course";
 
           foundationButton.disabled =
             false;
-
         }
 
         if (academicButton) {
-
           academicButton.textContent =
             "Select Class";
 
           academicButton.disabled =
             false;
-
         }
 
         if (plusTwoButton) {
-
           plusTwoButton.textContent =
             "Select Course";
 
           plusTwoButton.disabled =
             false;
-
         }
-
       }
 
 
-      function showMainCourses() {
+      /* =========================
+         GO TO MAIN COURSES
+      ========================== */
+
+      function goToCourses() {
 
         hideAllSections();
 
         resetSelections();
 
-        resetSuccessMessages();
+        resetMessages();
 
         resetMainButtons();
 
@@ -412,12 +369,11 @@
           });
 
         }
-
       }
 
 
       /* =========================
-         APPLY COURSE TO BACKEND
+         APPLY TO DATABASE
       ========================== */
 
       async function applyCourse(
@@ -430,60 +386,66 @@
         if (!courseName) {
 
           alert(
-            "Please select a course"
+            "Please select a course."
           );
 
           return;
-
         }
 
 
         if (applyElement) {
 
-          applyElement.disabled = true;
+          applyElement.disabled =
+            true;
 
           applyElement.textContent =
             "Applying...";
-
         }
 
 
         try {
 
-          const response = await fetch(
-            "/apply-course",
-            {
-              method: "POST",
-              credentials: "include",
-              headers: {
-                "Content-Type":
-                  "application/json"
-              },
-              body: JSON.stringify({
-                course_type:
-                  courseType,
-                course_name:
-                  courseName
-              })
-            }
-          );
+          const response =
+            await fetch(
+              "/apply-course",
+              {
+                method: "POST",
+                credentials: "include",
+
+                headers: {
+                  "Content-Type":
+                    "application/json"
+                },
+
+                body: JSON.stringify({
+                  course_type:
+                    courseType,
+
+                  course_name:
+                    courseName
+                })
+              }
+            );
 
 
           const message =
             await response.text();
 
 
-          if (response.status === 401) {
+          if (
+            response.status === 401
+          ) {
 
             window.location.href =
               "login.html";
 
             return;
-
           }
 
 
-          if (response.status === 409) {
+          if (
+            response.status === 409
+          ) {
 
             alert(
               "This course is already applied."
@@ -496,11 +458,9 @@
 
               applyElement.textContent =
                 "Apply";
-
             }
 
             return;
-
           }
 
 
@@ -510,7 +470,6 @@
               message ||
               "Application failed."
             );
-
           }
 
 
@@ -523,7 +482,6 @@
             successElement.textContent =
               "✅ Applied Successfully for " +
               courseName;
-
           }
 
 
@@ -531,16 +489,13 @@
 
             applyElement.textContent =
               "Applied ✓";
-
           }
 
-
-          /* Auto close */
 
           setTimeout(
             function () {
 
-              showMainCourses();
+              goToCourses();
 
             },
             2000
@@ -562,7 +517,6 @@
 
             applyElement.textContent =
               "Apply";
-
           }
 
         }
@@ -583,7 +537,7 @@
           "click",
           function () {
 
-            const hidden =
+            const isHidden =
               foundationList.classList.contains(
                 "hidden"
               );
@@ -593,12 +547,12 @@
 
             resetSelections();
 
-            resetSuccessMessages();
+            resetMessages();
 
             resetMainButtons();
 
 
-            if (hidden) {
+            if (isHidden) {
 
               foundationList.classList.remove(
                 "hidden"
@@ -625,15 +579,14 @@
          FOUNDATION SELECT
       ========================== */
 
-      foundationCourseButtons.forEach(
+      foundationButtons.forEach(
         function (button) {
 
           button.addEventListener(
             "click",
             function () {
 
-
-              foundationCourseButtons.forEach(
+              foundationButtons.forEach(
                 function (item) {
 
                   item.classList.remove(
@@ -666,11 +619,6 @@
                 selectedFoundationArea.classList.remove(
                   "hidden"
                 );
-
-                selectedFoundationArea.scrollIntoView({
-                  behavior: "smooth",
-                  block: "center"
-                });
 
               }
 
@@ -717,7 +665,7 @@
           "click",
           function () {
 
-            const hidden =
+            const isHidden =
               academicSelection.classList.contains(
                 "hidden"
               );
@@ -727,12 +675,12 @@
 
             resetSelections();
 
-            resetSuccessMessages();
+            resetMessages();
 
             resetMainButtons();
 
 
-            if (hidden) {
+            if (isHidden) {
 
               academicSelection.classList.remove(
                 "hidden"
@@ -756,7 +704,7 @@
 
 
       /* =========================
-         ACADEMIC SELECT
+         CLASS SELECT
       ========================== */
 
       classButtons.forEach(
@@ -765,7 +713,6 @@
           button.addEventListener(
             "click",
             function () {
-
 
               classButtons.forEach(
                 function (item) {
@@ -800,11 +747,6 @@
                 selectedClassArea.classList.remove(
                   "hidden"
                 );
-
-                selectedClassArea.scrollIntoView({
-                  behavior: "smooth",
-                  block: "center"
-                });
 
               }
 
@@ -851,7 +793,7 @@
           "click",
           function () {
 
-            const hidden =
+            const isHidden =
               plusTwoList.classList.contains(
                 "hidden"
               );
@@ -861,12 +803,12 @@
 
             resetSelections();
 
-            resetSuccessMessages();
+            resetMessages();
 
             resetMainButtons();
 
 
-            if (hidden) {
+            if (isHidden) {
 
               plusTwoList.classList.remove(
                 "hidden"
@@ -893,15 +835,14 @@
          PLUS TWO SELECT
       ========================== */
 
-      plusTwoCourseButtons.forEach(
+      plusTwoButtons.forEach(
         function (button) {
 
           button.addEventListener(
             "click",
             function () {
 
-
-              plusTwoCourseButtons.forEach(
+              plusTwoButtons.forEach(
                 function (item) {
 
                   item.classList.remove(
@@ -934,11 +875,6 @@
                 selectedPlusTwoArea.classList.remove(
                   "hidden"
                 );
-
-                selectedPlusTwoArea.scrollIntoView({
-                  behavior: "smooth",
-                  block: "center"
-                });
 
               }
 
@@ -973,7 +909,7 @@
 
 
       /* =========================
-         CLOSE COURSE SECTIONS
+         CLOSE BUTTONS
       ========================== */
 
       document
@@ -983,14 +919,12 @@
         .forEach(
           function (button) {
 
-
             if (
               button.id ===
               "closeContactButton"
             ) {
 
               return;
-
             }
 
 
@@ -998,7 +932,7 @@
               "click",
               function () {
 
-                showMainCourses();
+                goToCourses();
 
               }
             );
@@ -1027,7 +961,7 @@
 
             resetSelections();
 
-            resetSuccessMessages();
+            resetMessages();
 
             resetMainButtons();
 
@@ -1058,7 +992,7 @@
           "click",
           function () {
 
-            showMainCourses();
+            goToCourses();
 
           }
         );
@@ -1067,7 +1001,7 @@
 
 
       /* =========================
-         ESC KEY
+         ESC
       ========================== */
 
       document.addEventListener(
@@ -1075,11 +1009,10 @@
         function (event) {
 
           if (
-            event.key ===
-            "Escape"
+            event.key === "Escape"
           ) {
 
-            showMainCourses();
+            goToCourses();
 
           }
 
@@ -1088,17 +1021,16 @@
 
 
       /* =========================
-         INITIAL STATE
+         INITIAL
       ========================== */
 
       hideAllSections();
 
       resetSelections();
 
-      resetSuccessMessages();
+      resetMessages();
 
       resetMainButtons();
-
 
     }
   );
