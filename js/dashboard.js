@@ -1,298 +1,79 @@
 "use strict";
 
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", async function () {
 
-  /*
-   * =========================================
-   * AUTHENTICATION
-   * =========================================
-   */
+  /* ============================================================
+     SESSION CHECK
+     ============================================================ */
 
-  checkSession();
+  try {
 
-
-  async function checkSession() {
-
-    try {
-
-      const response = await fetch("/session", {
+    const response = await fetch(
+      "/session",
+      {
         method: "GET",
-        credentials: "include"
-      });
-
-      if (!response.ok) {
-        window.location.replace("login.html");
-        return;
+        credentials: "include",
+        cache: "no-store"
       }
-
-      const data = await response.json();
-
-      if (!data.authenticated) {
-        window.location.replace("login.html");
-        return;
-      }
-
-
-      /*
-       * Show logged-in user's real name
-       */
-
-      if (
-        data.user &&
-        data.user.name
-      ) {
-
-        const welcomeTitle =
-          document.getElementById(
-            "welcomeTitle"
-          );
-
-        if (welcomeTitle) {
-
-          welcomeTitle.textContent =
-            "Welcome back, " +
-            data.user.name +
-            "! 👋";
-
-        }
-
-
-        /*
-         * Keep localStorage updated
-         */
-
-        const user = {
-          id:
-            data.user.id ||
-            data.user_id ||
-            null,
-
-          name:
-            data.user.name ||
-            "",
-
-          email:
-            data.user.email ||
-            "",
-
-          phone:
-            data.user.phone ||
-            ""
-        };
-
-        localStorage.setItem(
-          "hih_user",
-          JSON.stringify(user)
-        );
-
-      }
-
-    } catch (error) {
-
-      console.error(
-        "Session check error:",
-        error
-      );
-
-      window.location.replace(
-        "login.html"
-      );
-
-    }
-
-  }
-
-
-  /*
-   * =========================================
-   * COURSE ELEMENTS
-   * =========================================
-   */
-
-  const foundationButton =
-    document.getElementById(
-      "foundationButton"
     );
 
-  const academicButton =
-    document.getElementById(
-      "academicButton"
-    );
-
-  const plusTwoButton =
-    document.getElementById(
-      "plusTwoButton"
-    );
-
-
-  const foundationList =
-    document.getElementById(
-      "foundationList"
-    );
-
-  const academicSelection =
-    document.getElementById(
-      "academicSelection"
-    );
-
-  const plusTwoList =
-    document.getElementById(
-      "plusTwoList"
-    );
-
-
-  /*
-   * =========================================
-   * OPEN COURSE SECTION
-   * =========================================
-   */
-
-  function hideAllCourseSections() {
-
-    if (foundationList) {
-      foundationList.classList.add(
-        "hidden"
-      );
-    }
-
-    if (academicSelection) {
-      academicSelection.classList.add(
-        "hidden"
-      );
-    }
-
-    if (plusTwoList) {
-      plusTwoList.classList.add(
-        "hidden"
-      );
-    }
-
-  }
-
-
-  function openCourseSection(section) {
-
-    hideAllCourseSections();
-
-    if (!section) {
+    if (!response.ok) {
+      window.location.href = "login.html";
       return;
     }
 
-    section.classList.remove(
-      "hidden"
+    const sessionData = await response.json();
+
+    /* Show actual user name when backend provides it */
+    const welcomeTitle =
+      document.getElementById("welcomeTitle");
+
+    if (
+      welcomeTitle &&
+      sessionData.user &&
+      sessionData.user.name
+    ) {
+      welcomeTitle.textContent =
+        "Welcome back, " +
+        sessionData.user.name +
+        "! 👋";
+    }
+
+  } catch (error) {
+
+    console.error(
+      "Session check failed:",
+      error
     );
 
-    setTimeout(function () {
-
-      section.scrollIntoView({
-        behavior: "smooth",
-        block: "start"
-      });
-
-    }, 50);
-
+    window.location.href = "login.html";
+    return;
   }
 
 
-  if (foundationButton) {
+  /* ============================================================
+     ELEMENTS
+     ============================================================ */
 
-    foundationButton.addEventListener(
-      "click",
-      function () {
+  const coursesSection =
+    document.getElementById("courses");
 
-        openCourseSection(
-          foundationList
-        );
+  const foundationButton =
+    document.getElementById("foundationButton");
 
-      }
-    );
+  const academicButton =
+    document.getElementById("academicButton");
 
-  }
-
-
-  if (academicButton) {
-
-    academicButton.addEventListener(
-      "click",
-      function () {
-
-        openCourseSection(
-          academicSelection
-        );
-
-      }
-    );
-
-  }
+  const plusTwoButton =
+    document.getElementById("plusTwoButton");
 
 
-  if (plusTwoButton) {
+  /* ---------- Foundation ---------- */
 
-    plusTwoButton.addEventListener(
-      "click",
-      function () {
+  const foundationList =
+    document.getElementById("foundationList");
 
-        openCourseSection(
-          plusTwoList
-        );
-
-      }
-    );
-
-  }
-
-
-  /*
-   * =========================================
-   * CLOSE COURSE SECTIONS
-   * =========================================
-   */
-
-  document
-    .querySelectorAll(
-      ".close-section-btn"
-    )
-    .forEach(function (button) {
-
-      button.addEventListener(
-        "click",
-        function () {
-
-          const sectionId =
-            button.getAttribute(
-              "data-close"
-            );
-
-          if (!sectionId) {
-            return;
-          }
-
-          const section =
-            document.getElementById(
-              sectionId
-            );
-
-          if (section) {
-
-            section.classList.add(
-              "hidden"
-            );
-
-          }
-
-        }
-      );
-
-    });
-
-
-  /*
-   * =========================================
-   * FOUNDATION COURSE SELECTION
-   * =========================================
-   */
-
-  const foundationButtons =
+  const foundationCourseButtons =
     document.querySelectorAll(
       ".foundation-course-button"
     );
@@ -318,74 +99,12 @@ document.addEventListener("DOMContentLoaded", function () {
     );
 
 
-  let selectedFoundation = "";
+  /* ---------- Academic ---------- */
 
-
-  foundationButtons.forEach(
-    function (button) {
-
-      button.addEventListener(
-        "click",
-        function () {
-
-          selectedFoundation =
-            button.textContent.trim();
-
-          if (selectedFoundationName) {
-
-            selectedFoundationName.textContent =
-              selectedFoundation;
-
-          }
-
-          if (selectedFoundationArea) {
-
-            selectedFoundationArea.classList.remove(
-              "hidden"
-            );
-
-          }
-
-          if (successFoundationMessage) {
-
-            successFoundationMessage.classList.add(
-              "hidden"
-            );
-
-          }
-
-        }
-      );
-
-    }
-  );
-
-
-  if (applyFoundationButton) {
-
-    applyFoundationButton.addEventListener(
-      "click",
-      function () {
-
-        if (!selectedFoundation) {
-          return;
-        }
-
-        applyCourse(
-          selectedFoundation
-        );
-
-      }
+  const academicSelection =
+    document.getElementById(
+      "academicSelection"
     );
-
-  }
-
-
-  /*
-   * =========================================
-   * ACADEMIC CLASS SELECTION
-   * =========================================
-   */
 
   const classButtons =
     document.querySelectorAll(
@@ -413,76 +132,14 @@ document.addEventListener("DOMContentLoaded", function () {
     );
 
 
-  let selectedClass = "";
+  /* ---------- Higher Secondary ---------- */
 
-
-  classButtons.forEach(
-    function (button) {
-
-      button.addEventListener(
-        "click",
-        function () {
-
-          selectedClass =
-            button.textContent.trim();
-
-          if (selectedClassName) {
-
-            selectedClassName.textContent =
-              selectedClass;
-
-          }
-
-          if (selectedClassArea) {
-
-            selectedClassArea.classList.remove(
-              "hidden"
-            );
-
-          }
-
-          if (successMessage) {
-
-            successMessage.classList.add(
-              "hidden"
-            );
-
-          }
-
-        }
-      );
-
-    }
-  );
-
-
-  if (applyButton) {
-
-    applyButton.addEventListener(
-      "click",
-      function () {
-
-        if (!selectedClass) {
-          return;
-        }
-
-        applyCourse(
-          selectedClass
-        );
-
-      }
+  const plusTwoList =
+    document.getElementById(
+      "plusTwoList"
     );
 
-  }
-
-
-  /*
-   * =========================================
-   * PLUS TWO SELECTION
-   * =========================================
-   */
-
-  const plusTwoButtons =
+  const plusTwoCourseButtons =
     document.querySelectorAll(
       ".plus-two-course-button"
     );
@@ -508,201 +165,7 @@ document.addEventListener("DOMContentLoaded", function () {
     );
 
 
-  let selectedPlusTwo = "";
-
-
-  plusTwoButtons.forEach(
-    function (button) {
-
-      button.addEventListener(
-        "click",
-        function () {
-
-          selectedPlusTwo =
-            button.textContent.trim();
-
-          if (selectedPlusTwoName) {
-
-            selectedPlusTwoName.textContent =
-              selectedPlusTwo;
-
-          }
-
-          if (selectedPlusTwoArea) {
-
-            selectedPlusTwoArea.classList.remove(
-              "hidden"
-            );
-
-          }
-
-          if (successPlusTwoMessage) {
-
-            successPlusTwoMessage.classList.add(
-              "hidden"
-            );
-
-          }
-
-        }
-      );
-
-    }
-  );
-
-
-  if (applyPlusTwoButton) {
-
-    applyPlusTwoButton.addEventListener(
-      "click",
-      function () {
-
-        if (!selectedPlusTwo) {
-          return;
-        }
-
-        applyCourse(
-          selectedPlusTwo
-        );
-
-      }
-    );
-
-  }
-
-
-  /*
-   * =========================================
-   * APPLY COURSE
-   * =========================================
-   */
-
-  async function applyCourse(
-    courseName
-  ) {
-
-    try {
-
-      const response = await fetch(
-        "/apply-course",
-        {
-          method: "POST",
-
-          credentials: "include",
-
-          headers: {
-            "Content-Type":
-              "application/json"
-          },
-
-          body: JSON.stringify({
-            course: courseName
-          })
-        }
-      );
-
-
-      const data =
-        await response
-          .json()
-          .catch(function () {
-            return {};
-          });
-
-
-      if (
-        response.status === 401 ||
-        response.status === 403
-      ) {
-
-        window.location.replace(
-          "login.html"
-        );
-
-        return;
-
-      }
-
-
-      if (!response.ok) {
-
-        alert(
-          data.message ||
-          "Unable to apply for course."
-        );
-
-        return;
-
-      }
-
-
-      /*
-       * Show correct success message
-       */
-
-      if (
-        selectedFoundation === courseName &&
-        successFoundationMessage
-      ) {
-
-        successFoundationMessage.classList.remove(
-          "hidden"
-        );
-
-      }
-
-
-      if (
-        selectedClass === courseName &&
-        successMessage
-      ) {
-
-        successMessage.classList.remove(
-          "hidden"
-        );
-
-      }
-
-
-      if (
-        selectedPlusTwo === courseName &&
-        successPlusTwoMessage
-      ) {
-
-        successPlusTwoMessage.classList.remove(
-          "hidden"
-        );
-
-      }
-
-
-      alert(
-        data.message ||
-        "Applied Successfully"
-      );
-
-
-    } catch (error) {
-
-      console.error(
-        "Apply course error:",
-        error
-      );
-
-      alert(
-        "Cannot connect to server. Please try again."
-      );
-
-    }
-
-  }
-
-
-  /*
-   * =========================================
-   * CONTACT
-   * =========================================
-   */
+  /* ---------- Contact ---------- */
 
   const contactLink =
     document.getElementById(
@@ -720,72 +183,794 @@ document.addEventListener("DOMContentLoaded", function () {
     );
 
 
-  function openContact() {
+  /* ============================================================
+     SELECTED VALUES
+     ============================================================ */
 
-    /*
-     * Hide course selection sections
-     */
-
-    hideAllCourseSections();
+  let selectedFoundation = "";
+  let selectedClass = "";
+  let selectedPlusTwo = "";
 
 
-    if (!contactSection) {
-      return;
+  /* ============================================================
+     HIDE ALL COURSE SECTIONS
+     ============================================================ */
+
+  function hideAllSections() {
+
+    if (foundationList) {
+      foundationList.classList.add(
+        "hidden"
+      );
     }
 
+    if (academicSelection) {
+      academicSelection.classList.add(
+        "hidden"
+      );
+    }
 
-    contactSection.classList.remove(
-      "hidden"
-    );
+    if (plusTwoList) {
+      plusTwoList.classList.add(
+        "hidden"
+      );
+    }
 
-
-    history.replaceState(
-      null,
-      "",
-      "#contact"
-    );
-
-
-    setTimeout(function () {
-
-      contactSection.scrollIntoView({
-        behavior: "smooth",
-        block: "start"
-      });
-
-    }, 50);
-
+    if (contactSection) {
+      contactSection.classList.add(
+        "hidden"
+      );
+    }
   }
 
 
-  function closeContact() {
+  /* ============================================================
+     RESET MAIN CARD BUTTONS
+     ============================================================ */
 
-    if (!contactSection) {
-      return;
+  function resetMainButtons() {
+
+    if (foundationButton) {
+      foundationButton.textContent =
+        "Select Course";
+    }
+
+    if (academicButton) {
+      academicButton.textContent =
+        "Select Class";
+    }
+
+    if (plusTwoButton) {
+      plusTwoButton.textContent =
+        "Select Course";
+    }
+  }
+
+
+  /* ============================================================
+     RESET COURSE SELECTIONS
+     ============================================================ */
+
+  function resetSelections() {
+
+    selectedFoundation = "";
+    selectedClass = "";
+    selectedPlusTwo = "";
+
+
+    document
+      .querySelectorAll(
+        ".foundation-course-button, " +
+        ".class-button, " +
+        ".plus-two-course-button"
+      )
+      .forEach(
+        function (button) {
+
+          button.classList.remove(
+            "active"
+          );
+        }
+      );
+
+
+    if (selectedFoundationName) {
+      selectedFoundationName.textContent =
+        "";
+    }
+
+    if (selectedClassName) {
+      selectedClassName.textContent =
+        "";
+    }
+
+    if (selectedPlusTwoName) {
+      selectedPlusTwoName.textContent =
+        "";
     }
 
 
-    contactSection.classList.add(
-      "hidden"
-    );
+    if (selectedFoundationArea) {
+      selectedFoundationArea.classList.add(
+        "hidden"
+      );
+    }
+
+    if (selectedClassArea) {
+      selectedClassArea.classList.add(
+        "hidden"
+      );
+    }
+
+    if (selectedPlusTwoArea) {
+      selectedPlusTwoArea.classList.add(
+        "hidden"
+      );
+    }
+  }
 
 
-    history.replaceState(
-      null,
-      "",
-      window.location.pathname
-    );
+  /* ============================================================
+     RESET SUCCESS MESSAGES
+     ============================================================ */
+
+  function resetSuccessMessages() {
+
+    if (successFoundationMessage) {
+      successFoundationMessage.classList.add(
+        "hidden"
+      );
+    }
+
+    if (successMessage) {
+      successMessage.classList.add(
+        "hidden"
+      );
+    }
+
+    if (successPlusTwoMessage) {
+      successPlusTwoMessage.classList.add(
+        "hidden"
+      );
+    }
+  }
 
 
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth"
+  /* ============================================================
+     SCROLL TO COURSES
+     ============================================================ */
+
+  function goToCourses() {
+
+    if (!coursesSection) {
+      return;
+    }
+
+    coursesSection.scrollIntoView({
+      behavior: "smooth",
+      block: "start"
     });
+  }
+
+
+  /* ============================================================
+     APPLY COURSE TO DATABASE
+     ============================================================ */
+
+  async function applyCourse(
+    courseType,
+    courseName,
+    successElement,
+    applyElement
+  ) {
+
+    if (!courseName) {
+      alert(
+        "Please select a course"
+      );
+      return;
+    }
+
+
+    if (applyElement) {
+      applyElement.disabled = true;
+      applyElement.textContent =
+        "Applying...";
+    }
+
+
+    try {
+
+      const response = await fetch(
+        "/apply-course",
+        {
+          method: "POST",
+
+          credentials: "include",
+
+          headers: {
+            "Content-Type":
+              "application/json"
+          },
+
+          body: JSON.stringify({
+            course_type: courseType,
+            course_name: courseName
+          })
+        }
+      );
+
+
+      if (response.status === 401) {
+
+        window.location.href =
+          "login.html";
+
+        return;
+      }
+
+
+      if (response.status === 409) {
+
+        alert(
+          "You have already applied for this course."
+        );
+
+        if (applyElement) {
+          applyElement.disabled = false;
+          applyElement.textContent =
+            "Apply";
+        }
+
+        return;
+      }
+
+
+      if (!response.ok) {
+
+        const errorText =
+          await response.text();
+
+        throw new Error(
+          errorText ||
+          "Application failed"
+        );
+      }
+
+
+      if (successElement) {
+
+        successElement.textContent =
+          "✅ Applied Successfully for " +
+          courseName;
+
+        successElement.classList.remove(
+          "hidden"
+        );
+      }
+
+
+      if (applyElement) {
+
+        applyElement.textContent =
+          "Applied ✓";
+      }
+
+
+      /*
+       * Return to main dashboard after
+       * showing success message.
+       */
+
+      setTimeout(
+        function () {
+
+          resetSuccessMessages();
+
+          hideAllSections();
+
+          resetSelections();
+
+          resetMainButtons();
+
+          if (applyButton) {
+            applyButton.disabled = false;
+            applyButton.textContent =
+              "Apply";
+          }
+
+          if (applyFoundationButton) {
+            applyFoundationButton.disabled =
+              false;
+            applyFoundationButton.textContent =
+              "Apply";
+          }
+
+          if (applyPlusTwoButton) {
+            applyPlusTwoButton.disabled =
+              false;
+            applyPlusTwoButton.textContent =
+              "Apply";
+          }
+
+          goToCourses();
+
+        },
+        2000
+      );
+
+
+    } catch (error) {
+
+      console.error(
+        "Course application error:",
+        error
+      );
+
+      alert(
+        error.message ||
+        "Unable to apply for the course."
+      );
+
+
+      if (applyElement) {
+
+        applyElement.disabled = false;
+
+        applyElement.textContent =
+          "Apply";
+      }
+    }
+  }
+
+
+  /* ============================================================
+     FOUNDATION CARD OPEN / CLOSE
+     ============================================================ */
+
+  if (
+    foundationButton &&
+    foundationList
+  ) {
+
+    foundationButton.addEventListener(
+      "click",
+      function () {
+
+        const opening =
+          foundationList.classList.contains(
+            "hidden"
+          );
+
+
+        hideAllSections();
+
+        resetSelections();
+
+        resetSuccessMessages();
+
+        resetMainButtons();
+
+
+        if (opening) {
+
+          foundationList.classList.remove(
+            "hidden"
+          );
+
+          foundationButton.textContent =
+            "✕ Close";
+
+          foundationList.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+          });
+
+        }
+
+      }
+    );
+  }
+
+
+  /* ============================================================
+     FOUNDATION COURSE SELECT
+     ============================================================ */
+
+  foundationCourseButtons.forEach(
+    function (button) {
+
+      button.addEventListener(
+        "click",
+        function () {
+
+          foundationCourseButtons.forEach(
+            function (item) {
+
+              item.classList.remove(
+                "active"
+              );
+
+            }
+          );
+
+
+          this.classList.add(
+            "active"
+          );
+
+
+          selectedFoundation =
+            this.textContent.trim();
+
+
+          if (selectedFoundationName) {
+
+            selectedFoundationName.textContent =
+              selectedFoundation;
+          }
+
+
+          if (selectedFoundationArea) {
+
+            selectedFoundationArea.classList.remove(
+              "hidden"
+            );
+
+            selectedFoundationArea.scrollIntoView({
+              behavior: "smooth",
+              block: "center"
+            });
+          }
+
+        }
+      );
+
+    }
+  );
+
+
+  /* ============================================================
+     FOUNDATION APPLY
+     ============================================================ */
+
+  if (applyFoundationButton) {
+
+    applyFoundationButton.addEventListener(
+      "click",
+      async function () {
+
+        await applyCourse(
+          "foundation",
+          selectedFoundation,
+          successFoundationMessage,
+          applyFoundationButton
+        );
+
+      }
+    );
 
   }
 
 
-  if (contactLink) {
+  /* ============================================================
+     ACADEMIC CARD OPEN / CLOSE
+     ============================================================ */
+
+  if (
+    academicButton &&
+    academicSelection
+  ) {
+
+    academicButton.addEventListener(
+      "click",
+      function () {
+
+        const opening =
+          academicSelection.classList.contains(
+            "hidden"
+          );
+
+
+        hideAllSections();
+
+        resetSelections();
+
+        resetSuccessMessages();
+
+        resetMainButtons();
+
+
+        if (opening) {
+
+          academicSelection.classList.remove(
+            "hidden"
+          );
+
+          academicButton.textContent =
+            "✕ Close";
+
+          academicSelection.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+          });
+
+        }
+
+      }
+    );
+  }
+
+
+  /* ============================================================
+     ACADEMIC CLASS SELECT
+     ============================================================ */
+
+  classButtons.forEach(
+    function (button) {
+
+      button.addEventListener(
+        "click",
+        function () {
+
+          classButtons.forEach(
+            function (item) {
+
+              item.classList.remove(
+                "active"
+              );
+
+            }
+          );
+
+
+          this.classList.add(
+            "active"
+          );
+
+
+          selectedClass =
+            this.textContent.trim();
+
+
+          if (selectedClassName) {
+
+            selectedClassName.textContent =
+              selectedClass;
+          }
+
+
+          if (selectedClassArea) {
+
+            selectedClassArea.classList.remove(
+              "hidden"
+            );
+
+            selectedClassArea.scrollIntoView({
+              behavior: "smooth",
+              block: "center"
+            });
+
+          }
+
+        }
+      );
+
+    }
+  );
+
+
+  /* ============================================================
+     ACADEMIC APPLY
+     ============================================================ */
+
+  if (applyButton) {
+
+    applyButton.addEventListener(
+      "click",
+      async function () {
+
+        await applyCourse(
+          "academic",
+          selectedClass,
+          successMessage,
+          applyButton
+        );
+
+      }
+    );
+
+  }
+
+
+  /* ============================================================
+     PLUS TWO CARD OPEN / CLOSE
+     ============================================================ */
+
+  if (
+    plusTwoButton &&
+    plusTwoList
+  ) {
+
+    plusTwoButton.addEventListener(
+      "click",
+      function () {
+
+        const opening =
+          plusTwoList.classList.contains(
+            "hidden"
+          );
+
+
+        hideAllSections();
+
+        resetSelections();
+
+        resetSuccessMessages();
+
+        resetMainButtons();
+
+
+        if (opening) {
+
+          plusTwoList.classList.remove(
+            "hidden"
+          );
+
+          plusTwoButton.textContent =
+            "✕ Close";
+
+          plusTwoList.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+          });
+
+        }
+
+      }
+    );
+  }
+
+
+  /* ============================================================
+     PLUS TWO COURSE SELECT
+     ============================================================ */
+
+  plusTwoCourseButtons.forEach(
+    function (button) {
+
+      button.addEventListener(
+        "click",
+        function () {
+
+          plusTwoCourseButtons.forEach(
+            function (item) {
+
+              item.classList.remove(
+                "active"
+              );
+
+            }
+          );
+
+
+          this.classList.add(
+            "active"
+          );
+
+
+          selectedPlusTwo =
+            this.textContent.trim();
+
+
+          if (selectedPlusTwoName) {
+
+            selectedPlusTwoName.textContent =
+              selectedPlusTwo;
+          }
+
+
+          if (selectedPlusTwoArea) {
+
+            selectedPlusTwoArea.classList.remove(
+              "hidden"
+            );
+
+            selectedPlusTwoArea.scrollIntoView({
+              behavior: "smooth",
+              block: "center"
+            });
+
+          }
+
+        }
+      );
+
+    }
+  );
+
+
+  /* ============================================================
+     PLUS TWO APPLY
+     ============================================================ */
+
+  if (applyPlusTwoButton) {
+
+    applyPlusTwoButton.addEventListener(
+      "click",
+      async function () {
+
+        await applyCourse(
+          "plus_two",
+          selectedPlusTwo,
+          successPlusTwoMessage,
+          applyPlusTwoButton
+        );
+
+      }
+    );
+
+  }
+
+
+  /* ============================================================
+     CLOSE COURSE SECTION BUTTONS
+     ============================================================ */
+
+  document
+    .querySelectorAll(
+      ".close-section-btn"
+    )
+    .forEach(
+      function (button) {
+
+        button.addEventListener(
+          "click",
+          function () {
+
+            const targetId =
+              this.getAttribute(
+                "data-close"
+              );
+
+
+            const target =
+              document.getElementById(
+                targetId
+              );
+
+
+            if (target) {
+
+              target.classList.add(
+                "hidden"
+              );
+            }
+
+
+            resetSelections();
+
+            resetSuccessMessages();
+
+            resetMainButtons();
+
+            goToCourses();
+
+          }
+        );
+
+      }
+    );
+
+
+  /* ============================================================
+     CONTACT OPEN
+     ============================================================ */
+
+  if (
+    contactLink &&
+    contactSection
+  ) {
 
     contactLink.addEventListener(
       "click",
@@ -793,13 +978,34 @@ document.addEventListener("DOMContentLoaded", function () {
 
         event.preventDefault();
 
-        openContact();
+
+        hideAllSections();
+
+        resetSelections();
+
+        resetSuccessMessages();
+
+        resetMainButtons();
+
+
+        contactSection.classList.remove(
+          "hidden"
+        );
+
+
+        contactSection.scrollIntoView({
+          behavior: "smooth",
+          block: "start"
+        });
 
       }
     );
-
   }
 
+
+  /* ============================================================
+     CONTACT CLOSE
+     ============================================================ */
 
   if (closeContactButton) {
 
@@ -807,7 +1013,15 @@ document.addEventListener("DOMContentLoaded", function () {
       "click",
       function () {
 
-        closeContact();
+        if (contactSection) {
+
+          contactSection.classList.add(
+            "hidden"
+          );
+        }
+
+
+        goToCourses();
 
       }
     );
@@ -815,18 +1029,42 @@ document.addEventListener("DOMContentLoaded", function () {
   }
 
 
-  /*
-   * Open Contact automatically
-   * when URL contains #contact
-   */
+  /* ============================================================
+     ESC KEY
+     ============================================================ */
 
-  if (
-    window.location.hash ===
-    "#contact"
-  ) {
+  document.addEventListener(
+    "keydown",
+    function (event) {
 
-    openContact();
+      if (event.key === "Escape") {
 
-  }
+        hideAllSections();
+
+        resetSelections();
+
+        resetSuccessMessages();
+
+        resetMainButtons();
+
+        goToCourses();
+
+      }
+
+    }
+  );
+
+
+  /* ============================================================
+     INITIAL STATE
+     ============================================================ */
+
+  hideAllSections();
+
+  resetSelections();
+
+  resetSuccessMessages();
+
+  resetMainButtons();
 
 });
