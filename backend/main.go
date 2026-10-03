@@ -942,6 +942,34 @@ func main() {
 		"PostgreSQL connected successfully",
 	)
 
+	// Create the users table automatically if it does not exist.
+	_, err = db.Exec(
+		context.Background(),
+		`
+		CREATE TABLE IF NOT EXISTS users (
+			id BIGSERIAL PRIMARY KEY,
+			name TEXT NOT NULL,
+			email TEXT NOT NULL UNIQUE,
+			phone TEXT NOT NULL UNIQUE,
+			password_hash TEXT NOT NULL,
+			status TEXT NOT NULL DEFAULT 'active',
+			created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+		);
+		`,
+	)
+
+	if err != nil {
+		log.Fatal(
+			"Users table creation failed:",
+			err,
+		)
+	}
+
+	log.Println(
+		"Users table ready",
+	)
+
 	mux := http.NewServeMux()
 
 	mux.HandleFunc(
