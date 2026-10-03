@@ -5,23 +5,23 @@
 
   <meta charset="UTF-8">
 
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1">
 
   <meta
     http-equiv="Content-Security-Policy"
-    content="default-src 'none';
-             img-src 'self';
-             style-src 'self';
-             script-src 'self';
-             connect-src 'self' http://localhost:8080;
-             base-uri 'none';
-             form-action 'none';
-             object-src 'none';
-             frame-ancestors 'none';
-             referrer no-referrer;"
+    content="
+      default-src 'none';
+      img-src 'self';
+      style-src 'self';
+      script-src 'self';
+      connect-src 'self';
+      base-uri 'none';
+      form-action 'none';
+      object-src 'none';
+      frame-ancestors 'none';
+      referrer no-referrer;
+    "
   >
 
   <meta
@@ -31,21 +31,9 @@
 
   <title>Dashboard — HAND IN HAND ACADEMY</title>
 
-  <link
-    rel="stylesheet"
-    href="css/base.css"
-  >
-
-  <link
-    rel="stylesheet"
-    href="css/dashboard.css"
-  >
-
-  <link
-    rel="icon"
-    type="image/png"
-    href="img/logo.png"
-  >
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <link rel="icon" type="image/png" href="img/logo.png">
 
 </head>
 
@@ -53,28 +41,9 @@
 <body class="dashboard">
 
 
-  <!-- =========================================
-       LOGO
-       ========================================= -->
-
-  <a
-    href="dashboard.html"
-    class="logo-corner"
-    aria-label="HAND IN HAND ACADEMY Dashboard"
-  >
-
-    <img
-      src="img/logo.png"
-      alt="HAND IN HAND ACADEMY"
-      class="logo-img"
-    >
-
-  </a>
-
-
-  <!-- =========================================
-       TOP BAR
-       ========================================= -->
+  <!-- =========================
+       TOPBAR
+  ========================== -->
 
   <header class="dash-topbar">
 
@@ -85,11 +54,7 @@
       HAND IN HAND ACADEMY
     </a>
 
-
-    <nav
-      class="dash-nav"
-      aria-label="Top navigation"
-    >
+    <nav class="dash-nav">
 
       <a
         href="logout.html"
@@ -103,25 +68,24 @@
   </header>
 
 
-  <!-- =========================================
-       DASHBOARD LAYOUT
-       ========================================= -->
+  <!-- =========================
+       LAYOUT
+  ========================== -->
 
   <div class="dash-layout">
 
 
-    <!-- =======================================
+    <!-- =========================
          SIDEBAR
-         ======================================= -->
+    ========================== -->
 
     <aside class="dash-sidebar">
+
 
       <div class="side-title">
         Main
       </div>
 
-
-      <!-- COURSES -->
 
       <a
         href="my-courses.html"
@@ -136,8 +100,6 @@
       </div>
 
 
-      <!-- PROFILE -->
-
       <a
         href="profile.html"
         class="side-link"
@@ -145,8 +107,6 @@
         👤 Profile
       </a>
 
-
-      <!-- SETTINGS -->
 
       <a
         href="settings.html"
@@ -161,18 +121,14 @@
       </div>
 
 
-      <!-- CONTACT -->
-
-      <a
-        href="#contact"
+      <button
+        type="button"
         class="side-link"
         id="contactLink"
       >
         ✉ Contact
-      </a>
+      </button>
 
-
-      <!-- LOGOUT -->
 
       <a
         href="logout.html"
@@ -181,51 +137,48 @@
         🚪 Logout
       </a>
 
+
     </aside>
 
 
-    <!-- =======================================
-         MAIN CONTENT
-         ======================================= -->
+    <!-- =========================
+         MAIN
+    ========================== -->
 
     <main class="dash-main">
 
 
-      <!-- =====================================
-           WELCOME
-           ===================================== -->
+      <!-- WELCOME -->
 
-      <section class="welcome">
+      <div class="welcome">
 
-        <h2 id="welcomeTitle">
+        <h2>
           Welcome back, Learner! 👋
         </h2>
 
         <p>
-          Continue your learning journey —
-          Learn. Grow. Succeed.
+          Continue your learning journey — Learn. Grow. Succeed.
         </p>
 
-      </section>
+      </div>
 
 
-      <!-- =====================================
-           MY COURSES
-           ===================================== -->
+      <!-- =========================
+           MAIN COURSE CARDS
+      ========================== -->
 
       <section id="courses">
 
+
         <h3 class="section-title">
-          My Courses
+          Courses
         </h3>
 
 
         <div class="courses">
 
 
-          <!-- =================================
-               FOUNDATIONS
-               ================================= -->
+          <!-- FOUNDATION -->
 
           <article class="course-card">
 
@@ -233,17 +186,13 @@
               Kids & Beginners
             </span>
 
-
             <h4 class="course-title">
               Foundations of Learning
             </h4>
 
-
             <p class="course-desc">
-              Basic learning program for kids
-              and beginners.
+              Basic learning program for kids and beginners.
             </p>
-
 
             <button
               type="button"
@@ -256,9 +205,7 @@
           </article>
 
 
-          <!-- =================================
-               ACADEMIC
-               ================================= -->
+          <!-- ACADEMIC -->
 
           <article class="course-card">
 
@@ -266,17 +213,13 @@
               LKG to 10th
             </span>
 
-
             <h4 class="course-title">
               Academic Learning
             </h4>
 
-
             <p class="course-desc">
-              Select your class and apply
-              for academic learning.
+              Select your class and apply for academic learning.
             </p>
-
 
             <button
               type="button"
@@ -289,9 +232,7 @@
           </article>
 
 
-          <!-- =================================
-               HIGHER SECONDARY
-               ================================= -->
+          <!-- HIGHER SECONDARY -->
 
           <article class="course-card">
 
@@ -299,17 +240,14 @@
               Plus One & Plus Two • 11th & 12th
             </span>
 
-
             <h4 class="course-title">
               Higher Secondary
             </h4>
 
-
             <p class="course-desc">
-              Focused coaching for Plus One &
-              Plus Two, covering the complete syllabus.
+              Focused coaching for Plus One & Plus Two,
+              covering the complete syllabus.
             </p>
-
 
             <button
               type="button"
@@ -327,22 +265,20 @@
       </section>
 
 
-      <!-- =====================================
-           FOUNDATIONS COURSE SELECTION
-           ===================================== -->
+      <!-- =========================
+           FOUNDATIONS
+      ========================== -->
 
       <section
         id="foundationList"
         class="course-section hidden"
       >
 
-
         <div class="section-header">
 
           <h3 class="section-title">
             Foundations of Learning
           </h3>
-
 
           <button
             type="button"
@@ -424,7 +360,6 @@
             <strong id="selectedFoundationName"></strong>
           </p>
 
-
           <button
             type="button"
             id="applyFoundationButton"
@@ -447,22 +382,20 @@
       </section>
 
 
-      <!-- =====================================
-           ACADEMIC COURSE SELECTION
-           ===================================== -->
+      <!-- =========================
+           ACADEMIC
+      ========================== -->
 
       <section
         id="academicSelection"
         class="course-section hidden"
       >
 
-
         <div class="section-header">
 
           <h3 class="section-title">
             Academic Learning - LKG to 10th
           </h3>
-
 
           <button
             type="button"
@@ -483,98 +416,51 @@
         <div class="class-list">
 
 
-          <button
-            type="button"
-            class="class-button"
-          >
+          <button type="button" class="class-button">
             LKG
           </button>
 
-
-          <button
-            type="button"
-            class="class-button"
-          >
+          <button type="button" class="class-button">
             UKG
           </button>
 
-
-          <button
-            type="button"
-            class="class-button"
-          >
+          <button type="button" class="class-button">
             1st Class
           </button>
 
-
-          <button
-            type="button"
-            class="class-button"
-          >
+          <button type="button" class="class-button">
             2nd Class
           </button>
 
-
-          <button
-            type="button"
-            class="class-button"
-          >
+          <button type="button" class="class-button">
             3rd Class
           </button>
 
-
-          <button
-            type="button"
-            class="class-button"
-          >
+          <button type="button" class="class-button">
             4th Class
           </button>
 
-
-          <button
-            type="button"
-            class="class-button"
-          >
+          <button type="button" class="class-button">
             5th Class
           </button>
 
-
-          <button
-            type="button"
-            class="class-button"
-          >
+          <button type="button" class="class-button">
             6th Class
           </button>
 
-
-          <button
-            type="button"
-            class="class-button"
-          >
+          <button type="button" class="class-button">
             7th Class
           </button>
 
-
-          <button
-            type="button"
-            class="class-button"
-          >
+          <button type="button" class="class-button">
             8th Class
           </button>
 
-
-          <button
-            type="button"
-            class="class-button"
-          >
+          <button type="button" class="class-button">
             9th Class
           </button>
 
-
-          <button
-            type="button"
-            class="class-button"
-          >
+          <button type="button" class="class-button">
             10th Class
           </button>
 
@@ -591,7 +477,6 @@
             Selected Class:
             <strong id="selectedClassName"></strong>
           </p>
-
 
           <button
             type="button"
@@ -615,22 +500,20 @@
       </section>
 
 
-      <!-- =====================================
-           HIGHER SECONDARY SELECTION
-           ===================================== -->
+      <!-- =========================
+           HIGHER SECONDARY
+      ========================== -->
 
       <section
         id="plusTwoList"
         class="course-section hidden"
       >
 
-
         <div class="section-header">
 
           <h3 class="section-title">
             Higher Secondary - Plus One & Plus Two
           </h3>
-
 
           <button
             type="button"
@@ -644,7 +527,7 @@
 
 
         <p class="selection-text">
-          Choose your stream - Select one course to apply
+          Choose your stream
         </p>
 
 
@@ -696,7 +579,6 @@
             <strong id="selectedPlusTwoName"></strong>
           </p>
 
-
           <button
             type="button"
             id="applyPlusTwoButton"
@@ -719,79 +601,43 @@
       </section>
 
 
-      <!-- =====================================
+      <!-- =========================
            CONTACT
-           ===================================== -->
+      ========================== -->
 
       <section
-        id="contact"
-        class="dashboard-contact hidden"
-        aria-labelledby="contactTitle"
+        id="contactSection"
+        class="course-section hidden"
       >
 
+        <div class="section-header">
 
-        <div class="contact-header">
-
-
-          <div class="contact-heading">
-
-            <span class="contact-label">
-              SUPPORT
-            </span>
-
-
-            <h3
-              id="contactTitle"
-              class="contact-title"
-            >
-              Contact Us
-            </h3>
-
-          </div>
-
+          <h3 class="section-title">
+            Contact Us
+          </h3>
 
           <button
             type="button"
+            class="close-section-btn"
             id="closeContactButton"
-            class="contact-close-button"
           >
             ✕ Close
           </button>
 
-
         </div>
 
 
-        <div class="contact-grid">
+        <div class="my-progress-card">
 
+          <p>
+            For enquiries and support, contact us at:
+          </p>
 
-          <article class="contact-card">
-
-
-            <div class="contact-icon">
-              ✉
-            </div>
-
-
-            <div class="contact-content">
-
-              <h4>
-                Email Support
-              </h4>
-
-
-              <a
-                href="mailto:handinhandonlineacademy@gmail.com"
-                class="contact-action"
-              >
-                handinhandonlineacademy@gmail.com
-              </a>
-
-            </div>
-
-
-          </article>
-
+          <p>
+            <strong>
+              handinhandonlineacademy@gmail.com
+            </strong>
+          </p>
 
         </div>
 
@@ -801,13 +647,8 @@
 
     </main>
 
-
   </div>
 
-
-  <!-- =========================================
-       JAVASCRIPT
-       ========================================= -->
 
   <script
     src="js/dashboard.js"
@@ -816,5 +657,4 @@
 
 
 </body>
-
 </html>
