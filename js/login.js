@@ -4,9 +4,15 @@ document.addEventListener("DOMContentLoaded", function () {
   const form = document.getElementById("loginModelForm");
   const loginInput = document.getElementById("login");
   const passwordInput = document.getElementById("password");
+  const rememberInput = document.getElementById("remember");
   const message = document.getElementById("form-message");
 
-  if (!form || !loginInput || !passwordInput) {
+  if (
+    !form ||
+    !loginInput ||
+    !passwordInput ||
+    !rememberInput
+  ) {
     return;
   }
 
@@ -17,8 +23,13 @@ document.addEventListener("DOMContentLoaded", function () {
 
     const login = loginInput.value.trim();
     const password = passwordInput.value;
+    const rememberMe = rememberInput.checked;
 
     let valid = true;
+
+    /* -----------------------------
+       LOGIN VALIDATION
+    ----------------------------- */
 
     if (!login) {
       showError(
@@ -45,11 +56,23 @@ document.addEventListener("DOMContentLoaded", function () {
       valid = false;
     }
 
-    if (!valid) {
+    /* -----------------------------
+       REMEMBER ME REQUIRED
+    ----------------------------- */
+
+    if (!rememberMe) {
       showMessage(
-        "Please correct the errors above.",
+        "Please tick Remember me before logging in.",
         "error"
       );
+
+      valid = false;
+    }
+
+    if (!valid) {
+      if (!rememberMe) {
+        rememberInput.focus();
+      }
 
       return;
     }
@@ -58,6 +81,15 @@ document.addEventListener("DOMContentLoaded", function () {
       "Checking your login...",
       "normal"
     );
+
+    /* Disable button during login */
+    const submitButton =
+      form.querySelector(".model-submit");
+
+    if (submitButton) {
+      submitButton.disabled = true;
+      submitButton.textContent = "Logging in...";
+    }
 
     try {
       const response = await fetch("/login", {
@@ -83,22 +115,35 @@ document.addEventListener("DOMContentLoaded", function () {
           "error"
         );
 
+        resetButton();
         return;
       }
 
-      /*
-       * Save logged-in user details locally.
-       * These details are returned by main.go.
-       */
+      /* -----------------------------
+         SAVE USER DETAILS
+      ----------------------------- */
+
       if (
         data.user &&
         typeof data.user === "object"
       ) {
         const user = {
-          id: data.user.id || data.user_id || null,
-          name: data.user.name || "",
-          email: data.user.email || "",
-          phone: data.user.phone || ""
+          id:
+            data.user.id ||
+            data.user_id ||
+            null,
+
+          name:
+            data.user.name ||
+            "",
+
+          email:
+            data.user.email ||
+            "",
+
+          phone:
+            data.user.phone ||
+            ""
         };
 
         localStorage.setItem(
@@ -106,11 +151,10 @@ document.addEventListener("DOMContentLoaded", function () {
           JSON.stringify(user)
         );
       } else {
-        /*
-         * Fallback:
-         * If the login response does not contain
-         * user details, get them from /session.
-         */
+        /* -----------------------------
+           FALLBACK /SESSION
+        ----------------------------- */
+
         try {
           const sessionResponse = await fetch(
             "/session",
@@ -161,15 +205,15 @@ document.addEventListener("DOMContentLoaded", function () {
         }
       }
 
+      /* -----------------------------
+         SUCCESS
+      ----------------------------- */
+
       showMessage(
         "Login successful! Redirecting...",
         "success"
       );
 
-      /*
-       * Small delay so the success message
-       * can be displayed before redirect.
-       */
       window.setTimeout(function () {
         window.location.replace(
           "dashboard.html"
@@ -186,8 +230,14 @@ document.addEventListener("DOMContentLoaded", function () {
         "Cannot connect to server. Please try again.",
         "error"
       );
+
+      resetButton();
     }
   });
+
+  /* -----------------------------
+     ERROR DISPLAY
+  ----------------------------- */
 
   function showError(id, text) {
     const element =
@@ -201,6 +251,10 @@ document.addEventListener("DOMContentLoaded", function () {
     element.classList.add("show");
   }
 
+  /* -----------------------------
+     CLEAR ERRORS
+  ----------------------------- */
+
   function clearErrors() {
     document
       .querySelectorAll(".model-error")
@@ -208,7 +262,16 @@ document.addEventListener("DOMContentLoaded", function () {
         element.textContent = "";
         element.classList.remove("show");
       });
+
+    if (message) {
+      message.textContent = "";
+      message.className = "model-message";
+    }
   }
+
+  /* -----------------------------
+     MESSAGE
+  ----------------------------- */
 
   function showMessage(text, type) {
     if (!message) {
@@ -231,5 +294,21 @@ document.addEventListener("DOMContentLoaded", function () {
     } else {
       message.classList.add("show");
     }
+  }
+
+  /* -----------------------------
+     RESET LOGIN BUTTON
+  ----------------------------- */
+
+  function resetButton() {
+    const submitButton =
+      form.querySelector(".model-submit");
+
+    if (!submitButton) {
+      return;
+    }
+
+    submitButton.disabled = false;
+    submitButton.textContent = "Login";
   }
 });
