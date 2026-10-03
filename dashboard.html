@@ -2,6 +2,7 @@
 <html lang="en">
 
 <head>
+
   <meta charset="UTF-8">
 
   <meta
@@ -30,47 +31,65 @@
 
   <title>Dashboard — HAND IN HAND ACADEMY</title>
 
-  <link rel="stylesheet" href="css/base.css">
-  <link rel="stylesheet" href="css/dashboard.css">
+  <link
+    rel="stylesheet"
+    href="css/base.css"
+  >
+
+  <link
+    rel="stylesheet"
+    href="css/dashboard.css"
+  >
 
   <link
     rel="icon"
     type="image/png"
     href="img/logo.png"
   >
+
 </head>
 
 
 <body class="dashboard">
 
 
-  <!-- LOGO -->
+  <!-- =========================================
+       LOGO
+       ========================================= -->
 
   <a
-    href="index.html"
+    href="dashboard.html"
     class="logo-corner"
-    aria-label="HAND IN HAND ACADEMY Home"
+    aria-label="HAND IN HAND ACADEMY Dashboard"
   >
+
     <img
       src="img/logo.png"
       alt="HAND IN HAND ACADEMY"
       class="logo-img"
     >
+
   </a>
 
 
-  <!-- TOP BAR -->
+  <!-- =========================================
+       TOP BAR
+       ========================================= -->
 
   <header class="dash-topbar">
 
     <a
-      href="index.html"
+      href="dashboard.html"
       class="dash-brand"
     >
       HAND IN HAND ACADEMY
     </a>
 
-    <nav class="dash-nav">
+
+    <nav
+      class="dash-nav"
+      aria-label="Top navigation"
+    >
 
       <a
         href="logout.html"
@@ -84,12 +103,16 @@
   </header>
 
 
-  <!-- DASHBOARD LAYOUT -->
+  <!-- =========================================
+       DASHBOARD LAYOUT
+       ========================================= -->
 
   <div class="dash-layout">
 
 
-    <!-- SIDEBAR -->
+    <!-- =======================================
+         SIDEBAR
+         ======================================= -->
 
     <aside class="dash-sidebar">
 
@@ -97,11 +120,14 @@
         Main
       </div>
 
+
+      <!-- COURSES -->
+
       <a
         href="my-courses.html"
         class="side-link"
       >
-        📚 My Courses
+        📚 Courses
       </a>
 
 
@@ -109,12 +135,18 @@
         Account
       </div>
 
+
+      <!-- PROFILE -->
+
       <a
         href="profile.html"
         class="side-link"
       >
         👤 Profile
       </a>
+
+
+      <!-- SETTINGS -->
 
       <a
         href="settings.html"
@@ -128,6 +160,9 @@
         Support
       </div>
 
+
+      <!-- CONTACT -->
+
       <a
         href="#contact"
         class="side-link"
@@ -135,6 +170,9 @@
       >
         ✉ Contact
       </a>
+
+
+      <!-- LOGOUT -->
 
       <a
         href="logout.html"
@@ -146,12 +184,16 @@
     </aside>
 
 
-    <!-- MAIN CONTENT -->
+    <!-- =======================================
+         MAIN CONTENT
+         ======================================= -->
 
     <main class="dash-main">
 
 
-      <!-- WELCOME -->
+      <!-- =====================================
+           WELCOME
+           ===================================== -->
 
       <section class="welcome">
 
@@ -167,7 +209,9 @@
       </section>
 
 
-      <!-- MY COURSES -->
+      <!-- =====================================
+           MY COURSES
+           ===================================== -->
 
       <section id="courses">
 
@@ -179,7 +223,9 @@
         <div class="courses">
 
 
-          <!-- FOUNDATIONS -->
+          <!-- =================================
+               FOUNDATIONS
+               ================================= -->
 
           <article class="course-card">
 
@@ -187,14 +233,17 @@
               Kids & Beginners
             </span>
 
+
             <h4 class="course-title">
               Foundations of Learning
             </h4>
+
 
             <p class="course-desc">
               Basic learning program for kids
               and beginners.
             </p>
+
 
             <button
               type="button"
@@ -207,7 +256,9 @@
           </article>
 
 
-          <!-- ACADEMIC -->
+          <!-- =================================
+               ACADEMIC
+               ================================= -->
 
           <article class="course-card">
 
@@ -215,14 +266,17 @@
               LKG to 10th
             </span>
 
+
             <h4 class="course-title">
               Academic Learning
             </h4>
+
 
             <p class="course-desc">
               Select your class and apply
               for academic learning.
             </p>
+
 
             <button
               type="button"
@@ -235,7 +289,9 @@
           </article>
 
 
-          <!-- HIGHER SECONDARY -->
+          <!-- =================================
+               HIGHER SECONDARY
+               ================================= -->
 
           <article class="course-card">
 
@@ -243,14 +299,17 @@
               Plus One & Plus Two • 11th & 12th
             </span>
 
+
             <h4 class="course-title">
               Higher Secondary
             </h4>
+
 
             <p class="course-desc">
               Focused coaching for Plus One &
               Plus Two, covering the complete syllabus.
             </p>
+
 
             <button
               type="button"
@@ -262,23 +321,28 @@
 
           </article>
 
+
         </div>
 
       </section>
 
 
-      <!-- FOUNDATIONS -->
+      <!-- =====================================
+           FOUNDATIONS COURSE SELECTION
+           ===================================== -->
 
       <section
         id="foundationList"
         class="course-section hidden"
       >
 
+
         <div class="section-header">
 
           <h3 class="section-title">
             Foundations of Learning
           </h3>
+
 
           <button
             type="button"
@@ -298,12 +362,14 @@
 
         <div class="course-list">
 
+
           <button
             type="button"
             class="foundation-course-button"
           >
             Malayalam
           </button>
+
 
           <button
             type="button"
@@ -312,12 +378,14 @@
             English
           </button>
 
+
           <button
             type="button"
             class="foundation-course-button"
           >
             Mathematics
           </button>
+
 
           <button
             type="button"
@@ -326,6 +394,7 @@
             General Science
           </button>
 
+
           <button
             type="button"
             class="foundation-course-button"
@@ -333,12 +402,14 @@
             അടിസ്ഥാന പാഠാവലി
           </button>
 
+
           <button
             type="button"
             class="foundation-course-button"
           >
             Hindi
           </button>
+
 
         </div>
 
@@ -352,6 +423,7 @@
             Selected Course:
             <strong id="selectedFoundationName"></strong>
           </p>
+
 
           <button
             type="button"
@@ -371,21 +443,26 @@
           ✅ Applied Successfully
         </div>
 
+
       </section>
 
 
-      <!-- ACADEMIC -->
+      <!-- =====================================
+           ACADEMIC COURSE SELECTION
+           ===================================== -->
 
       <section
         id="academicSelection"
         class="course-section hidden"
       >
 
+
         <div class="section-header">
 
           <h3 class="section-title">
             Academic Learning - LKG to 10th
           </h3>
+
 
           <button
             type="button"
@@ -405,53 +482,102 @@
 
         <div class="class-list">
 
-          <button type="button" class="class-button">
+
+          <button
+            type="button"
+            class="class-button"
+          >
             LKG
           </button>
 
-          <button type="button" class="class-button">
+
+          <button
+            type="button"
+            class="class-button"
+          >
             UKG
           </button>
 
-          <button type="button" class="class-button">
+
+          <button
+            type="button"
+            class="class-button"
+          >
             1st Class
           </button>
 
-          <button type="button" class="class-button">
+
+          <button
+            type="button"
+            class="class-button"
+          >
             2nd Class
           </button>
 
-          <button type="button" class="class-button">
+
+          <button
+            type="button"
+            class="class-button"
+          >
             3rd Class
           </button>
 
-          <button type="button" class="class-button">
+
+          <button
+            type="button"
+            class="class-button"
+          >
             4th Class
           </button>
 
-          <button type="button" class="class-button">
+
+          <button
+            type="button"
+            class="class-button"
+          >
             5th Class
           </button>
 
-          <button type="button" class="class-button">
+
+          <button
+            type="button"
+            class="class-button"
+          >
             6th Class
           </button>
 
-          <button type="button" class="class-button">
+
+          <button
+            type="button"
+            class="class-button"
+          >
             7th Class
           </button>
 
-          <button type="button" class="class-button">
+
+          <button
+            type="button"
+            class="class-button"
+          >
             8th Class
           </button>
 
-          <button type="button" class="class-button">
+
+          <button
+            type="button"
+            class="class-button"
+          >
             9th Class
           </button>
 
-          <button type="button" class="class-button">
+
+          <button
+            type="button"
+            class="class-button"
+          >
             10th Class
           </button>
+
 
         </div>
 
@@ -465,6 +591,7 @@
             Selected Class:
             <strong id="selectedClassName"></strong>
           </p>
+
 
           <button
             type="button"
@@ -484,21 +611,26 @@
           ✅ Applied Successfully
         </div>
 
+
       </section>
 
 
-      <!-- HIGHER SECONDARY -->
+      <!-- =====================================
+           HIGHER SECONDARY SELECTION
+           ===================================== -->
 
       <section
         id="plusTwoList"
         class="course-section hidden"
       >
 
+
         <div class="section-header">
 
           <h3 class="section-title">
             Higher Secondary - Plus One & Plus Two
           </h3>
+
 
           <button
             type="button"
@@ -518,12 +650,14 @@
 
         <div class="course-list">
 
+
           <button
             type="button"
             class="plus-two-course-button"
           >
             Biology Science
           </button>
+
 
           <button
             type="button"
@@ -532,6 +666,7 @@
             Commerce
           </button>
 
+
           <button
             type="button"
             class="plus-two-course-button"
@@ -539,12 +674,14 @@
             Humanities
           </button>
 
+
           <button
             type="button"
             class="plus-two-course-button"
           >
             Computer Science
           </button>
+
 
         </div>
 
@@ -558,6 +695,7 @@
             Selected Course:
             <strong id="selectedPlusTwoName"></strong>
           </p>
+
 
           <button
             type="button"
@@ -577,10 +715,13 @@
           ✅ Applied Successfully
         </div>
 
+
       </section>
 
 
-      <!-- CONTACT -->
+      <!-- =====================================
+           CONTACT
+           ===================================== -->
 
       <section
         id="contact"
@@ -588,7 +729,9 @@
         aria-labelledby="contactTitle"
       >
 
+
         <div class="contact-header">
+
 
           <div class="contact-heading">
 
@@ -596,17 +739,13 @@
               SUPPORT
             </span>
 
+
             <h3
               id="contactTitle"
               class="contact-title"
             >
               Contact Us
             </h3>
-
-            <p class="contact-subtitle">
-              We're here to help you with your
-              learning journey.
-            </p>
 
           </div>
 
@@ -619,19 +758,20 @@
             ✕ Close
           </button>
 
+
         </div>
 
 
         <div class="contact-grid">
 
 
-          <!-- EMAIL -->
-
           <article class="contact-card">
+
 
             <div class="contact-icon">
               ✉
             </div>
+
 
             <div class="contact-content">
 
@@ -639,9 +779,6 @@
                 Email Support
               </h4>
 
-              <p>
-                Have a question? Send us an email.
-              </p>
 
               <a
                 href="mailto:handinhandonlineacademy@gmail.com"
@@ -652,80 +789,31 @@
 
             </div>
 
-          </article>
-
-
-          <!-- PHONE -->
-
-          <article class="contact-card">
-
-            <div class="contact-icon">
-              ☎
-            </div>
-
-            <div class="contact-content">
-
-              <h4>
-                Phone Support
-              </h4>
-
-              <p>
-                Contact our academy support team.
-              </p>
-
-              <a
-                href="tel:+919876543210"
-                class="contact-action"
-              >
-                +91 98765 43210
-              </a>
-
-            </div>
-
-          </article>
-
-
-          <!-- ACADEMY -->
-
-          <article class="contact-card">
-
-            <div class="contact-icon">
-              🏫
-            </div>
-
-            <div class="contact-content">
-
-              <h4>
-                HAND IN HAND ACADEMY
-              </h4>
-
-              <p>
-                Learn. Grow. Succeed.
-              </p>
-
-              <span class="contact-action">
-                Education & Learning Support
-              </span>
-
-            </div>
 
           </article>
 
 
         </div>
 
+
       </section>
 
 
     </main>
 
+
   </div>
 
+
+  <!-- =========================================
+       JAVASCRIPT
+       ========================================= -->
 
   <script
     src="js/dashboard.js"
     defer
   ></script>
+
 
 </body>
 
