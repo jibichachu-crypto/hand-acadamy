@@ -1,241 +1,102 @@
-"use strict";
+(function () {
 
-document.addEventListener("DOMContentLoaded", function () {
+  "use strict";
 
-  const applicationsList =
-    document.getElementById("applicationsList");
+  document.addEventListener("DOMContentLoaded", async function () {
 
-  const continueLearningButton =
-    document.getElementById("continueLearningButton");
-
-
-  /* ==============================
-     LOAD APPLICATIONS
-  ============================== */
-
-  function getApplications() {
+    const applicationsList =
+      document.getElementById("applicationsList");
 
     try {
 
-      const stored =
-        localStorage.getItem("hih_applications");
-
-      if (!stored) {
-        return [];
-      }
-
-      const parsed =
-        JSON.parse(stored);
-
-      return Array.isArray(parsed)
-        ? parsed
-        : [];
-
-    } catch (error) {
-
-      return [];
-    }
-  }
-
-
-  /* ==============================
-     CREATE COURSE CARD
-  ============================== */
-
-  function createCourseCard(application) {
-
-    const card =
-      document.createElement("div");
-
-    card.className =
-      "course-card my-course-card";
-
-
-    const tag =
-      document.createElement("span");
-
-    tag.className =
-      "course-tag";
-
-    tag.textContent =
-      "Applied Course";
-
-
-    const title =
-      document.createElement("h3");
-
-    title.className =
-      "course-title";
-
-    title.textContent =
-      application.course ||
-      application.class ||
-      "Selected Course";
-
-
-    const description =
-      document.createElement("p");
-
-    description.className =
-      "course-desc";
-
-
-    if (application.type === "foundation") {
-
-      description.textContent =
-        "Foundations of Learning";
-
-    } else if (application.type === "academic") {
-
-      description.textContent =
-        "Academic Learning";
-
-    } else if (application.type === "plus_two") {
-
-      description.textContent =
-        "Higher Secondary";
-
-    } else {
-
-      description.textContent =
-        "Your selected course";
-    }
-
-
-    const status =
-      document.createElement("span");
-
-    status.className =
-      "app-status";
-
-    status.textContent =
-      "Applied Successfully";
-
-
-    const progressText =
-      document.createElement("p");
-
-    progressText.className =
-      "progress-text";
-
-    progressText.textContent =
-      "Progress: 0%";
-
-
-    const button =
-      document.createElement("button");
-
-    button.type =
-      "button";
-
-    button.className =
-      "model-submit";
-
-    button.textContent =
-      "Continue Learning";
-
-
-    button.addEventListener(
-      "click",
-      function () {
-
-        /*
-         * Learning module will be connected
-         * here later.
-         */
-
-        window.location.href =
-          "dashboard.html";
-
-      }
-    );
-
-
-    card.appendChild(tag);
-    card.appendChild(title);
-    card.appendChild(description);
-    card.appendChild(status);
-    card.appendChild(progressText);
-    card.appendChild(button);
-
-
-    return card;
-  }
-
-
-  /* ==============================
-     SHOW APPLICATIONS
-  ============================== */
-
-  function loadApplications() {
-
-    if (!applicationsList) {
-      return;
-    }
-
-
-    applicationsList.textContent = "";
-
-
-    const applications =
-      getApplications();
-
-
-    if (applications.length === 0) {
-
-      const emptyMessage =
-        document.createElement("p");
-
-      emptyMessage.className =
-        "course-empty-message";
-
-      emptyMessage.textContent =
-        "No courses yet. Apply for a course from Dashboard.";
-
-      applicationsList.appendChild(
-        emptyMessage
+      const response = await fetch(
+        "/my-courses",
+        {
+          method: "GET",
+          credentials: "include",
+          cache: "no-store"
+        }
       );
 
-      return;
-    }
+      if (response.status === 401) {
+        window.location.href = "login.html";
+        return;
+      }
 
+      if (!response.ok) {
+        throw new Error("Unable to load courses.");
+      }
 
-    applications
-      .slice()
-      .reverse()
-      .forEach(function (application) {
+      const data = await response.json();
+
+      const courses =
+        Array.isArray(data.courses)
+          ? data.courses
+          : [];
+
+      applicationsList.innerHTML = "";
+
+      if (courses.length === 0) {
+
+        applicationsList.innerHTML = `
+          <div class="my-progress-card">
+            <p>No applied courses yet.</p>
+          </div>
+        `;
+
+        return;
+      }
+
+      courses.forEach(function (course) {
 
         const card =
-          createCourseCard(application);
+          document.createElement("div");
+
+        card.className = "course-card";
+
+        card.innerHTML = `
+          <span class="course-tag">
+            ${escapeHTML(course.course_type)}
+          </span>
+
+          <h4 class="course-title">
+            ${escapeHTML(course.course_name)}
+          </h4>
+
+          <p class="course-desc">
+            Applied course
+          </p>
+        `;
 
         applicationsList.appendChild(card);
 
       });
+
+    } catch (error) {
+
+      applicationsList.innerHTML = `
+        <div class="my-progress-card">
+          <p>${escapeHTML(
+            error.message ||
+            "Unable to load courses."
+          )}</p>
+        </div>
+      `;
+
+    }
+
+  });
+
+
+  function escapeHTML(value) {
+
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+
   }
 
-
-  /* ==============================
-     OLD CONTINUE BUTTON SUPPORT
-  ============================== */
-
-  if (continueLearningButton) {
-
-    continueLearningButton.addEventListener(
-      "click",
-      function () {
-
-        window.location.href =
-          "dashboard.html";
-
-      }
-    );
-  }
-
-
-  /* ==============================
-     INITIAL LOAD
-  ============================== */
-
-  loadApplications();
-
-});
+})();
