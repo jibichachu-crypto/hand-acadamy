@@ -1013,6 +1013,42 @@ func securityHeaders(
 	)
 }
 
+
+/* =========================================
+   SITEMAP
+========================================= */
+
+func sitemapHandler(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+	if r.Method != http.MethodGet {
+		http.Error(
+			w,
+			"Method not allowed",
+			http.StatusMethodNotAllowed,
+		)
+
+		return
+	}
+
+	w.Header().Set(
+		"Content-Type",
+		"application/xml; charset=utf-8",
+	)
+
+	w.WriteHeader(http.StatusOK)
+
+	_, _ = w.Write([]byte(`<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://hand-acadamy.onrender.com/</loc>
+    <lastmod>2026-10-03</lastmod>
+  </url>
+</urlset>`))
+}
+
+
 func main() {
 	dsn := os.Getenv("DATABASE_URL")
 
@@ -1112,6 +1148,11 @@ func main() {
 	mux.HandleFunc(
 		"/apply-course",
 		applyCourseHandler,
+	)
+
+	mux.HandleFunc(
+		"/sitemap.xml",
+		sitemapHandler,
 	)
 
 	mux.HandleFunc(
