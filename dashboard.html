@@ -1,12 +1,11 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
+  <title>Dashboard — HAND IN HAND ACADEMY</title>
 
   <meta
     http-equiv="Content-Security-Policy"
@@ -27,8 +26,6 @@
     content="nosniff"
   >
 
-  <title>Dashboard — HAND IN HAND ACADEMY</title>
-
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/dashboard.css">
 
@@ -39,636 +36,584 @@
   >
 </head>
 
-<body class="dashboard">
+<body class="dashboard-page">
 
-<header class="dash-topbar">
+  <div class="dashboard-layout">
 
-  <a
-    href="index.html"
-    class="dash-brand"
-  >
-    HAND IN HAND ACADEMY
-  </a>
+    <!-- =========================
+         SIDEBAR
+    ========================== -->
 
-  <nav class="dash-nav">
+    <aside class="dashboard-sidebar">
 
-    <a
-      href="logout.html"
-      class="dash-link"
-    >
-      Logout
-    </a>
+      <div class="sidebar-brand">
 
-  </nav>
-
-</header>
-
-
-<div class="dash-layout">
-
-  <!-- SIDEBAR -->
-
-  <aside class="dash-sidebar">
-
-    <div class="side-title">
-      Main
-    </div>
-
-    <a
-      href="my-courses.html"
-      class="side-link"
-    >
-      📚 My Courses
-    </a>
-
-
-    <div class="side-title">
-      Account
-    </div>
-
-    <a
-      href="profile.html"
-      class="side-link"
-    >
-      👤 Profile
-    </a>
-
-    <a
-      href="settings.html"
-      class="side-link"
-    >
-      ⚙ Settings
-    </a>
-
-
-    <div class="side-title">
-      Support
-    </div>
-
-    <a
-      href="#contact"
-      class="side-link"
-      id="contactLink"
-    >
-      ✉ Contact
-    </a>
-
-
-    <a
-      href="logout.html"
-      class="side-link"
-    >
-      🚪 Logout
-    </a>
-
-  </aside>
-
-
-  <!-- MAIN -->
-
-  <main class="dash-main">
-
-
-    <!-- WELCOME -->
-
-    <section class="welcome">
-
-      <h2 id="welcomeTitle">
-        Welcome back, Learner! 👋
-      </h2>
-
-      <p>
-        Continue your learning journey —
-        Learn. Grow. Succeed.
-      </p>
-
-    </section>
-
-
-    <!-- MY COURSES -->
-
-    <section id="courses">
-
-      <h3 class="section-title">
-        My Courses
-      </h3>
-
-
-      <div class="courses">
-
-
-        <!-- FOUNDATIONS -->
-
-        <article class="course-card">
-
-          <span class="course-tag">
-            Kids & Beginners
-          </span>
-
-          <h4 class="course-title">
-            Foundations of Learning
-          </h4>
-
-          <p class="course-desc">
-            Basic learning program for kids
-            and beginners.
-          </p>
-
-          <button
-            type="button"
-            class="course-button"
-            id="foundationButton"
+        <a href="dashboard.html">
+          <img
+            src="img/logo.png"
+            alt="HAND IN HAND ACADEMY"
           >
-            Select Course
-          </button>
-
-        </article>
-
-
-        <!-- ACADEMIC -->
-
-        <article class="course-card">
-
-          <span class="course-tag">
-            LKG to 10th
-          </span>
-
-          <h4 class="course-title">
-            Academic Learning
-          </h4>
-
-          <p class="course-desc">
-            Select your class and apply
-            for academic learning.
-          </p>
-
-          <button
-            type="button"
-            class="course-button"
-            id="academicButton"
-          >
-            Select Class
-          </button>
-
-        </article>
-
-
-        <!-- HIGHER SECONDARY -->
-
-        <article class="course-card">
-
-          <span class="course-tag">
-            Plus One & Plus Two • 11th & 12th
-          </span>
-
-          <h4 class="course-title">
-            Higher Secondary
-          </h4>
-
-          <p class="course-desc">
-            Focused coaching for Plus One &
-            Plus Two, covering the complete syllabus.
-          </p>
-
-          <button
-            type="button"
-            class="course-button"
-            id="plusTwoButton"
-          >
-            Select Course
-          </button>
-
-        </article>
-
-      </div>
-
-    </section>
-
-
-    <!-- FOUNDATIONS -->
-
-    <section
-      id="foundationList"
-      class="course-section hidden"
-    >
-
-      <div class="section-header">
-
-        <h3 class="section-title">
-          Foundations of Learning
-        </h3>
-
-        <button
-          type="button"
-          class="close-section-btn"
-          data-close="foundationList"
-        >
-          ✕ Close
-        </button>
-
-      </div>
-
-
-      <p class="selection-text">
-        Select your course
-      </p>
-
-
-      <div class="course-list">
-
-        <button
-          type="button"
-          class="foundation-course-button"
-        >
-          Malayalam
-        </button>
-
-        <button
-          type="button"
-          class="foundation-course-button"
-        >
-          English
-        </button>
-
-        <button
-          type="button"
-          class="foundation-course-button"
-        >
-          Mathematics
-        </button>
-
-        <button
-          type="button"
-          class="foundation-course-button"
-        >
-          General Science
-        </button>
-
-        <button
-          type="button"
-          class="foundation-course-button"
-        >
-          അടിസ്ഥാന പാഠാവലി
-        </button>
-
-        <button
-          type="button"
-          class="foundation-course-button"
-        >
-          Hindi
-        </button>
-
-      </div>
-
-
-      <div
-        id="selectedFoundationArea"
-        class="selected-class-area hidden"
-      >
-
-        <p>
-          Selected Course:
-          <strong id="selectedFoundationName"></strong>
-        </p>
-
-        <button
-          type="button"
-          id="applyFoundationButton"
-          class="apply-button"
-        >
-          Apply
-        </button>
-
-      </div>
-
-
-      <div
-        id="successFoundationMessage"
-        class="success-message hidden"
-      >
-        ✅ Applied Successfully
-      </div>
-
-    </section>
-
-
-    <!-- ACADEMIC -->
-
-    <section
-      id="academicSelection"
-      class="course-section hidden"
-    >
-
-      <div class="section-header">
-
-        <h3 class="section-title">
-          Academic Learning - LKG to 10th
-        </h3>
-
-        <button
-          type="button"
-          class="close-section-btn"
-          data-close="academicSelection"
-        >
-          ✕ Close
-        </button>
-
-      </div>
-
-
-      <p class="selection-text">
-        Select your class
-      </p>
-
-
-      <div class="class-list">
-
-        <button type="button" class="class-button">LKG</button>
-        <button type="button" class="class-button">UKG</button>
-        <button type="button" class="class-button">1st Class</button>
-        <button type="button" class="class-button">2nd Class</button>
-        <button type="button" class="class-button">3rd Class</button>
-        <button type="button" class="class-button">4th Class</button>
-        <button type="button" class="class-button">5th Class</button>
-        <button type="button" class="class-button">6th Class</button>
-        <button type="button" class="class-button">7th Class</button>
-        <button type="button" class="class-button">8th Class</button>
-        <button type="button" class="class-button">9th Class</button>
-        <button type="button" class="class-button">10th Class</button>
-
-      </div>
-
-
-      <div
-        id="selectedClassArea"
-        class="selected-class-area hidden"
-      >
-
-        <p>
-          Selected Class:
-          <strong id="selectedClassName"></strong>
-        </p>
-
-        <button
-          type="button"
-          id="applyButton"
-          class="apply-button"
-        >
-          Apply
-        </button>
-
-      </div>
-
-
-      <div
-        id="successMessage"
-        class="success-message hidden"
-      >
-        ✅ Applied Successfully
-      </div>
-
-    </section>
-
-
-    <!-- HIGHER SECONDARY -->
-
-    <section
-      id="plusTwoList"
-      class="course-section hidden"
-    >
-
-      <div class="section-header">
-
-        <h3 class="section-title">
-          Higher Secondary - Plus One & Plus Two
-        </h3>
-
-        <button
-          type="button"
-          class="close-section-btn"
-          data-close="plusTwoList"
-        >
-          ✕ Close
-        </button>
-
-      </div>
-
-
-      <p class="selection-text">
-        Choose your stream - Select one course to apply
-      </p>
-
-
-      <div class="course-list">
-
-        <button
-          type="button"
-          class="plus-two-course-button"
-        >
-          Biology Science
-        </button>
-
-        <button
-          type="button"
-          class="plus-two-course-button"
-        >
-          Commerce
-        </button>
-
-        <button
-          type="button"
-          class="plus-two-course-button"
-        >
-          Humanities
-        </button>
-
-        <button
-          type="button"
-          class="plus-two-course-button"
-        >
-          Computer Science
-        </button>
-
-      </div>
-
-
-      <div
-        id="selectedPlusTwoArea"
-        class="selected-class-area hidden"
-      >
-
-        <p>
-          Selected Course:
-          <strong id="selectedPlusTwoName"></strong>
-        </p>
-
-        <button
-          type="button"
-          id="applyPlusTwoButton"
-          class="apply-button"
-        >
-          Apply
-        </button>
-
-      </div>
-
-
-      <div
-        id="successPlusTwoMessage"
-        class="success-message hidden"
-      >
-        ✅ Applied Successfully
-      </div>
-
-    </section>
-
-
-    <!-- CONTACT -->
-
-    <section
-      id="contact"
-      class="dashboard-contact hidden"
-      aria-labelledby="contactTitle"
-    >
-
-      <div class="contact-header">
-
-        <div class="contact-heading">
-
-          <span class="contact-label">
-            SUPPORT
-          </span>
-
-          <h3
-            id="contactTitle"
-            class="contact-title"
-          >
-            Contact Us
-          </h3>
-
-          <p class="contact-subtitle">
-            We're here to help you with your
-            learning journey.
-          </p>
-
+        </a>
+
+        <div class="sidebar-brand-text">
+          <strong>HAND IN HAND</strong>
+          <span>ACADEMY</span>
         </div>
 
-
-        <button
-          type="button"
-          id="closeContactButton"
-          class="contact-close-button"
-        >
-          ✕ Close
-        </button>
-
       </div>
 
+      <nav class="sidebar-nav">
 
-      <div class="contact-grid">
+        <a
+          href="#courses"
+          class="sidebar-link active"
+          id="coursesLink"
+        >
+          <span class="sidebar-icon">📚</span>
+          <span>My Courses</span>
+        </a>
 
+        <a
+          href="profile.html"
+          class="sidebar-link"
+        >
+          <span class="sidebar-icon">👤</span>
+          <span>Profile</span>
+        </a>
 
-        <!-- EMAIL -->
+        <a
+          href="settings.html"
+          class="sidebar-link"
+        >
+          <span class="sidebar-icon">⚙️</span>
+          <span>Settings</span>
+        </a>
 
-        <article class="contact-card">
+        <a
+          href="#contact"
+          class="sidebar-link"
+          id="contactLink"
+        >
+          <span class="sidebar-icon">✉️</span>
+          <span>Contact Us</span>
+        </a>
 
-          <div class="contact-icon">
-            ✉
-          </div>
+        <a
+          href="logout.html"
+          class="sidebar-link sidebar-logout"
+        >
+          <span class="sidebar-icon">🚪</span>
+          <span>Logout</span>
+        </a>
 
-          <div class="contact-content">
+      </nav>
 
-            <h4>
-              Email Support
-            </h4>
+      <div class="sidebar-footer">
+        <span>© 2026</span>
+        <span>HAND IN HAND ACADEMY</span>
+      </div>
 
-            <p>
-              Have a question? Send us an email.
-            </p>
-
-            <a
-              href="mailto:support@handinhandacademy.com"
-              class="contact-action"
-            >
-              support@handinhandacademy.com
-            </a>
-
-          </div>
-
-        </article>
-
-
-        <!-- PHONE -->
-
-        <article class="contact-card">
-
-          <div class="contact-icon">
-            ☎
-          </div>
-
-          <div class="contact-content">
-
-            <h4>
-              Phone Support
-            </h4>
-
-            <p>
-              Contact our academy support team.
-            </p>
-
-            <a
-              href="tel:+910000000000"
-              class="contact-action"
-            >
-              Call Support
-            </a>
-
-          </div>
-
-        </article>
+    </aside>
 
 
-        <!-- ACADEMY -->
+    <!-- =========================
+         MAIN AREA
+    ========================== -->
 
-        <article class="contact-card">
+    <main class="dashboard-main">
 
-          <div class="contact-icon">
-            🏫
-          </div>
+      <!-- TOP BAR -->
 
-          <div class="contact-content">
+      <header class="dashboard-topbar">
 
-            <h4>
-              HAND IN HAND ACADEMY
-            </h4>
+        <div class="topbar-title">
+          <span>Student Dashboard</span>
+        </div>
 
-            <p>
-              Learn. Grow. Succeed.
-            </p>
+        <a
+          href="logout.html"
+          class="topbar-logout"
+        >
+          Logout
+        </a>
 
-            <span class="contact-action">
-              Education & Learning Support
+      </header>
+
+
+      <!-- CONTENT -->
+
+      <div class="dashboard-content">
+
+        <!-- WELCOME -->
+
+        <section class="welcome-section">
+
+          <div>
+            <span class="welcome-label">
+              STUDENT PORTAL
             </span>
 
+            <h1 id="welcomeTitle">
+              Welcome back, Learner! 👋
+            </h1>
+
+            <p>
+              Continue your learning journey
+              with HAND IN HAND ACADEMY.
+            </p>
           </div>
 
-        </article>
+        </section>
 
+
+        <!-- =========================
+             COURSES
+        ========================== -->
+
+        <section
+          id="courses"
+          class="courses-section"
+        >
+
+          <div class="section-heading">
+
+            <div>
+              <span class="section-label">
+                LEARNING
+              </span>
+
+              <h2>My Courses</h2>
+
+              <p>
+                Choose a course to continue learning.
+              </p>
+            </div>
+
+          </div>
+
+
+          <div class="course-grid">
+
+            <!-- FOUNDATION -->
+
+            <article class="course-card">
+
+              <div class="course-card-icon">
+                📖
+              </div>
+
+              <div class="course-card-content">
+
+                <span class="course-tag">
+                  FOUNDATION
+                </span>
+
+                <h3>
+                  Foundations of Learning
+                </h3>
+
+                <p>
+                  Build strong basic knowledge
+                  with essential subjects.
+                </p>
+
+                <button
+                  type="button"
+                  class="course-button"
+                  id="foundationButton"
+                >
+                  View Subjects
+                </button>
+
+              </div>
+
+            </article>
+
+
+            <!-- ACADEMIC -->
+
+            <article class="course-card">
+
+              <div class="course-card-icon">
+                🎓
+              </div>
+
+              <div class="course-card-content">
+
+                <span class="course-tag">
+                  ACADEMIC
+                </span>
+
+                <h3>
+                  Academic Learning
+                </h3>
+
+                <p>
+                  School-level academic learning
+                  from LKG to 10th.
+                </p>
+
+                <button
+                  type="button"
+                  class="course-button"
+                  id="academicButton"
+                >
+                  Select Class
+                </button>
+
+              </div>
+
+            </article>
+
+
+            <!-- HIGHER SECONDARY -->
+
+            <article class="course-card">
+
+              <div class="course-card-icon">
+                🏫
+              </div>
+
+              <div class="course-card-content">
+
+                <span class="course-tag">
+                  HIGHER SECONDARY
+                </span>
+
+                <h3>
+                  Higher Secondary
+                </h3>
+
+                <p>
+                  Choose your stream and continue
+                  your higher secondary studies.
+                </p>
+
+                <button
+                  type="button"
+                  class="course-button"
+                  id="plusTwoButton"
+                >
+                  Select Stream
+                </button>
+
+              </div>
+
+            </article>
+
+          </div>
+
+
+          <!-- FOUNDATION SUBJECTS -->
+
+          <section
+            id="foundationList"
+            class="course-detail-section hidden"
+          >
+
+            <div class="detail-header">
+
+              <div>
+                <span class="section-label">
+                  FOUNDATION
+                </span>
+
+                <h3>
+                  Foundations of Learning
+                </h3>
+              </div>
+
+              <button
+                type="button"
+                class="close-section-btn"
+              >
+                ×
+              </button>
+
+            </div>
+
+            <div class="subject-grid">
+
+              <button type="button" class="subject-card">
+                Malayalam
+              </button>
+
+              <button type="button" class="subject-card">
+                English
+              </button>
+
+              <button type="button" class="subject-card">
+                Mathematics
+              </button>
+
+              <button type="button" class="subject-card">
+                General Science
+              </button>
+
+              <button type="button" class="subject-card">
+                അടിസ്ഥാന പാഠാവലി
+              </button>
+
+              <button type="button" class="subject-card">
+                Hindi
+              </button>
+
+            </div>
+
+          </section>
+
+
+          <!-- ACADEMIC CLASS SELECTION -->
+
+          <section
+            id="academicSelection"
+            class="course-detail-section hidden"
+          >
+
+            <div class="detail-header">
+
+              <div>
+                <span class="section-label">
+                  ACADEMIC
+                </span>
+
+                <h3>
+                  Select Your Class
+                </h3>
+              </div>
+
+              <button
+                type="button"
+                class="close-section-btn"
+              >
+                ×
+              </button>
+
+            </div>
+
+            <div class="class-grid">
+
+              <button type="button" class="class-card">LKG</button>
+              <button type="button" class="class-card">UKG</button>
+              <button type="button" class="class-card">1st</button>
+              <button type="button" class="class-card">2nd</button>
+              <button type="button" class="class-card">3rd</button>
+              <button type="button" class="class-card">4th</button>
+              <button type="button" class="class-card">5th</button>
+              <button type="button" class="class-card">6th</button>
+              <button type="button" class="class-card">7th</button>
+              <button type="button" class="class-card">8th</button>
+              <button type="button" class="class-card">9th</button>
+              <button type="button" class="class-card">10th</button>
+
+            </div>
+
+          </section>
+
+
+          <!-- HIGHER SECONDARY -->
+
+          <section
+            id="plusTwoList"
+            class="course-detail-section hidden"
+          >
+
+            <div class="detail-header">
+
+              <div>
+                <span class="section-label">
+                  HIGHER SECONDARY
+                </span>
+
+                <h3>
+                  Select Your Stream
+                </h3>
+              </div>
+
+              <button
+                type="button"
+                class="close-section-btn"
+              >
+                ×
+              </button>
+
+            </div>
+
+            <div class="stream-grid">
+
+              <button type="button" class="stream-card">
+                Biology Science
+              </button>
+
+              <button type="button" class="stream-card">
+                Commerce
+              </button>
+
+              <button type="button" class="stream-card">
+                Humanities
+              </button>
+
+              <button type="button" class="stream-card">
+                Computer Science
+              </button>
+
+            </div>
+
+          </section>
+
+        </section>
+
+
+        <!-- =========================
+             CONTACT US
+        ========================== -->
+
+        <section
+          id="contact"
+          class="dashboard-contact hidden"
+        >
+
+          <div class="contact-card">
+
+            <div class="contact-card-header">
+
+              <div>
+
+                <span class="section-label">
+                  SUPPORT
+                </span>
+
+                <h2 id="contactTitle">
+                  Contact Us
+                </h2>
+
+                <p>
+                  Need help? Our support team is
+                  here to assist you.
+                </p>
+
+              </div>
+
+              <button
+                type="button"
+                class="contact-close-button"
+                id="closeContactButton"
+                aria-label="Close Contact"
+              >
+                ×
+              </button>
+
+            </div>
+
+
+            <div class="contact-card-grid">
+
+              <!-- EMAIL SUPPORT -->
+
+              <a
+                href="mailto:handinhandonlineacademy@gmail.com"
+                class="contact-info-card"
+              >
+
+                <div class="contact-info-icon">
+                  ✉
+                </div>
+
+                <div>
+
+                  <span>
+                    EMAIL SUPPORT
+                  </span>
+
+                  <strong>
+                    handinhandonlineacademy@gmail.com
+                  </strong>
+
+                  <p>
+                    Send us your questions or
+                    support requests.
+                  </p>
+
+                </div>
+
+              </a>
+
+
+              <!-- PHONE SUPPORT -->
+
+              <a
+                href="tel:+919876543210"
+                class="contact-info-card"
+              >
+
+                <div class="contact-info-icon">
+                  ☎
+                </div>
+
+                <div>
+
+                  <span>
+                    PHONE SUPPORT
+                  </span>
+
+                  <strong>
+                    +91 98765 43210
+                  </strong>
+
+                  <p>
+                    Contact our support team directly.
+                  </p>
+
+                </div>
+
+              </a>
+
+
+              <!-- ACADEMY -->
+
+              <div class="contact-info-card academy-card">
+
+                <div class="contact-info-icon">
+                  🎓
+                </div>
+
+                <div>
+
+                  <span>
+                    HAND IN HAND ACADEMY
+                  </span>
+
+                  <strong>
+                    Education & Learning Support
+                  </strong>
+
+                  <p>
+                    Helping students learn,
+                    grow and achieve their goals.
+                  </p>
+
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+        </section>
 
       </div>
 
-    </section>
+    </main>
+
+  </div>
 
 
-  </main>
-
-</div>
-
-
-<script
-  src="js/dashboard.js"
-  defer
-></script>
+  <script
+    src="js/dashboard.js"
+    defer
+  ></script>
 
 </body>
 </html>
+```
