@@ -156,6 +156,57 @@ func deleteSession(sessionID string) {
 	sessionMu.Unlock()
 }
 
+func isHTTPS(r *http.Request) bool {
+	if r.TLS != nil {
+		return true
+	}
+
+	proto := strings.ToLower(
+		strings.TrimSpace(
+			r.Header.Get("X-Forwarded-Proto"),
+		),
+	)
+
+	return proto == "https"
+}
+
+func setSessionCookie(
+	w http.ResponseWriter,
+	r *http.Request,
+	sessionID string,
+) {
+	http.SetCookie(
+		w,
+		&http.Cookie{
+			Name:     "hih_session",
+			Value:    sessionID,
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   isHTTPS(r),
+			SameSite: http.SameSiteLaxMode,
+			MaxAge:   int(sessionTTL.Seconds()),
+		},
+	)
+}
+
+func clearSessionCookie(
+	w http.ResponseWriter,
+	r *http.Request,
+) {
+	http.SetCookie(
+		w,
+		&http.Cookie{
+			Name:     "hih_session",
+			Value:    "",
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   isHTTPS(r),
+			SameSite: http.SameSiteLaxMode,
+			MaxAge:   -1,
+		},
+	)
+}
+
 func requireAdminPage(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -429,6 +480,8 @@ func loginHandler(
 	var passwordHash string
 	var status string
 	var userName string
+	var userEmail string
+	var userPhone string
 
 	err := db.QueryRow(
 		ctx,
@@ -436,10 +489,12 @@ func loginHandler(
 		SELECT
 			id,
 			name,
+			email,
+			phone,
 			password_hash,
 			status
 		FROM users
-		WHERE email = $1
+		WHERE LOWER(email) = $1
 		   OR phone = $1
 		LIMIT 1
 		`,
@@ -447,6 +502,8 @@ func loginHandler(
 	).Scan(
 		&userID,
 		&userName,
+		&userEmail,
+		&userPhone,
 		&passwordHash,
 		&status,
 	)
@@ -501,17 +558,10 @@ func loginHandler(
 
 	sessionID := createSession(userID)
 
-	http.SetCookie(
+	setSessionCookie(
 		w,
-		&http.Cookie{
-			Name:     "hih_session",
-			Value:    sessionID,
-			Path:     "/",
-			HttpOnly: true,
-			Secure:   false,
-			SameSite: http.SameSiteLaxMode,
-			MaxAge:   int(sessionTTL.Seconds()),
-		},
+		r,
+		sessionID,
 	)
 
 	recordAdminNotification(
@@ -534,6 +584,12 @@ func loginHandler(
 		map[string]interface{}{
 			"message": "Login successful",
 			"user_id": userID,
+			"user": map[string]interface{}{
+				"id":    userID,
+				"name":  userName,
+				"email": userEmail,
+				"phone": userPhone,
+			},
 		},
 	)
 }
@@ -558,17 +614,9 @@ func logoutHandler(
 		deleteSession(cookie.Value)
 	}
 
-	http.SetCookie(
+	clearSessionCookie(
 		w,
-		&http.Cookie{
-			Name:     "hih_session",
-			Value:    "",
-			Path:     "/",
-			HttpOnly: true,
-			Secure:   false,
-			SameSite: http.SameSiteLaxMode,
-			MaxAge:   -1,
-		},
+		r,
 	)
 
 	w.Header().Set(
@@ -621,6 +669,70 @@ func sessionHandler(
 		return
 	}
 
+	ctx, cancel := context.WithTimeout(
+		r.Context(),
+		5*time.Second,
+	)
+
+	defer cancel()
+
+	var userName string
+	var userEmail string
+	var userPhone string
+	var status string
+
+	err = db.QueryRow(
+		ctx,
+		`
+		SELECT
+			name,
+			email,
+			phone,
+			status
+		FROM users
+		WHERE id = $1
+		LIMIT 1
+		`,
+		session.UserID,
+	).Scan(
+		&userName,
+		&userEmail,
+		&userPhone,
+		&status,
+	)
+
+	if err != nil {
+		log.Println(
+			"Session user lookup error:",
+			err,
+		)
+
+		http.Error(
+			w,
+			"Unable to load user session",
+			http.StatusInternalServerError,
+		)
+
+		return
+	}
+
+	if status != "active" {
+		deleteSession(cookie.Value)
+
+		clearSessionCookie(
+			w,
+			r,
+		)
+
+		http.Error(
+			w,
+			"User account is inactive",
+			http.StatusForbidden,
+		)
+
+		return
+	}
+
 	w.Header().Set(
 		"Content-Type",
 		"application/json",
@@ -630,6 +742,12 @@ func sessionHandler(
 		map[string]interface{}{
 			"authenticated": true,
 			"user_id":       session.UserID,
+			"user": map[string]interface{}{
+				"id":    session.UserID,
+				"name":  userName,
+				"email": userEmail,
+				"phone": userPhone,
+			},
 		},
 	)
 }
@@ -942,7 +1060,6 @@ func main() {
 		"PostgreSQL connected successfully",
 	)
 
-	// Create the users table automatically if it does not exist.
 	_, err = db.Exec(
 		context.Background(),
 		`
