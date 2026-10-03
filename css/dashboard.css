@@ -13,11 +13,12 @@ html {
 body.dashboard {
   margin: 0;
   min-height: 100vh;
+  min-height: 100dvh;
   overflow-x: hidden;
 
   background-image: url("../img/hand.jpg");
   background-size: cover;
-  background-position: center;
+  background-position: center center;
   background-repeat: no-repeat;
   background-attachment: fixed;
 }
@@ -105,10 +106,22 @@ body.dashboard {
   transform: translateX(-50%);
 
   white-space: nowrap;
+
+  max-width: calc(100% - 180px);
+
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .dashboard .dash-nav {
   margin-left: auto;
+
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+
+  position: relative;
+  z-index: 2;
 }
 
 .dashboard .dash-link {
@@ -123,9 +136,9 @@ body.dashboard {
 
 .dashboard .dash-layout {
   width: 100%;
-  max-width: 1600px;
+  max-width: none;
 
-  margin: 0 auto;
+  margin: 0;
 
   display: flex;
   align-items: stretch;
@@ -141,6 +154,7 @@ body.dashboard {
   min-width: 250px;
 
   min-height: calc(100vh - 64px);
+  min-height: calc(100dvh - 64px);
 
   padding: 24px 16px;
 
@@ -149,8 +163,10 @@ body.dashboard {
   top: 64px;
 
   height: calc(100vh - 64px);
+  height: calc(100dvh - 64px);
 
   overflow-y: auto;
+  overflow-x: hidden;
 
   background: rgba(255, 255, 255, 0.94);
 
@@ -211,11 +227,16 @@ body.dashboard {
 .dashboard .dash-main {
   flex: 1;
 
+  width: calc(100% - 250px);
+  max-width: calc(100% - 250px);
+
   min-width: 0;
 
   padding: 32px;
 
   margin-left: 250px;
+
+  overflow-x: hidden;
 }
 
 
@@ -673,7 +694,7 @@ body.dashboard {
 
 
 /* =========================================
-   TABLET
+   TABLET / SMALL LAPTOP
    ========================================= */
 
 @media (max-width: 1000px) {
@@ -684,7 +705,11 @@ body.dashboard {
   }
 
   .dashboard .dash-main {
+    width: calc(100% - 220px);
+    max-width: calc(100% - 220px);
+
     margin-left: 220px;
+
     padding: 24px;
   }
 
@@ -717,6 +742,16 @@ body.dashboard {
 
 @media (max-width: 700px) {
 
+  body.dashboard {
+    background-position: center top;
+    background-attachment: scroll;
+
+    min-height: 100dvh;
+  }
+
+
+  /* LOGO */
+
   .dashboard .logo-corner {
     width: 52px;
     height: 52px;
@@ -729,6 +764,9 @@ body.dashboard {
     border-radius: 12px;
   }
 
+
+  /* TOPBAR */
+
   .dashboard .dash-topbar {
     min-height: 58px;
 
@@ -737,6 +775,8 @@ body.dashboard {
 
   .dashboard .dash-brand {
     font-size: 15px;
+
+    max-width: calc(100% - 150px);
   }
 
   .dashboard .dash-link {
@@ -744,14 +784,22 @@ body.dashboard {
   }
 
 
+  /* LAYOUT */
+
   .dashboard .dash-layout {
     display: block;
+
+    width: 100%;
   }
 
+
+  /* SIDEBAR */
 
   .dashboard .dash-sidebar {
     width: 100%;
     min-width: 0;
+
+    min-height: 0;
 
     height: auto;
 
@@ -766,36 +814,59 @@ body.dashboard {
 
     padding: 12px;
 
+    overflow: visible;
+
     border-right: 0;
-    border-bottom: 1px solid rgba(11, 31, 58, 0.08);
+
+    border-bottom: 1px solid
+      rgba(11, 31, 58, 0.08);
+
+    box-shadow:
+      0 2px 12px rgba(11, 31, 58, 0.04);
   }
 
   .dashboard .side-title {
     grid-column: 1 / -1;
 
     margin: 8px 4px 2px;
+
+    font-size: 10px;
   }
 
   .dashboard .side-link {
+    width: 100%;
+
     margin: 0;
 
     padding: 11px 10px;
 
     text-align: center;
+
+    overflow-wrap: anywhere;
   }
 
 
+  /* MAIN */
+
   .dashboard .dash-main {
     width: 100%;
+    max-width: 100%;
 
     margin-left: 0;
 
     padding: 20px 14px;
+
+    overflow-x: hidden;
   }
 
 
+  /* WELCOME */
+
   .dashboard .welcome {
+    width: 100%;
+
     margin-bottom: 24px;
+
     padding: 20px;
   }
 
@@ -804,20 +875,27 @@ body.dashboard {
   }
 
 
+  /* COURSES */
+
   .dashboard .courses {
     grid-template-columns: 1fr;
 
     gap: 14px;
   }
 
-
   .dashboard .course-card {
+    width: 100%;
+
     padding: 18px;
   }
 
 
+  /* COURSE SECTIONS */
+
   .dashboard .course-section,
   .dashboard .dashboard-contact {
+    width: 100%;
+
     padding: 18px;
 
     margin-bottom: 22px;
@@ -837,6 +915,8 @@ body.dashboard {
   }
 
 
+  /* COURSE / CLASS BUTTONS */
+
   .dashboard .course-list,
   .dashboard .class-list {
     grid-template-columns: 1fr;
@@ -844,6 +924,8 @@ body.dashboard {
     gap: 10px;
   }
 
+
+  /* CONTACT */
 
   .dashboard .contact-header {
     flex-direction: column;
@@ -861,7 +943,6 @@ body.dashboard {
     width: 100%;
   }
 
-
   .dashboard .contact-grid {
     grid-template-columns: 1fr;
 
@@ -873,6 +954,8 @@ body.dashboard {
   }
 
   .dashboard .contact-card {
+    width: 100%;
+
     padding: 18px;
   }
 
@@ -883,40 +966,92 @@ body.dashboard {
    SMALL PHONE
    ========================================= */
 
-@media (max-width: 400px) {
+@media (max-width: 480px) {
 
   .dashboard .logo-corner {
     width: 48px;
     height: 48px;
+
+    top: 7px;
+    left: 7px;
+  }
+
+  .dashboard .dash-topbar {
+    min-height: 54px;
+
+    padding: 9px 10px 9px 64px;
   }
 
   .dashboard .dash-brand {
     font-size: 13px;
+
+    max-width: calc(100% - 125px);
   }
 
-  .dashboard .dash-topbar {
-    padding: 9px 10px 9px 66px;
+  .dashboard .dash-link {
+    font-size: 13px;
   }
+
 
   .dashboard .dash-sidebar {
-    grid-template-columns: 1fr;
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+
+    gap: 7px;
+
+    padding: 10px;
   }
+
+  .dashboard .side-title {
+    margin: 7px 3px 2px;
+
+    font-size: 9px;
+  }
+
+  .dashboard .side-link {
+    padding: 10px 7px;
+
+    font-size: 13px;
+  }
+
 
   .dashboard .dash-main {
     padding: 16px 10px;
+  }
+
+  .dashboard .welcome {
+    padding: 16px;
+
+    margin-bottom: 20px;
   }
 
   .dashboard .welcome h2 {
     font-size: 21px;
   }
 
+  .dashboard .welcome p {
+    font-size: 14px;
+  }
+
   .dashboard .course-card {
     padding: 15px;
+  }
+
+  .dashboard .course-title {
+    font-size: 18px;
+  }
+
+  .dashboard .course-desc {
+    font-size: 14px;
   }
 
   .dashboard .course-section,
   .dashboard .dashboard-contact {
     padding: 15px;
+  }
+
+  .dashboard .section-title {
+    font-size: 20px;
   }
 
   .dashboard .contact-card {
@@ -931,6 +1066,42 @@ body.dashboard {
     height: 42px;
 
     font-size: 20px;
+  }
+
+}
+
+
+/* =========================================
+   VERY SMALL PHONE
+   ========================================= */
+
+@media (max-width: 360px) {
+
+  .dashboard .dash-brand {
+    font-size: 12px;
+
+    max-width: calc(100% - 115px);
+  }
+
+  .dashboard .dash-topbar {
+    padding-left: 60px;
+    padding-right: 8px;
+  }
+
+  .dashboard .dash-link {
+    font-size: 12px;
+  }
+
+  .dashboard .dash-sidebar {
+    grid-template-columns: 1fr;
+  }
+
+  .dashboard .side-title {
+    text-align: left;
+  }
+
+  .dashboard .side-link {
+    text-align: left;
   }
 
 }
