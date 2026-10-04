@@ -23,12 +23,12 @@ import (
 // DATABASE CONNECTIONS
 // ============================================================
 
-// db = USER database connection
+// USER connection
 var db *pgxpool.Pool
 
-// adminDB = ADMIN database connection
-// This can point to the same PostgreSQL database but is a
-// separate connection pool.
+// ADMIN connection
+// Can point to the same PostgreSQL database,
+// but remains a separate connection pool.
 var adminDB *pgxpool.Pool
 
 // ============================================================
@@ -352,7 +352,10 @@ func registerHandler(
 
 	var req RegisterRequest
 
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	if err := json.NewDecoder(
+		r.Body,
+	).Decode(&req); err != nil {
+
 		http.Error(
 			w,
 			"Invalid request",
@@ -363,9 +366,11 @@ func registerHandler(
 	}
 
 	req.Name = strings.TrimSpace(req.Name)
+
 	req.Email = strings.ToLower(
 		strings.TrimSpace(req.Email),
 	)
+
 	req.Phone = strings.TrimSpace(req.Phone)
 
 	if req.Name == "" ||
@@ -392,7 +397,8 @@ func registerHandler(
 		return
 	}
 
-	passwordHash, err := hashPassword(req.Password)
+	passwordHash, err :=
+		hashPassword(req.Password)
 
 	if err != nil {
 		http.Error(
@@ -404,10 +410,11 @@ func registerHandler(
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(
-		r.Context(),
-		5*time.Second,
-	)
+	ctx, cancel :=
+		context.WithTimeout(
+			r.Context(),
+			5*time.Second,
+		)
 
 	defer cancel()
 
@@ -461,7 +468,6 @@ func registerHandler(
 		return
 	}
 
-	// Notification goes to ADMIN DB.
 	recordAdminNotification(
 		ctx,
 		&userID,
@@ -506,7 +512,10 @@ func loginHandler(
 
 	var req LoginRequest
 
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	if err := json.NewDecoder(
+		r.Body,
+	).Decode(&req); err != nil {
+
 		http.Error(
 			w,
 			"Invalid request",
@@ -530,10 +539,11 @@ func loginHandler(
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(
-		r.Context(),
-		5*time.Second,
-	)
+	ctx, cancel :=
+		context.WithTimeout(
+			r.Context(),
+			5*time.Second,
+		)
 
 	defer cancel()
 
@@ -625,7 +635,6 @@ func loginHandler(
 		sessionID,
 	)
 
-	// Notification goes to ADMIN DB.
 	recordAdminNotification(
 		ctx,
 		&userID,
@@ -674,7 +683,8 @@ func logoutHandler(
 		return
 	}
 
-	cookie, err := r.Cookie("hih_session")
+	cookie, err :=
+		r.Cookie("hih_session")
 
 	if err == nil && cookie.Value != "" {
 		deleteSession(cookie.Value)
@@ -715,9 +725,12 @@ func sessionHandler(
 		return
 	}
 
-	cookie, err := r.Cookie("hih_session")
+	cookie, err :=
+		r.Cookie("hih_session")
 
-	if err != nil || cookie.Value == "" {
+	if err != nil ||
+		cookie.Value == "" {
+
 		http.Error(
 			w,
 			"Unauthorized",
@@ -727,7 +740,10 @@ func sessionHandler(
 		return
 	}
 
-	session, ok := getSession(cookie.Value)
+	session, ok :=
+		getSession(
+			cookie.Value,
+		)
 
 	if !ok {
 		http.Error(
@@ -739,10 +755,11 @@ func sessionHandler(
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(
-		r.Context(),
-		5*time.Second,
-	)
+	ctx, cancel :=
+		context.WithTimeout(
+			r.Context(),
+			5*time.Second,
+		)
 
 	defer cancel()
 
@@ -787,7 +804,9 @@ func sessionHandler(
 	}
 
 	if status != "active" {
-		deleteSession(cookie.Value)
+		deleteSession(
+			cookie.Value,
+		)
 
 		clearSessionCookie(
 			w,
@@ -840,9 +859,12 @@ func applyCourseHandler(
 		return
 	}
 
-	cookie, err := r.Cookie("hih_session")
+	cookie, err :=
+		r.Cookie("hih_session")
 
-	if err != nil || cookie.Value == "" {
+	if err != nil ||
+		cookie.Value == "" {
+
 		http.Error(
 			w,
 			"Unauthorized",
@@ -852,7 +874,10 @@ func applyCourseHandler(
 		return
 	}
 
-	session, ok := getSession(cookie.Value)
+	session, ok :=
+		getSession(
+			cookie.Value,
+		)
 
 	if !ok {
 		http.Error(
@@ -864,15 +889,19 @@ func applyCourseHandler(
 		return
 	}
 
-	r.Body = http.MaxBytesReader(
-		w,
-		r.Body,
-		8<<10,
-	)
+	r.Body =
+		http.MaxBytesReader(
+			w,
+			r.Body,
+			8<<10,
+		)
 
 	var req CourseApplicationRequest
 
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	if err := json.NewDecoder(
+		r.Body,
+	).Decode(&req); err != nil {
+
 		http.Error(
 			w,
 			"Invalid request",
@@ -882,8 +911,15 @@ func applyCourseHandler(
 		return
 	}
 
-	req.CourseType = strings.TrimSpace(req.CourseType)
-	req.CourseName = strings.TrimSpace(req.CourseName)
+	req.CourseType =
+		strings.TrimSpace(
+			req.CourseType,
+		)
+
+	req.CourseName =
+		strings.TrimSpace(
+			req.CourseName,
+		)
 
 	if req.CourseType == "" ||
 		req.CourseName == "" {
@@ -910,10 +946,13 @@ func applyCourseHandler(
 	}
 
 	switch req.CourseType {
+
 	case "foundation",
 		"academic",
 		"plus_two":
+
 	default:
+
 		http.Error(
 			w,
 			"Invalid course type",
@@ -923,10 +962,11 @@ func applyCourseHandler(
 		return
 	}
 
-	ctx, cancel := context.WithTimeout(
-		r.Context(),
-		5*time.Second,
-	)
+	ctx, cancel :=
+		context.WithTimeout(
+			r.Context(),
+			5*time.Second,
+		)
 
 	defer cancel()
 
@@ -940,7 +980,11 @@ func applyCourseHandler(
 			course_name
 		)
 		VALUES
-		($1, $2, $3)
+		(
+			$1,
+			$2,
+			$3
+		)
 		`,
 		session.UserID,
 		req.CourseType,
@@ -948,6 +992,7 @@ func applyCourseHandler(
 	)
 
 	if err != nil {
+
 		log.Println(
 			"Course application database error:",
 			err,
@@ -957,6 +1002,7 @@ func applyCourseHandler(
 			err.Error(),
 			"course_applications_unique",
 		) {
+
 			http.Error(
 				w,
 				"Course already applied",
@@ -985,13 +1031,18 @@ func applyCourseHandler(
 		WHERE id = $1
 		`,
 		session.UserID,
-	).Scan(&studentName)
+	).Scan(
+		&studentName,
+	)
 
 	if err != nil {
 		studentName = "Student"
 	}
 
-	// Notification goes to ADMIN DB.
+	/* ========================================================
+	   ADMIN NOTIFICATION
+	======================================================== */
+
 	recordAdminNotification(
 		ctx,
 		&session.UserID,
@@ -1002,6 +1053,15 @@ func applyCourseHandler(
 			formatUserID(session.UserID)+
 			") applied for "+
 			req.CourseName+".",
+	)
+
+	/* ========================================================
+	   AUTOMATIC USER REPLY
+	======================================================== */
+
+	createCourseApplicationAutoReply(
+		ctx,
+		session.UserID,
 	)
 
 	w.Header().Set(
@@ -1025,6 +1085,7 @@ func formatUserID(id int64) string {
 }
 
 func formatFourDigits(id int64) string {
+
 	if id < 10 {
 		return "000" + int64ToString(id)
 	}
@@ -1041,23 +1102,31 @@ func formatFourDigits(id int64) string {
 }
 
 func int64ToString(value int64) string {
+
 	switch {
+
 	case value == 0:
 		return "0"
 
 	case value < 10:
-		return string(rune('0' + value))
+		return string(
+			rune('0' + value),
+		)
 
 	default:
+
 		var digits []byte
 
 		for value > 0 {
-			digit := byte(value%10) + '0'
 
-			digits = append(
-				[]byte{digit},
-				digits...,
-			)
+			digit :=
+				byte(value%10) + '0'
+
+			digits =
+				append(
+					[]byte{digit},
+					digits...,
+				)
 
 			value /= 10
 		}
@@ -1073,11 +1142,13 @@ func int64ToString(value int64) string {
 func securityHeaders(
 	next http.Handler,
 ) http.Handler {
+
 	return http.HandlerFunc(
 		func(
 			w http.ResponseWriter,
 			r *http.Request,
 		) {
+
 			w.Header().Set(
 				"X-Content-Type-Options",
 				"nosniff",
@@ -1104,7 +1175,9 @@ func sitemapHandler(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
+
 	if r.Method != http.MethodGet {
+
 		http.Error(
 			w,
 			"Method not allowed",
@@ -1119,15 +1192,22 @@ func sitemapHandler(
 		"application/xml; charset=utf-8",
 	)
 
-	w.WriteHeader(http.StatusOK)
+	w.WriteHeader(
+		http.StatusOK,
+	)
 
-	_, _ = w.Write([]byte(`<?xml version="1.0" encoding="UTF-8"?>
+	_, _ =
+		w.Write(
+			[]byte(
+				`<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://hand-acadamy.onrender.com/</loc>
     <lastmod>2026-10-03</lastmod>
   </url>
-</urlset>`))
+</urlset>`,
+			),
+		)
 }
 
 // ============================================================
@@ -1138,19 +1218,25 @@ func connectDatabase(
 	dsn string,
 	name string,
 ) *pgxpool.Pool {
-	pool, err := pgxpool.New(
-		context.Background(),
-		dsn,
-	)
+
+	pool, err :=
+		pgxpool.New(
+			context.Background(),
+			dsn,
+		)
 
 	if err != nil {
+
 		log.Fatal(
 			name+" database connection failed:",
 			err,
 		)
 	}
 
-	if err := pool.Ping(context.Background()); err != nil {
+	if err := pool.Ping(
+		context.Background(),
+	); err != nil {
+
 		pool.Close()
 
 		log.Fatal(
@@ -1173,15 +1259,23 @@ func connectDatabase(
 func main() {
 
 	/* =========================================
-	   USER DATABASE URL
+	   USER DATABASE
 	========================================= */
 
-	userDSN := os.Getenv("DATABASE_URL")
+	userDSN :=
+		os.Getenv(
+			"DATABASE_URL",
+		)
 
 	if userDSN == "" {
-		dbPassword := os.Getenv("DB_PASSWORD")
+
+		dbPassword :=
+			os.Getenv(
+				"DB_PASSWORD",
+			)
 
 		if dbPassword == "" {
+
 			log.Fatal(
 				"DATABASE_URL or DB_PASSWORD environment variable is required",
 			)
@@ -1194,19 +1288,16 @@ func main() {
 	}
 
 	/* =========================================
-	   ADMIN DATABASE URL
-
-	   Use ADMIN_DATABASE_URL if supplied.
-
-	   When it is not supplied, we fall back to
-	   DATABASE_URL. This gives us a separate
-	   connection pool even when both connections
-	   point to the same PostgreSQL database.
+	   ADMIN DATABASE
 	========================================= */
 
-	adminDSN := os.Getenv("ADMIN_DATABASE_URL")
+	adminDSN :=
+		os.Getenv(
+			"ADMIN_DATABASE_URL",
+		)
 
 	if adminDSN == "" {
+
 		log.Println(
 			"ADMIN_DATABASE_URL not set. Using DATABASE_URL for admin connection.",
 		)
@@ -1215,24 +1306,26 @@ func main() {
 	}
 
 	/* =========================================
-	   CREATE USER CONNECTION
+	   USER CONNECTION
 	========================================= */
 
-	db = connectDatabase(
-		userDSN,
-		"User",
-	)
+	db =
+		connectDatabase(
+			userDSN,
+			"User",
+		)
 
 	defer db.Close()
 
 	/* =========================================
-	   CREATE ADMIN CONNECTION
+	   ADMIN CONNECTION
 	========================================= */
 
-	adminDB = connectDatabase(
-		adminDSN,
-		"Admin",
-	)
+	adminDB =
+		connectDatabase(
+			adminDSN,
+			"Admin",
+		)
 
 	defer adminDB.Close()
 
@@ -1240,23 +1333,25 @@ func main() {
 	   USERS TABLE
 	========================================= */
 
-	_, err := db.Exec(
-		context.Background(),
-		`
-		CREATE TABLE IF NOT EXISTS users (
-			id BIGSERIAL PRIMARY KEY,
-			name TEXT NOT NULL,
-			email TEXT NOT NULL UNIQUE,
-			phone TEXT NOT NULL UNIQUE,
-			password_hash TEXT NOT NULL,
-			status TEXT NOT NULL DEFAULT 'active',
-			created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-		);
-		`,
-	)
+	_, err :=
+		db.Exec(
+			context.Background(),
+			`
+			CREATE TABLE IF NOT EXISTS users (
+				id BIGSERIAL PRIMARY KEY,
+				name TEXT NOT NULL,
+				email TEXT NOT NULL UNIQUE,
+				phone TEXT NOT NULL UNIQUE,
+				password_hash TEXT NOT NULL,
+				status TEXT NOT NULL DEFAULT 'active',
+				created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+				updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+			);
+			`,
+		)
 
 	if err != nil {
+
 		log.Fatal(
 			"Users table creation failed:",
 			err,
@@ -1271,14 +1366,16 @@ func main() {
 	   ADMIN SCHEMA
 	========================================= */
 
-	_, err = adminDB.Exec(
-		context.Background(),
-		`
-		CREATE SCHEMA IF NOT EXISTS admin;
-		`,
-	)
+	_, err =
+		adminDB.Exec(
+			context.Background(),
+			`
+			CREATE SCHEMA IF NOT EXISTS admin;
+			`,
+		)
 
 	if err != nil {
+
 		log.Fatal(
 			"Admin schema creation failed:",
 			err,
@@ -1290,76 +1387,96 @@ func main() {
 	)
 
 	/* =========================================
-	   ADMIN TABLES
+	   ADMIN TABLE
 	========================================= */
 
-	_, err = adminDB.Exec(
-		context.Background(),
-		`
-		CREATE TABLE IF NOT EXISTS admin.admins (
-			id BIGSERIAL PRIMARY KEY,
-			name TEXT NOT NULL,
-			email TEXT NOT NULL UNIQUE,
-			phone TEXT NOT NULL UNIQUE,
-			password_hash TEXT NOT NULL,
-			status TEXT NOT NULL DEFAULT 'active',
-			created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-		);
-		`,
-	)
+	_, err =
+		adminDB.Exec(
+			context.Background(),
+			`
+			CREATE TABLE IF NOT EXISTS admin.admins (
+				id BIGSERIAL PRIMARY KEY,
+				name TEXT NOT NULL,
+				email TEXT NOT NULL UNIQUE,
+				phone TEXT NOT NULL UNIQUE,
+				password_hash TEXT NOT NULL,
+				status TEXT NOT NULL DEFAULT 'active',
+				created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+				updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+			);
+			`,
+		)
 
 	if err != nil {
+
 		log.Fatal(
 			"Admin admins table creation failed:",
 			err,
 		)
 	}
 
-	_, err = adminDB.Exec(
-		context.Background(),
-		`
-		CREATE TABLE IF NOT EXISTS admin.teachers (
-			id BIGSERIAL PRIMARY KEY,
-			teacher_id VARCHAR(30) NOT NULL UNIQUE,
-			name TEXT NOT NULL,
-			email TEXT NULL,
-			phone TEXT NULL,
-			subject TEXT NOT NULL,
-			password_hash TEXT NOT NULL,
-			status TEXT NOT NULL DEFAULT 'active',
-			must_change_password BOOLEAN NOT NULL DEFAULT TRUE,
-			created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
-			updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-		);
-		`,
-	)
+	/* =========================================
+	   TEACHER TABLE
+	========================================= */
+
+	_, err =
+		adminDB.Exec(
+			context.Background(),
+			`
+			CREATE TABLE IF NOT EXISTS admin.teachers (
+				id BIGSERIAL PRIMARY KEY,
+				teacher_id VARCHAR(30) NOT NULL UNIQUE,
+				name TEXT NOT NULL,
+				email TEXT NULL,
+				phone TEXT NULL,
+				subject TEXT NOT NULL,
+				password_hash TEXT NOT NULL,
+				status TEXT NOT NULL DEFAULT 'active',
+				must_change_password BOOLEAN NOT NULL DEFAULT TRUE,
+				created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+				updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+			);
+			`,
+		)
 
 	if err != nil {
+
 		log.Fatal(
 			"Admin teachers table creation failed:",
 			err,
 		)
 	}
 
-	_, err = adminDB.Exec(
-		context.Background(),
-		`
-		CREATE TABLE IF NOT EXISTS admin.notifications (
-			id BIGINT
-				GENERATED BY DEFAULT AS IDENTITY
-				PRIMARY KEY,
-			user_id BIGINT NULL,
-			event_type VARCHAR(50) NOT NULL,
-			title VARCHAR(200) NOT NULL,
-			message TEXT NOT NULL,
-			is_read BOOLEAN NOT NULL DEFAULT FALSE,
-			created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
-		);
-		`,
-	)
+	/* =========================================
+	   ADMIN NOTIFICATIONS TABLE
+	========================================= */
+
+	_, err =
+		adminDB.Exec(
+			context.Background(),
+			`
+			CREATE TABLE IF NOT EXISTS admin.notifications (
+				id BIGINT
+					GENERATED BY DEFAULT AS IDENTITY
+					PRIMARY KEY,
+
+				user_id BIGINT NULL,
+
+				event_type VARCHAR(50) NOT NULL,
+
+				title VARCHAR(200) NOT NULL,
+
+				message TEXT NOT NULL,
+
+				is_read BOOLEAN NOT NULL DEFAULT FALSE,
+
+				created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+			);
+			`,
+		)
 
 	if err != nil {
+
 		log.Fatal(
 			"Admin notifications table creation failed:",
 			err,
@@ -1371,10 +1488,29 @@ func main() {
 	)
 
 	/* =========================================
+	   CHAT TABLES
+	========================================= */
+
+	if err := ensureChatTables(
+		context.Background(),
+	); err != nil {
+
+		log.Fatal(
+			"Chat tables creation failed:",
+			err,
+		)
+	}
+
+	log.Println(
+		"Chat tables ready",
+	)
+
+	/* =========================================
 	   MUX
 	========================================= */
 
-	mux := http.NewServeMux()
+	mux :=
+		http.NewServeMux()
 
 	/* =========================================
 	   USER ROUTES
@@ -1406,6 +1542,34 @@ func main() {
 	)
 
 	/* =========================================
+	   USER NOTIFICATION ROUTES
+	========================================= */
+
+	mux.HandleFunc(
+		"/user/notifications",
+		userNotificationsHandler,
+	)
+
+	mux.HandleFunc(
+		"/user/notifications/read",
+		markUserNotificationsReadHandler,
+	)
+
+	/* =========================================
+	   USER CHAT ROUTES
+	========================================= */
+
+	mux.HandleFunc(
+		"/user/chat/messages",
+		userChatMessagesHandler,
+	)
+
+	mux.HandleFunc(
+		"/user/chat/ws",
+		userChatWebSocketHandler,
+	)
+
+	/* =========================================
 	   SITEMAP
 	========================================= */
 
@@ -1415,7 +1579,7 @@ func main() {
 	)
 
 	/* =========================================
-	   ADMIN API ROUTES
+	   ADMIN API
 	========================================= */
 
 	mux.HandleFunc(
@@ -1444,7 +1608,10 @@ func main() {
 			w http.ResponseWriter,
 			r *http.Request,
 		) {
-			if r.Method == http.MethodPost {
+
+			if r.Method ==
+				http.MethodPost {
+
 				addTeacherHandler(
 					w,
 					r,
@@ -1453,7 +1620,9 @@ func main() {
 				return
 			}
 
-			if r.Method == http.MethodGet {
+			if r.Method ==
+				http.MethodGet {
+
 				getTeachersHandler(
 					w,
 					r,
@@ -1462,7 +1631,9 @@ func main() {
 				return
 			}
 
-			if r.Method == http.MethodDelete {
+			if r.Method ==
+				http.MethodDelete {
+
 				deleteTeacherHandler(
 					w,
 					r,
@@ -1500,6 +1671,25 @@ func main() {
 	)
 
 	/* =========================================
+	   ADMIN CHAT
+	========================================= */
+
+	mux.HandleFunc(
+		"/admin/chat/users",
+		adminChatUsersHandler,
+	)
+
+	mux.HandleFunc(
+		"/admin/chat/messages",
+		adminChatMessagesHandler,
+	)
+
+	mux.HandleFunc(
+		"/admin/chat/ws",
+		adminChatWebSocketHandler,
+	)
+
+	/* =========================================
 	   TEACHER ROUTES
 	========================================= */
 
@@ -1529,7 +1719,7 @@ func main() {
 	)
 
 	/* =========================================
-	   PRIVATE ADMIN LOGIN
+	   PRIVATE ADMIN ROOT
 	========================================= */
 
 	mux.HandleFunc(
@@ -1538,6 +1728,7 @@ func main() {
 			w http.ResponseWriter,
 			r *http.Request,
 		) {
+
 			http.Redirect(
 				w,
 				r,
@@ -1548,7 +1739,7 @@ func main() {
 	)
 
 	/* =========================================
-	   PRIVATE ADMIN LOGIN PAGE
+	   PRIVATE ADMIN LOGIN
 	========================================= */
 
 	mux.HandleFunc(
@@ -1557,6 +1748,7 @@ func main() {
 			w http.ResponseWriter,
 			r *http.Request,
 		) {
+
 			if r.URL.Path !=
 				privateAdminBasePath+"/" {
 
@@ -1591,6 +1783,7 @@ func main() {
 			w http.ResponseWriter,
 			r *http.Request,
 		) {
+
 			if r.URL.Path !=
 				privateAdminBasePath+"/register" {
 
@@ -1625,6 +1818,7 @@ func main() {
 			w http.ResponseWriter,
 			r *http.Request,
 		) {
+
 			if r.URL.Path !=
 				privateAdminBasePath+"/dashboard" {
 
@@ -1640,6 +1834,7 @@ func main() {
 				w,
 				r,
 			) {
+
 				return
 			}
 
@@ -1660,9 +1855,10 @@ func main() {
 	   FILE SERVER
 	========================================= */
 
-	fileServer := http.FileServer(
-		http.Dir("."),
-	)
+	fileServer :=
+		http.FileServer(
+			http.Dir("."),
+		)
 
 	/* =========================================
 	   PUBLIC FILE ROUTER
@@ -1674,15 +1870,18 @@ func main() {
 			w http.ResponseWriter,
 			r *http.Request,
 		) {
-			cleanPath := path.Clean(
-				r.URL.Path,
-			)
+
+			cleanPath :=
+				path.Clean(
+					r.URL.Path,
+				)
 
 			/* =====================================
 			   HOME
 			===================================== */
 
 			if cleanPath == "/" {
+
 				http.ServeFile(
 					w,
 					r,
@@ -1693,10 +1892,11 @@ func main() {
 			}
 
 			/* =====================================
-			   BLOCK OLD ADMIN UI
+			   BLOCK OLD ADMIN FILES
 			===================================== */
 
 			switch cleanPath {
+
 			case "/admin.html",
 				"/admin-login.html",
 				"/admin-register.html":
@@ -1710,7 +1910,7 @@ func main() {
 			}
 
 			/* =====================================
-			   CSS / JS / IMAGES
+			   CSS / JS / IMG
 			===================================== */
 
 			if strings.HasPrefix(
@@ -1735,7 +1935,7 @@ func main() {
 			}
 
 			/* =====================================
-			   PUBLIC TOP-LEVEL HTML
+			   PUBLIC HTML
 			===================================== */
 
 			if strings.HasSuffix(
@@ -1780,7 +1980,8 @@ func main() {
 	   PORT
 	========================================= */
 
-	port := os.Getenv("PORT")
+	port :=
+		os.Getenv("PORT")
 
 	if port == "" {
 		port = "8080"
@@ -1795,6 +1996,7 @@ func main() {
 		":"+port,
 		handler,
 	); err != nil {
+
 		log.Fatal(err)
 	}
 }
