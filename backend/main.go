@@ -19,7 +19,21 @@ import (
 	"golang.org/x/crypto/argon2"
 )
 
+// ============================================================
+// DATABASE CONNECTIONS
+// ============================================================
+
+// db = USER database connection
 var db *pgxpool.Pool
+
+// adminDB = ADMIN database connection
+// This can point to the same PostgreSQL database but is a
+// separate connection pool.
+var adminDB *pgxpool.Pool
+
+// ============================================================
+// USER SESSION
+// ============================================================
 
 type Session struct {
 	UserID    int64
@@ -32,14 +46,15 @@ var (
 	sessionTTL = 24 * time.Hour
 )
 
-/*
-	Private Admin UI path.
+// ============================================================
+// PRIVATE ADMIN PATH
+// ============================================================
 
-	This does NOT replace backend authentication.
-	The backend still verifies the admin session before
-	allowing access to the dashboard.
-*/
 const privateAdminBasePath = "/hih-control-84k7"
+
+// ============================================================
+// REQUEST TYPES
+// ============================================================
 
 type RegisterRequest struct {
 	Name     string `json:"name"`
@@ -57,6 +72,10 @@ type CourseApplicationRequest struct {
 	CourseType string `json:"course_type"`
 	CourseName string `json:"course_name"`
 }
+
+// ============================================================
+// PASSWORD HASH
+// ============================================================
 
 func hashPassword(password string) (string, error) {
 	salt := make([]byte, 16)
@@ -118,6 +137,10 @@ func verifyPassword(password, storedHash string) bool {
 	return result == 0
 }
 
+// ============================================================
+// USER SESSION FUNCTIONS
+// ============================================================
+
 func createSession(userID int64) string {
 	sessionID := uuid.NewString()
 
@@ -165,6 +188,10 @@ func deleteSession(sessionID string) {
 	sessionMu.Unlock()
 }
 
+// ============================================================
+// HTTPS CHECK
+// ============================================================
+
 func isHTTPS(r *http.Request) bool {
 	if r.TLS != nil {
 		return true
@@ -178,6 +205,10 @@ func isHTTPS(r *http.Request) bool {
 
 	return proto == "https"
 }
+
+// ============================================================
+// USER SESSION COOKIE
+// ============================================================
 
 func setSessionCookie(
 	w http.ResponseWriter,
@@ -216,6 +247,10 @@ func clearSessionCookie(
 	)
 }
 
+// ============================================================
+// PRIVATE ADMIN PAGE AUTH
+// ============================================================
+
 func requireAdminPage(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -248,6 +283,10 @@ func requireAdminPage(
 
 	return true
 }
+
+// ============================================================
+// CORS
+// ============================================================
 
 func corsMiddleware(
 	next http.Handler,
@@ -293,6 +332,10 @@ func corsMiddleware(
 	)
 }
 
+// ============================================================
+// USER REGISTER
+// ============================================================
+
 func registerHandler(
 	w http.ResponseWriter,
 	r *http.Request,
@@ -320,7 +363,9 @@ func registerHandler(
 	}
 
 	req.Name = strings.TrimSpace(req.Name)
-	req.Email = strings.ToLower(strings.TrimSpace(req.Email))
+	req.Email = strings.ToLower(
+		strings.TrimSpace(req.Email),
+	)
 	req.Phone = strings.TrimSpace(req.Phone)
 
 	if req.Name == "" ||
@@ -416,6 +461,7 @@ func registerHandler(
 		return
 	}
 
+	// Notification goes to ADMIN DB.
 	recordAdminNotification(
 		ctx,
 		&userID,
@@ -439,6 +485,10 @@ func registerHandler(
 		},
 	)
 }
+
+// ============================================================
+// USER LOGIN
+// ============================================================
 
 func loginHandler(
 	w http.ResponseWriter,
@@ -468,7 +518,9 @@ func loginHandler(
 
 	req.Login = strings.TrimSpace(req.Login)
 
-	if req.Login == "" || req.Password == "" {
+	if req.Login == "" ||
+		req.Password == "" {
+
 		http.Error(
 			w,
 			"Invalid login credentials",
@@ -573,6 +625,7 @@ func loginHandler(
 		sessionID,
 	)
 
+	// Notification goes to ADMIN DB.
 	recordAdminNotification(
 		ctx,
 		&userID,
@@ -602,6 +655,10 @@ func loginHandler(
 		},
 	)
 }
+
+// ============================================================
+// USER LOGOUT
+// ============================================================
 
 func logoutHandler(
 	w http.ResponseWriter,
@@ -639,6 +696,10 @@ func logoutHandler(
 		},
 	)
 }
+
+// ============================================================
+// USER SESSION
+// ============================================================
 
 func sessionHandler(
 	w http.ResponseWriter,
@@ -760,6 +821,10 @@ func sessionHandler(
 		},
 	)
 }
+
+// ============================================================
+// APPLY COURSE
+// ============================================================
 
 func applyCourseHandler(
 	w http.ResponseWriter,
@@ -926,6 +991,7 @@ func applyCourseHandler(
 		studentName = "Student"
 	}
 
+	// Notification goes to ADMIN DB.
 	recordAdminNotification(
 		ctx,
 		&session.UserID,
@@ -949,6 +1015,10 @@ func applyCourseHandler(
 		},
 	)
 }
+
+// ============================================================
+// USER ID FORMAT
+// ============================================================
 
 func formatUserID(id int64) string {
 	return "STU" + formatFourDigits(id)
@@ -996,6 +1066,10 @@ func int64ToString(value int64) string {
 	}
 }
 
+// ============================================================
+// SECURITY HEADERS
+// ============================================================
+
 func securityHeaders(
 	next http.Handler,
 ) http.Handler {
@@ -1022,9 +1096,9 @@ func securityHeaders(
 	)
 }
 
-/* =========================================
-   SITEMAP
-========================================= */
+// ============================================================
+// SITEMAP
+// ============================================================
 
 func sitemapHandler(
 	w http.ResponseWriter,
@@ -1056,10 +1130,55 @@ func sitemapHandler(
 </urlset>`))
 }
 
-func main() {
-	dsn := os.Getenv("DATABASE_URL")
+// ============================================================
+// DATABASE CONNECTION HELPER
+// ============================================================
 
-	if dsn == "" {
+func connectDatabase(
+	dsn string,
+	name string,
+) *pgxpool.Pool {
+	pool, err := pgxpool.New(
+		context.Background(),
+		dsn,
+	)
+
+	if err != nil {
+		log.Fatal(
+			name+" database connection failed:",
+			err,
+		)
+	}
+
+	if err := pool.Ping(context.Background()); err != nil {
+		pool.Close()
+
+		log.Fatal(
+			name+" database ping failed:",
+			err,
+		)
+	}
+
+	log.Println(
+		name+" PostgreSQL connection established",
+	)
+
+	return pool
+}
+
+// ============================================================
+// MAIN
+// ============================================================
+
+func main() {
+
+	/* =========================================
+	   USER DATABASE URL
+	========================================= */
+
+	userDSN := os.Getenv("DATABASE_URL")
+
+	if userDSN == "" {
 		dbPassword := os.Getenv("DB_PASSWORD")
 
 		if dbPassword == "" {
@@ -1068,42 +1187,60 @@ func main() {
 			)
 		}
 
-		dsn =
+		userDSN =
 			"postgres://postgres:" +
 				dbPassword +
 				"@localhost:5432/hand_in_handacademy"
 	}
 
-	var err error
+	/* =========================================
+	   ADMIN DATABASE URL
 
-	db, err = pgxpool.New(
-		context.Background(),
-		dsn,
+	   Use ADMIN_DATABASE_URL if supplied.
+
+	   When it is not supplied, we fall back to
+	   DATABASE_URL. This gives us a separate
+	   connection pool even when both connections
+	   point to the same PostgreSQL database.
+	========================================= */
+
+	adminDSN := os.Getenv("ADMIN_DATABASE_URL")
+
+	if adminDSN == "" {
+		log.Println(
+			"ADMIN_DATABASE_URL not set. Using DATABASE_URL for admin connection.",
+		)
+
+		adminDSN = userDSN
+	}
+
+	/* =========================================
+	   CREATE USER CONNECTION
+	========================================= */
+
+	db = connectDatabase(
+		userDSN,
+		"User",
 	)
-
-	if err != nil {
-		log.Fatal(
-			"Database connection failed:",
-			err,
-		)
-	}
-
-	if err := db.Ping(context.Background()); err != nil {
-		db.Close()
-
-		log.Fatal(
-			"Database ping failed:",
-			err,
-		)
-	}
 
 	defer db.Close()
 
-	log.Println(
-		"PostgreSQL connected successfully",
+	/* =========================================
+	   CREATE ADMIN CONNECTION
+	========================================= */
+
+	adminDB = connectDatabase(
+		adminDSN,
+		"Admin",
 	)
 
-	_, err = db.Exec(
+	defer adminDB.Close()
+
+	/* =========================================
+	   USERS TABLE
+	========================================= */
+
+	_, err := db.Exec(
 		context.Background(),
 		`
 		CREATE TABLE IF NOT EXISTS users (
@@ -1129,6 +1266,113 @@ func main() {
 	log.Println(
 		"Users table ready",
 	)
+
+	/* =========================================
+	   ADMIN SCHEMA
+	========================================= */
+
+	_, err = adminDB.Exec(
+		context.Background(),
+		`
+		CREATE SCHEMA IF NOT EXISTS admin;
+		`,
+	)
+
+	if err != nil {
+		log.Fatal(
+			"Admin schema creation failed:",
+			err,
+		)
+	}
+
+	log.Println(
+		"Admin schema ready",
+	)
+
+	/* =========================================
+	   ADMIN TABLES
+	========================================= */
+
+	_, err = adminDB.Exec(
+		context.Background(),
+		`
+		CREATE TABLE IF NOT EXISTS admin.admins (
+			id BIGSERIAL PRIMARY KEY,
+			name TEXT NOT NULL,
+			email TEXT NOT NULL UNIQUE,
+			phone TEXT NOT NULL UNIQUE,
+			password_hash TEXT NOT NULL,
+			status TEXT NOT NULL DEFAULT 'active',
+			created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+		);
+		`,
+	)
+
+	if err != nil {
+		log.Fatal(
+			"Admin admins table creation failed:",
+			err,
+		)
+	}
+
+	_, err = adminDB.Exec(
+		context.Background(),
+		`
+		CREATE TABLE IF NOT EXISTS admin.teachers (
+			id BIGSERIAL PRIMARY KEY,
+			teacher_id VARCHAR(30) NOT NULL UNIQUE,
+			name TEXT NOT NULL,
+			email TEXT NULL,
+			phone TEXT NULL,
+			subject TEXT NOT NULL,
+			password_hash TEXT NOT NULL,
+			status TEXT NOT NULL DEFAULT 'active',
+			must_change_password BOOLEAN NOT NULL DEFAULT TRUE,
+			created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+			updated_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+		);
+		`,
+	)
+
+	if err != nil {
+		log.Fatal(
+			"Admin teachers table creation failed:",
+			err,
+		)
+	}
+
+	_, err = adminDB.Exec(
+		context.Background(),
+		`
+		CREATE TABLE IF NOT EXISTS admin.notifications (
+			id BIGINT
+				GENERATED BY DEFAULT AS IDENTITY
+				PRIMARY KEY,
+			user_id BIGINT NULL,
+			event_type VARCHAR(50) NOT NULL,
+			title VARCHAR(200) NOT NULL,
+			message TEXT NOT NULL,
+			is_read BOOLEAN NOT NULL DEFAULT FALSE,
+			created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+		);
+		`,
+	)
+
+	if err != nil {
+		log.Fatal(
+			"Admin notifications table creation failed:",
+			err,
+		)
+	}
+
+	log.Println(
+		"Admin tables ready",
+	)
+
+	/* =========================================
+	   MUX
+	========================================= */
 
 	mux := http.NewServeMux()
 
@@ -1172,9 +1416,6 @@ func main() {
 
 	/* =========================================
 	   ADMIN API ROUTES
-
-	   These remain protected by admin.go.
-	   The private URL is only for the admin UI.
 	========================================= */
 
 	mux.HandleFunc(
@@ -1288,19 +1529,8 @@ func main() {
 	)
 
 	/* =========================================
-	   PRIVATE ADMIN UI
+	   PRIVATE ADMIN LOGIN
 	========================================= */
-
-	/*
-		Admin Login:
-		/hih-control-84k7/
-
-		Admin Register:
-		/hih-control-84k7/register
-
-		Admin Dashboard:
-		/hih-control-84k7/dashboard
-	*/
 
 	mux.HandleFunc(
 		privateAdminBasePath,
@@ -1316,6 +1546,10 @@ func main() {
 			)
 		},
 	)
+
+	/* =========================================
+	   PRIVATE ADMIN LOGIN PAGE
+	========================================= */
 
 	mux.HandleFunc(
 		privateAdminBasePath+"/",
@@ -1347,6 +1581,10 @@ func main() {
 		},
 	)
 
+	/* =========================================
+	   PRIVATE ADMIN REGISTER
+	========================================= */
+
 	mux.HandleFunc(
 		privateAdminBasePath+"/register",
 		func(
@@ -1376,6 +1614,10 @@ func main() {
 			)
 		},
 	)
+
+	/* =========================================
+	   PRIVATE ADMIN DASHBOARD
+	========================================= */
 
 	mux.HandleFunc(
 		privateAdminBasePath+"/dashboard",
@@ -1423,7 +1665,7 @@ func main() {
 	)
 
 	/* =========================================
-	   ROOT / PUBLIC FILE ROUTER
+	   PUBLIC FILE ROUTER
 	========================================= */
 
 	mux.HandleFunc(
@@ -1437,11 +1679,10 @@ func main() {
 			)
 
 			/* =====================================
-			   PUBLIC HOMEPAGE
+			   HOME
 			===================================== */
 
 			if cleanPath == "/" {
-
 				http.ServeFile(
 					w,
 					r,
@@ -1452,11 +1693,10 @@ func main() {
 			}
 
 			/* =====================================
-			   BLOCK OLD ADMIN UI URLs
+			   BLOCK OLD ADMIN UI
 			===================================== */
 
 			switch cleanPath {
-
 			case "/admin.html",
 				"/admin-login.html",
 				"/admin-register.html":
@@ -1470,7 +1710,7 @@ func main() {
 			}
 
 			/* =====================================
-			   PUBLIC CSS / JS / IMG
+			   CSS / JS / IMAGES
 			===================================== */
 
 			if strings.HasPrefix(
@@ -1517,10 +1757,6 @@ func main() {
 
 				return
 			}
-
-			/* =====================================
-			   EVERYTHING ELSE
-			===================================== */
 
 			http.NotFound(
 				w,
