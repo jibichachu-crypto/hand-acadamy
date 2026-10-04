@@ -1,239 +1,203 @@
 "use strict";
 
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", () => {
+    const form = document.getElementById("adminRegisterForm");
 
-    const form =
-        document.getElementById("adminRegisterForm");
+    const nameInput = document.getElementById("adminName");
+    const emailInput = document.getElementById("adminEmail");
+    const phoneInput = document.getElementById("adminPhone");
+    const passwordInput = document.getElementById("adminPassword");
+    const confirmPasswordInput =
+        document.getElementById("adminConfirmPassword");
 
-    const message =
+    const messageBox =
         document.getElementById("adminRegisterMessage");
 
+    const submitButton =
+        form ? form.querySelector(".auth-submit") : null;
 
-    function showMessage(text, isError) {
-        if (!message) {
-            return;
-        }
+    const ADMIN_LOGIN_PATH = "/hih-control-84k7/";
 
-        message.hidden = false;
-        message.textContent = text;
-
-        message.className =
-            "auth-message " +
-            (isError ? "error" : "success");
-    }
-
-
-    function clearMessage() {
-        if (!message) {
-            return;
-        }
-
-        message.hidden = true;
-        message.textContent = "";
-        message.className = "auth-message";
-    }
-
-
-    if (!form) {
+    if (!form || !nameInput || !emailInput || !phoneInput ||
+        !passwordInput || !confirmPasswordInput ||
+        !messageBox || !submitButton) {
+        console.error("Admin register form elements are missing.");
         return;
     }
 
+    function showMessage(message, type = "error") {
+        messageBox.textContent = message;
+        messageBox.hidden = false;
 
-    form.addEventListener(
-        "submit",
-        async function (event) {
+        messageBox.classList.remove("success", "error");
+        messageBox.classList.add(type);
+    }
 
-            event.preventDefault();
+    function clearMessage() {
+        messageBox.textContent = "";
+        messageBox.hidden = true;
+        messageBox.classList.remove("success", "error");
+    }
 
-            clearMessage();
+    function setLoading(isLoading) {
+        submitButton.disabled = isLoading;
 
+        if (isLoading) {
+            submitButton.dataset.originalText =
+                submitButton.textContent;
 
-            const nameInput =
-                document.getElementById("adminName");
+            submitButton.textContent = "Creating Account...";
+        } else {
+            submitButton.textContent =
+                submitButton.dataset.originalText ||
+                "Create Admin Account";
+        }
+    }
 
-            const emailInput =
-                document.getElementById("adminEmail");
+    function isValidEmail(email) {
+        return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    }
 
-            const phoneInput =
-                document.getElementById("adminPhone");
+    function isValidPhone(phone) {
+        return /^[0-9+\-\s()]{7,20}$/.test(phone);
+    }
 
-            const passwordInput =
-                document.getElementById("adminPassword");
+    function isStrongPassword(password) {
+        return (
+            password.length >= 8 &&
+            /[A-Z]/.test(password) &&
+            /[a-z]/.test(password) &&
+            /[0-9]/.test(password)
+        );
+    }
 
-            const confirmPasswordInput =
-                document.getElementById(
-                    "adminConfirmPassword"
-                );
+    form.addEventListener("submit", async (event) => {
+        event.preventDefault();
 
+        clearMessage();
 
-            const name =
-                nameInput
-                    ? nameInput.value.trim()
-                    : "";
+        const name = nameInput.value.trim();
+        const email = emailInput.value.trim();
+        const phone = phoneInput.value.trim();
+        const password = passwordInput.value;
+        const confirmPassword = confirmPasswordInput.value;
 
-            const email =
-                emailInput
-                    ? emailInput.value.trim()
-                    : "";
+        if (!name) {
+            showMessage("Please enter admin name.");
+            nameInput.focus();
+            return;
+        }
 
-            const phone =
-                phoneInput
-                    ? phoneInput.value.trim()
-                    : "";
+        if (!email) {
+            showMessage("Please enter admin email.");
+            emailInput.focus();
+            return;
+        }
 
-            const password =
-                passwordInput
-                    ? passwordInput.value
-                    : "";
+        if (!isValidEmail(email)) {
+            showMessage("Please enter a valid email address.");
+            emailInput.focus();
+            return;
+        }
 
-            const confirmPassword =
-                confirmPasswordInput
-                    ? confirmPasswordInput.value
-                    : "";
+        if (!phone) {
+            showMessage("Please enter phone number.");
+            phoneInput.focus();
+            return;
+        }
 
+        if (!isValidPhone(phone)) {
+            showMessage("Please enter a valid phone number.");
+            phoneInput.focus();
+            return;
+        }
 
-            if (
-                !name ||
-                !email ||
-                !phone ||
-                !password ||
-                !confirmPassword
-            ) {
+        if (!password) {
+            showMessage("Please enter a password.");
+            passwordInput.focus();
+            return;
+        }
 
-                showMessage(
-                    "All fields are required.",
-                    true
-                );
+        if (password.length < 8) {
+            showMessage("Password must be at least 8 characters.");
+            passwordInput.focus();
+            return;
+        }
 
-                return;
-            }
+        if (!isStrongPassword(password)) {
+            showMessage(
+                "Password must contain uppercase, lowercase and a number."
+            );
+            passwordInput.focus();
+            return;
+        }
 
+        if (password !== confirmPassword) {
+            showMessage("Passwords do not match.");
+            confirmPasswordInput.focus();
+            return;
+        }
 
-            if (password.length < 8) {
+        const payload = {
+            name: name,
+            email: email,
+            phone: phone,
+            password: password
+        };
 
-                showMessage(
-                    "Password must be at least 8 characters.",
-                    true
-                );
+        setLoading(true);
 
-                return;
-            }
+        try {
+            const response = await fetch("/admin/register", {
+                method: "POST",
+                credentials: "include",
+                cache: "no-store",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify(payload)
+            });
 
-
-            if (password !== confirmPassword) {
-
-                showMessage(
-                    "Passwords do not match.",
-                    true
-                );
-
-                return;
-            }
-
-
-            const submitButton =
-                form.querySelector(
-                    'button[type="submit"]'
-                );
-
-
-            if (submitButton) {
-                submitButton.disabled = true;
-                submitButton.textContent =
-                    "Creating...";
-            }
-
+            let data = {};
 
             try {
-
-                const response =
-                    await fetch(
-                        "/admin/register",
-                        {
-                            method: "POST",
-                            credentials: "include",
-                            cache: "no-store",
-
-                            headers: {
-                                "Content-Type":
-                                    "application/json"
-                            },
-
-                            body: JSON.stringify({
-                                name: name,
-                                email: email,
-                                phone: phone,
-                                password: password
-                            })
-                        }
-                    );
-
-
-                const responseText =
-                    await response.text();
-
-
-                let data = {};
-
-                try {
-                    data = responseText
-                        ? JSON.parse(responseText)
-                        : {};
-                } catch (error) {
-                    data = {};
-                }
-
-
-                if (!response.ok) {
-
-                    showMessage(
-                        data.error ||
-                        data.message ||
-                        responseText.trim() ||
-                        "Admin registration failed.",
-                        true
-                    );
-
-                    return;
-                }
-
-
-                showMessage(
-                    data.message ||
-                    "Admin account created successfully. Redirecting...",
-                    false
-                );
-
-
-                window.setTimeout(
-                    function () {
-
-                        window.location.replace(
-                            "/admin-login.html"
-                        );
-
-                    },
-                    800
-                );
-
-
-            } catch (error) {
-
-                showMessage(
-                    "Unable to connect to the server.",
-                    true
-                );
-
-            } finally {
-
-                if (submitButton) {
-                    submitButton.disabled = false;
-
-                    submitButton.textContent =
-                        "Create Admin Account";
-                }
+                data = await response.json();
+            } catch (jsonError) {
+                data = {};
             }
-        }
-    );
 
+            if (!response.ok) {
+                const errorMessage =
+                    data.error ||
+                    data.message ||
+                    "Admin registration failed.";
+
+                showMessage(errorMessage, "error");
+                return;
+            }
+
+            showMessage(
+                data.message ||
+                "Admin account created successfully. Redirecting...",
+                "success"
+            );
+
+            form.reset();
+
+            setTimeout(() => {
+                window.location.replace(ADMIN_LOGIN_PATH);
+            }, 1200);
+
+        } catch (error) {
+            console.error("Admin registration error:", error);
+
+            showMessage(
+                "Unable to connect to server. Please try again.",
+                "error"
+            );
+        } finally {
+            setLoading(false);
+        }
+    });
 });
