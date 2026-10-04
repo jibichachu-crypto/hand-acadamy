@@ -1,177 +1,137 @@
 "use strict";
 
-document.addEventListener("DOMContentLoaded", function () {
+document.addEventListener("DOMContentLoaded", () => {
+    const form = document.getElementById("adminLoginForm");
 
-    const form =
-        document.getElementById("adminLoginForm");
+    const loginInput = document.getElementById("adminLogin");
+    const passwordInput = document.getElementById("adminLoginPassword");
 
-    const message =
+    const messageBox =
         document.getElementById("adminLoginMessage");
 
+    const submitButton =
+        form ? form.querySelector(".auth-submit") : null;
 
-    function showMessage(text, isError) {
-        if (!message) {
-            return;
-        }
+    const ADMIN_DASHBOARD_PATH =
+        "/hih-control-84k7/dashboard";
 
-        message.hidden = false;
-        message.textContent = text;
-
-        message.className =
-            "auth-message " +
-            (isError ? "error" : "success");
-    }
-
-
-    function clearMessage() {
-        if (!message) {
-            return;
-        }
-
-        message.hidden = true;
-        message.textContent = "";
-        message.className = "auth-message";
-    }
-
-
-    if (!form) {
+    if (
+        !form ||
+        !loginInput ||
+        !passwordInput ||
+        !messageBox ||
+        !submitButton
+    ) {
+        console.error("Admin login form elements are missing.");
         return;
     }
 
+    function showMessage(message, type = "error") {
+        messageBox.textContent = message;
+        messageBox.hidden = false;
 
-    form.addEventListener(
-        "submit",
-        async function (event) {
+        messageBox.classList.remove("success", "error");
+        messageBox.classList.add(type);
+    }
 
-            event.preventDefault();
+    function clearMessage() {
+        messageBox.textContent = "";
+        messageBox.hidden = true;
 
-            clearMessage();
+        messageBox.classList.remove("success", "error");
+    }
 
+    function setLoading(isLoading) {
+        submitButton.disabled = isLoading;
 
-            const loginInput =
-                document.getElementById("adminLogin");
+        if (isLoading) {
+            submitButton.dataset.originalText =
+                submitButton.textContent;
 
-            const passwordInput =
-                document.getElementById(
-                    "adminLoginPassword"
-                );
+            submitButton.textContent = "Signing In...";
+        } else {
+            submitButton.textContent =
+                submitButton.dataset.originalText ||
+                "Admin Login";
+        }
+    }
 
+    form.addEventListener("submit", async (event) => {
+        event.preventDefault();
 
-            const login =
-                loginInput
-                    ? loginInput.value.trim()
-                    : "";
+        clearMessage();
 
-            const password =
-                passwordInput
-                    ? passwordInput.value
-                    : "";
+        const login = loginInput.value.trim();
+        const password = passwordInput.value;
 
+        if (!login) {
+            showMessage("Please enter your email or phone number.");
+            loginInput.focus();
+            return;
+        }
 
-            if (!login || !password) {
+        if (!password) {
+            showMessage("Please enter your password.");
+            passwordInput.focus();
+            return;
+        }
 
+        setLoading(true);
+
+        try {
+            const response = await fetch("/admin/login", {
+                method: "POST",
+                credentials: "include",
+                cache: "no-store",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify({
+                    login: login,
+                    password: password
+                })
+            });
+
+            let data = {};
+
+            try {
+                data = await response.json();
+            } catch (jsonError) {
+                data = {};
+            }
+
+            if (!response.ok) {
                 showMessage(
-                    "Enter email/phone and password.",
-                    true
+                    data.error ||
+                    data.message ||
+                    "Invalid admin login details.",
+                    "error"
                 );
-
                 return;
             }
 
+            showMessage(
+                data.message ||
+                "Login successful. Redirecting...",
+                "success"
+            );
 
-            const submitButton =
-                form.querySelector(
-                    'button[type="submit"]'
-                );
-
-
-            if (submitButton) {
-                submitButton.disabled = true;
-                submitButton.textContent =
-                    "Signing in...";
-            }
-
-
-            try {
-
-                const response =
-                    await fetch(
-                        "/admin/login",
-                        {
-                            method: "POST",
-                            credentials: "include",
-                            cache: "no-store",
-
-                            headers: {
-                                "Content-Type":
-                                    "application/json"
-                            },
-
-                            body: JSON.stringify({
-                                login: login,
-                                password: password
-                            })
-                        }
-                    );
-
-
-                const responseText =
-                    await response.text();
-
-
-                let data = {};
-
-                try {
-                    data = responseText
-                        ? JSON.parse(responseText)
-                        : {};
-                } catch (error) {
-                    data = {};
-                }
-
-
-                if (!response.ok) {
-
-                    showMessage(
-                        data.error ||
-                        data.message ||
-                        responseText.trim() ||
-                        "Invalid admin credentials.",
-                        true
-                    );
-
-                    return;
-                }
-
-
-                showMessage(
-                    data.message ||
-                    "Admin login successful. Redirecting...",
-                    false
-                );
-
-
+            setTimeout(() => {
                 window.location.replace(
-                    "/admin.html"
+                    ADMIN_DASHBOARD_PATH
                 );
+            }, 500);
 
+        } catch (error) {
+            console.error("Admin login error:", error);
 
-            } catch (error) {
-
-                showMessage(
-                    "Unable to connect to the server.",
-                    true
-                );
-
-            } finally {
-
-                if (submitButton) {
-                    submitButton.disabled = false;
-                    submitButton.textContent =
-                        "Admin Login";
-                }
-            }
+            showMessage(
+                "Unable to connect to server. Please try again.",
+                "error"
+            );
+        } finally {
+            setLoading(false);
         }
-    );
-
+    });
 });
