@@ -32,6 +32,15 @@ var (
 	sessionTTL = 24 * time.Hour
 )
 
+/*
+	Private Admin UI path.
+
+	This does NOT replace backend authentication.
+	The backend still verifies the admin session before
+	allowing access to the dashboard.
+*/
+const privateAdminBasePath = "/hih-control-84k7"
+
 type RegisterRequest struct {
 	Name     string `json:"name"`
 	Email    string `json:"email"`
@@ -217,7 +226,7 @@ func requireAdminPage(
 		http.Redirect(
 			w,
 			r,
-			"/admin-login.html",
+			privateAdminBasePath+"/",
 			http.StatusFound,
 		)
 
@@ -230,7 +239,7 @@ func requireAdminPage(
 		http.Redirect(
 			w,
 			r,
-			"/admin-login.html",
+			privateAdminBasePath+"/",
 			http.StatusFound,
 		)
 
@@ -1125,6 +1134,10 @@ func main() {
 
 	mux := http.NewServeMux()
 
+	/* =========================================
+	   USER ROUTES
+	========================================= */
+
 	mux.HandleFunc(
 		"/register",
 		registerHandler,
@@ -1150,10 +1163,23 @@ func main() {
 		applyCourseHandler,
 	)
 
+
+	/* =========================================
+	   SITEMAP
+	========================================= */
+
 	mux.HandleFunc(
 		"/sitemap.xml",
 		sitemapHandler,
 	)
+
+
+	/* =========================================
+	   ADMIN API ROUTES
+	   
+	   These remain protected by admin.go.
+	   The private URL is for the admin UI.
+	========================================= */
 
 	mux.HandleFunc(
 		"/admin/register",
@@ -1236,6 +1262,11 @@ func main() {
 		adminOverviewHandler,
 	)
 
+
+	/* =========================================
+	   TEACHER ROUTES
+	========================================= */
+
 	mux.HandleFunc(
 		"/teacher/login",
 		teacherLoginHandler,
@@ -1261,9 +1292,134 @@ func main() {
 		teacherProfileHandler,
 	)
 
+
+	/* =========================================
+	   PRIVATE ADMIN UI
+	========================================= */
+
+	/*
+		Example:
+
+		/hih-control-84k7/
+		    -> Admin Login
+
+		/hih-control-84k7/register
+		    -> Admin Register
+
+		/hih-control-84k7/dashboard
+		    -> Protected Admin Dashboard
+	*/
+
+	mux.HandleFunc(
+		privateAdminBasePath,
+		func(
+			w http.ResponseWriter,
+			r *http.Request,
+		) {
+			http.Redirect(
+				w,
+				r,
+				privateAdminBasePath+"/",
+				http.StatusFound,
+			)
+		},
+	)
+
+	mux.HandleFunc(
+		privateAdminBasePath+"/",
+		func(
+			w http.ResponseWriter,
+			r *http.Request,
+		) {
+			if r.URL.Path !=
+				privateAdminBasePath+"/" {
+
+				http.NotFound(
+					w,
+					r,
+				)
+
+				return
+			}
+
+			http.ServeFile(
+				w,
+				r,
+				"admin-login.html",
+			)
+		},
+	)
+
+	mux.HandleFunc(
+		privateAdminBasePath+"/register",
+		func(
+			w http.ResponseWriter,
+			r *http.Request,
+		) {
+			if r.URL.Path !=
+				privateAdminBasePath+"/register" {
+
+				http.NotFound(
+					w,
+					r,
+				)
+
+				return
+			}
+
+			http.ServeFile(
+				w,
+				r,
+				"admin-register.html",
+			)
+		},
+	)
+
+	mux.HandleFunc(
+		privateAdminBasePath+"/dashboard",
+		func(
+			w http.ResponseWriter,
+			r *http.Request,
+		) {
+			if r.URL.Path !=
+				privateAdminBasePath+"/dashboard" {
+
+				http.NotFound(
+					w,
+					r,
+				)
+
+				return
+			}
+
+			if !requireAdminPage(
+				w,
+				r,
+			) {
+				return
+			}
+
+			http.ServeFile(
+				w,
+				r,
+				"admin.html",
+			)
+		},
+	)
+
+
+	/* =========================================
+	   FILE SERVER
+	========================================= */
+
 	fileServer := http.FileServer(
 		http.Dir("."),
 	)
+
+
+	/* =========================================
+	   ROOT / PUBLIC FILE ROUTER
+	========================================= */
 
 	mux.HandleFunc(
 		"/",
@@ -1275,7 +1431,13 @@ func main() {
 				r.URL.Path,
 			)
 
+
+			/* =====================================
+			   PUBLIC HOMEPAGE
+			===================================== */
+
 			if cleanPath == "/" {
+
 				http.ServeFile(
 					w,
 					r,
@@ -1285,22 +1447,29 @@ func main() {
 				return
 			}
 
-			if cleanPath == "/admin.html" {
-				if !requireAdminPage(
-					w,
-					r,
-				) {
-					return
-				}
 
-				http.ServeFile(
+			/* =====================================
+			   BLOCK OLD ADMIN UI URLs
+			===================================== */
+
+			switch cleanPath {
+
+			case "/admin.html",
+				"/admin-login.html",
+				"/admin-register.html":
+
+				http.NotFound(
 					w,
 					r,
-					"admin.html",
 				)
 
 				return
 			}
+
+
+			/* =====================================
+			   PUBLIC CSS / JS / IMG
+			===================================== */
 
 			if strings.HasPrefix(
 				cleanPath,
@@ -1323,6 +1492,11 @@ func main() {
 				return
 			}
 
+
+			/* =====================================
+			   PUBLIC TOP-LEVEL HTML
+			===================================== */
+
 			if strings.HasSuffix(
 				cleanPath,
 				".html",
@@ -1335,13 +1509,18 @@ func main() {
 					"/",
 				) {
 
-				fileServer.ServeHTTP(
+				http.NotFound(
 					w,
 					r,
 				)
 
 				return
 			}
+
+
+			/* =====================================
+			   EVERYTHING ELSE
+			===================================== */
 
 			http.NotFound(
 				w,
@@ -1350,12 +1529,22 @@ func main() {
 		},
 	)
 
+
+	/* =========================================
+	   MIDDLEWARE
+	========================================= */
+
 	handler :=
 		corsMiddleware(
 			securityHeaders(
 				mux,
 			),
 		)
+
+
+	/* =========================================
+	   PORT
+	========================================= */
 
 	port := os.Getenv("PORT")
 
