@@ -3,10 +3,22 @@
 document.addEventListener("DOMContentLoaded", async function () {
 
     /* ============================================================
-       ADMIN SESSION
+       PRIVATE ADMIN PATH
+    ============================================================ */
+
+    const ADMIN_LOGIN_PATH =
+        "/hih-control-84k7/";
+
+    const ADMIN_DASHBOARD_PATH =
+        "/hih-control-84k7/dashboard";
+
+
+    /* ============================================================
+       ADMIN SESSION CHECK
     ============================================================ */
 
     try {
+
         const response = await fetch(
             "/admin/session",
             {
@@ -17,21 +29,34 @@ document.addEventListener("DOMContentLoaded", async function () {
         );
 
         if (!response.ok) {
-            window.location.replace("/admin-login.html");
+            window.location.replace(
+                ADMIN_LOGIN_PATH
+            );
             return;
         }
 
-        const data = await response.json().catch(function () {
-            return {};
-        });
+        const data =
+            await response.json().catch(
+                function () {
+                    return {};
+                }
+            );
 
-        if (data.authenticated === false) {
-            window.location.replace("/admin-login.html");
+        if (
+            data.authenticated === false
+        ) {
+            window.location.replace(
+                ADMIN_LOGIN_PATH
+            );
             return;
         }
 
     } catch (error) {
-        window.location.replace("/admin-login.html");
+
+        window.location.replace(
+            ADMIN_LOGIN_PATH
+        );
+
         return;
     }
 
@@ -41,46 +66,84 @@ document.addEventListener("DOMContentLoaded", async function () {
     ============================================================ */
 
     const navItems =
-        document.querySelectorAll(".nav-item");
+        document.querySelectorAll(
+            ".nav-item"
+        );
 
     const sections =
-        document.querySelectorAll(".admin-section");
+        document.querySelectorAll(
+            ".admin-section"
+        );
 
     const teacherList =
-        document.getElementById("teacherList");
+        document.getElementById(
+            "teacherList"
+        );
 
     const studentList =
-        document.getElementById("studentList");
+        document.getElementById(
+            "studentList"
+        );
 
     const applicationsList =
-        document.getElementById("applicationsList");
+        document.getElementById(
+            "applicationsList"
+        );
 
     const notificationsList =
-        document.getElementById("notificationsList");
+        document.getElementById(
+            "notificationsList"
+        );
 
     const addTeacherForm =
-        document.getElementById("addTeacherForm");
+        document.getElementById(
+            "addTeacherForm"
+        );
 
     const teacherMessage =
-        document.getElementById("teacherMessage");
+        document.getElementById(
+            "teacherMessage"
+        );
 
     const detailsModal =
-        document.getElementById("detailsModal");
+        document.getElementById(
+            "detailsModal"
+        );
 
     const detailsModalContent =
-        document.getElementById("detailsModalContent");
+        document.getElementById(
+            "detailsModalContent"
+        );
 
     const closeDetailsModal =
-        document.getElementById("closeDetailsModal");
+        document.getElementById(
+            "closeDetailsModal"
+        );
 
     const adminLogoutButton =
-        document.getElementById("adminLogoutButton");
+        document.getElementById(
+            "adminLogoutButton"
+        );
 
     const sendChatButton =
-        document.getElementById("sendChatButton");
+        document.getElementById(
+            "sendChatButton"
+        );
 
     const chatMessageInput =
-        document.getElementById("chatMessageInput");
+        document.getElementById(
+            "chatMessageInput"
+        );
+
+    const chatSearch =
+        document.getElementById(
+            "chatSearch"
+        );
+
+    const chatUserList =
+        document.getElementById(
+            "chatUserList"
+        );
 
 
     /* ============================================================
@@ -88,12 +151,28 @@ document.addEventListener("DOMContentLoaded", async function () {
     ============================================================ */
 
     function escapeHTML(value) {
+
         return String(value ?? "")
-            .replaceAll("&", "&amp;")
-            .replaceAll("<", "&lt;")
-            .replaceAll(">", "&gt;")
-            .replaceAll('"', "&quot;")
-            .replaceAll("'", "&#039;");
+            .replaceAll(
+                "&",
+                "&amp;"
+            )
+            .replaceAll(
+                "<",
+                "&lt;"
+            )
+            .replaceAll(
+                ">",
+                "&gt;"
+            )
+            .replaceAll(
+                '"',
+                "&quot;"
+            )
+            .replaceAll(
+                "'",
+                "&#039;"
+            );
     }
 
 
@@ -102,27 +181,41 @@ document.addEventListener("DOMContentLoaded", async function () {
         text,
         isError
     ) {
+
         if (!element) {
             return;
         }
 
         element.hidden = false;
-        element.textContent = text;
+
+        element.textContent =
+            text;
 
         element.className =
             "form-message " +
-            (isError ? "error" : "success");
+            (
+                isError
+                    ? "error"
+                    : "success"
+            );
     }
 
 
-    function clearMessage(element) {
+    function clearMessage(
+        element
+    ) {
+
         if (!element) {
             return;
         }
 
         element.hidden = true;
-        element.textContent = "";
-        element.className = "form-message";
+
+        element.textContent =
+            "";
+
+        element.className =
+            "form-message";
     }
 
 
@@ -130,14 +223,20 @@ document.addEventListener("DOMContentLoaded", async function () {
         url,
         options = {}
     ) {
-        const response = await fetch(
-            url,
-            {
-                credentials: "include",
-                cache: "no-store",
-                ...options
-            }
-        );
+
+        const response =
+            await fetch(
+                url,
+                {
+                    credentials:
+                        "include",
+
+                    cache:
+                        "no-store",
+
+                    ...options
+                }
+            );
 
 
         const responseText =
@@ -148,16 +247,28 @@ document.addEventListener("DOMContentLoaded", async function () {
 
 
         try {
-            data = responseText
-                ? JSON.parse(responseText)
-                : {};
+
+            data =
+                responseText
+                    ? JSON.parse(
+                        responseText
+                    )
+                    : {};
+
         } catch (error) {
+
             data = {};
         }
 
 
-        if (response.status === 401) {
-            window.location.replace("/admin-login.html");
+        if (
+            response.status === 401
+        ) {
+
+            window.location.replace(
+                ADMIN_LOGIN_PATH
+            );
+
             throw new Error(
                 "Admin session expired."
             );
@@ -165,6 +276,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
 
         if (!response.ok) {
+
             throw new Error(
                 data.error ||
                 data.message ||
@@ -179,8 +291,12 @@ document.addEventListener("DOMContentLoaded", async function () {
 
 
     function formatLabel(key) {
+
         return String(key)
-            .replaceAll("_", " ")
+            .replaceAll(
+                "_",
+                " "
+            )
             .replace(
                 /\b\w/g,
                 function (letter) {
@@ -206,6 +322,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
         sections.forEach(
             function (section) {
+
                 section.classList.toggle(
                     "active-section",
                     section.id === sectionId
@@ -216,6 +333,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
         navItems.forEach(
             function (item) {
+
                 item.classList.toggle(
                     "active",
                     item === clickedNav
@@ -224,8 +342,14 @@ document.addEventListener("DOMContentLoaded", async function () {
         );
 
 
-        if (sectionId === "addTeacherSection") {
-            clearMessage(teacherMessage);
+        if (
+            sectionId ===
+            "addTeacherSection"
+        ) {
+
+            clearMessage(
+                teacherMessage
+            );
         }
     }
 
@@ -258,11 +382,13 @@ document.addEventListener("DOMContentLoaded", async function () {
     );
 
 
-    clearMessage(teacherMessage);
+    clearMessage(
+        teacherMessage
+    );
 
 
     /* ============================================================
-       OVERVIEW
+       LOAD OVERVIEW
     ============================================================ */
 
     async function loadOverview() {
@@ -278,40 +404,54 @@ document.addEventListener("DOMContentLoaded", async function () {
             const values = {
 
                 totalStudents:
-                    data.total_students ?? 0,
+                    data.total_students ??
+                    0,
 
                 totalTeachers:
-                    data.total_teachers ?? 0,
+                    data.total_teachers ??
+                    0,
 
                 totalApplications:
-                    data.total_applications ?? 0,
+                    data.total_applications ??
+                    0,
 
                 totalNotifications:
-                    data.total_notifications ?? 0,
+                    data.total_notifications ??
+                    0,
 
                 teacherCount:
-                    data.total_teachers ?? 0,
+                    data.total_teachers ??
+                    0,
 
                 studentCount:
-                    data.total_students ?? 0,
+                    data.total_students ??
+                    0,
 
                 applicationCount:
-                    data.total_applications ?? 0,
+                    data.total_applications ??
+                    0,
 
                 notificationCount:
-                    data.total_notifications ?? 0
+                    data.total_notifications ??
+                    0
             };
 
 
-            Object.entries(values).forEach(
+            Object.entries(
+                values
+            ).forEach(
                 function ([id, value]) {
 
                     const element =
-                        document.getElementById(id);
+                        document.getElementById(
+                            id
+                        );
 
 
                     if (element) {
-                        element.textContent = value;
+
+                        element.textContent =
+                            String(value);
                     }
                 }
             );
@@ -339,7 +479,10 @@ document.addEventListener("DOMContentLoaded", async function () {
 
                 event.preventDefault();
 
-                clearMessage(teacherMessage);
+
+                clearMessage(
+                    teacherMessage
+                );
 
 
                 const nameInput =
@@ -365,7 +508,10 @@ document.addEventListener("DOMContentLoaded", async function () {
                         : "";
 
 
-                if (!name || !subject) {
+                if (
+                    !name ||
+                    !subject
+                ) {
 
                     showMessage(
                         teacherMessage,
@@ -384,8 +530,12 @@ document.addEventListener("DOMContentLoaded", async function () {
 
 
                 if (button) {
-                    button.disabled = true;
-                    button.textContent = "Adding...";
+
+                    button.disabled =
+                        true;
+
+                    button.textContent =
+                        "Adding...";
                 }
 
 
@@ -395,17 +545,22 @@ document.addEventListener("DOMContentLoaded", async function () {
                         await getJSON(
                             "/admin/teachers",
                             {
-                                method: "POST",
+                                method:
+                                    "POST",
 
                                 headers: {
                                     "Content-Type":
                                         "application/json"
                                 },
 
-                                body: JSON.stringify({
-                                    name: name,
-                                    subject: subject
-                                })
+                                body:
+                                    JSON.stringify({
+                                        name:
+                                            name,
+
+                                        subject:
+                                            subject
+                                    })
                             }
                         );
 
@@ -418,14 +573,22 @@ document.addEventListener("DOMContentLoaded", async function () {
                         "Teacher added successfully.";
 
 
-                    if (result.teacher_id) {
+                    if (
+                        result.teacher_id
+                    ) {
+
                         successText +=
                             " User ID: " +
-                            String(result.teacher_id);
+                            String(
+                                result.teacher_id
+                            );
                     }
 
 
-                    if (result.temporary_password) {
+                    if (
+                        result.temporary_password
+                    ) {
+
                         successText +=
                             " | Temporary Password: " +
                             String(
@@ -465,7 +628,10 @@ document.addEventListener("DOMContentLoaded", async function () {
                 } finally {
 
                     if (button) {
-                        button.disabled = false;
+
+                        button.disabled =
+                            false;
+
                         button.textContent =
                             "Add Teacher";
                     }
@@ -495,15 +661,21 @@ document.addEventListener("DOMContentLoaded", async function () {
 
 
             const teachers =
-                Array.isArray(data.teachers)
+                Array.isArray(
+                    data.teachers
+                )
                     ? data.teachers
                     : [];
 
 
-            teacherList.innerHTML = "";
+            teacherList.innerHTML =
+                "";
 
 
-            if (teachers.length === 0) {
+            if (
+                teachers.length ===
+                0
+            ) {
 
                 teacherList.innerHTML =
                     '<div class="empty-state">' +
@@ -518,7 +690,9 @@ document.addEventListener("DOMContentLoaded", async function () {
                 function (teacher) {
 
                     const card =
-                        document.createElement("div");
+                        document.createElement(
+                            "div"
+                        );
 
 
                     card.className =
@@ -586,7 +760,9 @@ document.addEventListener("DOMContentLoaded", async function () {
                     );
 
 
-                    teacherList.appendChild(card);
+                    teacherList.appendChild(
+                        card
+                    );
                 }
             );
 
@@ -624,15 +800,21 @@ document.addEventListener("DOMContentLoaded", async function () {
 
 
             const students =
-                Array.isArray(data.students)
+                Array.isArray(
+                    data.students
+                )
                     ? data.students
                     : [];
 
 
-            studentList.innerHTML = "";
+            studentList.innerHTML =
+                "";
 
 
-            if (students.length === 0) {
+            if (
+                students.length ===
+                0
+            ) {
 
                 studentList.innerHTML =
                     '<div class="empty-state">' +
@@ -647,7 +829,9 @@ document.addEventListener("DOMContentLoaded", async function () {
                 function (student) {
 
                     const card =
-                        document.createElement("div");
+                        document.createElement(
+                            "div"
+                        );
 
 
                     card.className =
@@ -714,7 +898,9 @@ document.addEventListener("DOMContentLoaded", async function () {
                     );
 
 
-                    studentList.appendChild(card);
+                    studentList.appendChild(
+                        card
+                    );
                 }
             );
 
@@ -733,7 +919,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
 
     /* ============================================================
-       LOAD APPLICATIONS
+       LOAD COURSE APPLICATIONS
     ============================================================ */
 
     async function loadApplications() {
@@ -759,10 +945,14 @@ document.addEventListener("DOMContentLoaded", async function () {
                     : [];
 
 
-            applicationsList.innerHTML = "";
+            applicationsList.innerHTML =
+                "";
 
 
-            if (applications.length === 0) {
+            if (
+                applications.length ===
+                0
+            ) {
 
                 applicationsList.innerHTML =
                     '<div class="empty-state">' +
@@ -777,7 +967,9 @@ document.addEventListener("DOMContentLoaded", async function () {
                 function (application) {
 
                     const card =
-                        document.createElement("div");
+                        document.createElement(
+                            "div"
+                        );
 
 
                     card.className =
@@ -846,7 +1038,9 @@ document.addEventListener("DOMContentLoaded", async function () {
                     );
 
 
-                    applicationsList.appendChild(card);
+                    applicationsList.appendChild(
+                        card
+                    );
                 }
             );
 
@@ -891,10 +1085,14 @@ document.addEventListener("DOMContentLoaded", async function () {
                     : [];
 
 
-            notificationsList.innerHTML = "";
+            notificationsList.innerHTML =
+                "";
 
 
-            if (notifications.length === 0) {
+            if (
+                notifications.length ===
+                0
+            ) {
 
                 notificationsList.innerHTML =
                     '<div class="empty-state">' +
@@ -909,7 +1107,9 @@ document.addEventListener("DOMContentLoaded", async function () {
                 function (notification) {
 
                     const card =
-                        document.createElement("div");
+                        document.createElement(
+                            "div"
+                        );
 
 
                     card.className =
@@ -920,7 +1120,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                         <div class="data-card-title">
                             ${escapeHTML(
                                 notification.title ||
-                                notification.type ||
+                                notification.event_type ||
                                 "Notification"
                             )}
                         </div>
@@ -957,7 +1157,9 @@ document.addEventListener("DOMContentLoaded", async function () {
                     );
 
 
-                    notificationsList.appendChild(card);
+                    notificationsList.appendChild(
+                        card
+                    );
                 }
             );
 
@@ -993,107 +1195,127 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
 
 
-        const hiddenKeys = new Set([
-            "password",
-            "password_hash",
-            "temporary_password"
-        ]);
+        const hiddenKeys =
+            new Set([
+                "password",
+                "password_hash",
+                "temporary_password"
+            ]);
 
 
         const removalConfig = {
 
             teacher: {
 
-                label: "Remove Teacher",
+                label:
+                    "Remove Teacher",
 
-                confirmLabel: "Confirm Remove",
+                confirmLabel:
+                    "Confirm Remove",
 
-                url: function (item) {
-                    return (
-                        "/admin/teachers?teacher_id=" +
-                        encodeURIComponent(
-                            String(
-                                item.teacher_id || ""
-                            ).trim()
-                        )
-                    );
-                },
+                url:
+                    function (item) {
 
-                refresh: async function () {
+                        return (
+                            "/admin/teachers?teacher_id=" +
+                            encodeURIComponent(
+                                String(
+                                    item.teacher_id ||
+                                    ""
+                                ).trim()
+                            )
+                        );
+                    },
 
-                    await Promise.all([
-                        loadTeachers(),
-                        loadOverview()
-                    ]);
-                }
+                refresh:
+                    async function () {
+
+                        await Promise.all([
+                            loadTeachers(),
+                            loadOverview()
+                        ]);
+                    }
             },
 
 
             student: {
 
-                label: "Remove Student",
+                label:
+                    "Remove Student",
 
-                confirmLabel: "Confirm Remove",
+                confirmLabel:
+                    "Confirm Remove",
 
-                url: function (item) {
-                    return (
-                        "/admin/students?user_id=" +
-                        encodeURIComponent(
-                            String(
-                                item.user_id || ""
-                            ).trim()
-                        )
-                    );
-                },
+                url:
+                    function (item) {
 
-                refresh: async function () {
+                        return (
+                            "/admin/students?user_id=" +
+                            encodeURIComponent(
+                                String(
+                                    item.user_id ||
+                                    ""
+                                ).trim()
+                            )
+                        );
+                    },
 
-                    await Promise.all([
-                        loadStudents(),
-                        loadApplications(),
-                        loadOverview()
-                    ]);
-                }
+                refresh:
+                    async function () {
+
+                        await Promise.all([
+                            loadStudents(),
+                            loadApplications(),
+                            loadOverview()
+                        ]);
+                    }
             },
 
 
             application: {
 
-                label: "Remove Application",
+                label:
+                    "Remove Application",
 
-                confirmLabel: "Confirm Remove",
+                confirmLabel:
+                    "Confirm Remove",
 
-                url: function (item) {
+                url:
+                    function (item) {
 
-                    return (
-                        "/admin/applications?user_id=" +
-                        encodeURIComponent(
-                            String(
-                                item.user_id || ""
-                            ).trim()
-                        ) +
-                        "&course_type=" +
-                        encodeURIComponent(
-                            String(
-                                item.course_type || ""
-                            ).trim()
-                        ) +
-                        "&course_name=" +
-                        encodeURIComponent(
-                            String(
-                                item.course_name || ""
-                            ).trim()
-                        )
-                    );
-                },
+                        return (
+                            "/admin/applications?user_id=" +
+                            encodeURIComponent(
+                                String(
+                                    item.user_id ||
+                                    ""
+                                ).trim()
+                            ) +
+                            "&course_type=" +
+                            encodeURIComponent(
+                                String(
+                                    item.course_type ||
+                                    ""
+                                ).trim()
+                            ) +
+                            "&course_name=" +
+                            encodeURIComponent(
+                                String(
+                                    item.course_name ||
+                                    ""
+                                ).trim()
+                            )
+                        );
+                    },
 
-                refresh: async function () {
+                refresh:
+                    async function () {
 
-                    await Promise.all([
-                        loadApplications(),
-                        loadOverview()
-                    ]);
-                }
+                        await Promise.all([
+                            loadApplications(),
+                            loadOverview()
+                        ]);
+                    }
             }
         };
 
@@ -1110,7 +1332,11 @@ document.addEventListener("DOMContentLoaded", async function () {
         ).forEach(
             function ([key, value]) {
 
-                if (hiddenKeys.has(key)) {
+                if (
+                    hiddenKeys.has(
+                        key
+                    )
+                ) {
                     return;
                 }
 
@@ -1144,7 +1370,9 @@ document.addEventListener("DOMContentLoaded", async function () {
 
 
         const config =
-            removalConfig[detailType];
+            removalConfig[
+                detailType
+            ];
 
 
         const canRemove =
@@ -1152,15 +1380,18 @@ document.addEventListener("DOMContentLoaded", async function () {
             !!data &&
             (
                 (
-                    detailType === "teacher" &&
+                    detailType ===
+                    "teacher" &&
                     data.teacher_id
                 ) ||
                 (
-                    detailType === "student" &&
+                    detailType ===
+                    "student" &&
                     data.user_id
                 ) ||
                 (
-                    detailType === "application" &&
+                    detailType ===
+                    "application" &&
                     data.user_id
                 )
             );
@@ -1170,7 +1401,6 @@ document.addEventListener("DOMContentLoaded", async function () {
 
             html += `
                 <div
-                    class="remove-area"
                     style="
                         margin-top:24px;
                         padding-top:18px;
@@ -1198,7 +1428,6 @@ document.addEventListener("DOMContentLoaded", async function () {
                         )}
                     </button>
 
-
                     <div
                         id="removeConfirmHint"
                         hidden
@@ -1222,7 +1451,8 @@ document.addEventListener("DOMContentLoaded", async function () {
             html;
 
 
-        detailsModal.hidden = false;
+        detailsModal.hidden =
+            false;
 
 
         const removeButton =
@@ -1264,17 +1494,20 @@ document.addEventListener("DOMContentLoaded", async function () {
                         "#991b1b";
 
 
-                    if (removeConfirmHint) {
+                    if (
+                        removeConfirmHint
+                    ) {
+
                         removeConfirmHint.hidden =
                             false;
                     }
-
 
                     return;
                 }
 
 
-                removeButton.disabled = true;
+                removeButton.disabled =
+                    true;
 
                 removeButton.textContent =
                     "Removing...";
@@ -1284,14 +1517,18 @@ document.addEventListener("DOMContentLoaded", async function () {
 
                     const result =
                         await getJSON(
-                            config.url(data),
+                            config.url(
+                                data
+                            ),
                             {
-                                method: "DELETE"
+                                method:
+                                    "DELETE"
                             }
                         );
 
 
-                    detailsModal.hidden = true;
+                    detailsModal.hidden =
+                        true;
 
 
                     await config.refresh();
@@ -1336,7 +1573,9 @@ document.addEventListener("DOMContentLoaded", async function () {
             function () {
 
                 if (detailsModal) {
-                    detailsModal.hidden = true;
+
+                    detailsModal.hidden =
+                        true;
                 }
             }
         );
@@ -1353,7 +1592,9 @@ document.addEventListener("DOMContentLoaded", async function () {
                     event.target ===
                     detailsModal
                 ) {
-                    detailsModal.hidden = true;
+
+                    detailsModal.hidden =
+                        true;
                 }
             }
         );
@@ -1364,10 +1605,15 @@ document.addEventListener("DOMContentLoaded", async function () {
         "keydown",
         function (event) {
 
-            if (event.key === "Escape") {
+            if (
+                event.key ===
+                "Escape"
+            ) {
 
                 if (detailsModal) {
-                    detailsModal.hidden = true;
+
+                    detailsModal.hidden =
+                        true;
                 }
             }
         }
@@ -1396,19 +1642,25 @@ document.addEventListener("DOMContentLoaded", async function () {
                     await fetch(
                         "/admin/logout",
                         {
-                            method: "POST",
-                            credentials: "include",
-                            cache: "no-store"
+                            method:
+                                "POST",
+
+                            credentials:
+                                "include",
+
+                            cache:
+                                "no-store"
                         }
                     );
 
                 } catch (error) {
-                    // Redirect even if logout request fails.
+
+                    // Redirect anyway.
                 }
 
 
                 window.location.replace(
-                    "/admin-login.html"
+                    ADMIN_LOGIN_PATH
                 );
             }
         );
@@ -1417,6 +1669,8 @@ document.addEventListener("DOMContentLoaded", async function () {
 
     /* ============================================================
        CHAT UI
+       
+       Actual chat backend is not connected yet.
     ============================================================ */
 
     if (
@@ -1439,8 +1693,7 @@ document.addEventListener("DOMContentLoaded", async function () {
 
                 /*
                     Chat backend is not connected yet.
-                    Keep the UI ready without pretending
-                    the message was sent.
+                    Do not pretend the message was sent.
                 */
 
                 console.log(
@@ -1448,7 +1701,9 @@ document.addEventListener("DOMContentLoaded", async function () {
                     message
                 );
 
-                chatMessageInput.value = "";
+
+                chatMessageInput.value =
+                    "";
             }
         );
 
@@ -1458,7 +1713,8 @@ document.addEventListener("DOMContentLoaded", async function () {
             function (event) {
 
                 if (
-                    event.key === "Enter" &&
+                    event.key ===
+                    "Enter" &&
                     !event.shiftKey
                 ) {
 
@@ -1472,13 +1728,62 @@ document.addEventListener("DOMContentLoaded", async function () {
 
 
     /* ============================================================
+       CHAT SEARCH UI
+    ============================================================ */
+
+    if (
+        chatSearch &&
+        chatUserList
+    ) {
+
+        chatSearch.addEventListener(
+            "input",
+            function () {
+
+                const query =
+                    chatSearch.value
+                        .trim()
+                        .toLowerCase();
+
+
+                const items =
+                    chatUserList.querySelectorAll(
+                        ".chat-user-item"
+                    );
+
+
+                items.forEach(
+                    function (item) {
+
+                        const text =
+                            item.textContent
+                                .toLowerCase();
+
+
+                        item.style.display =
+                            !query ||
+                            text.includes(query)
+                                ? ""
+                                : "none";
+                    }
+                );
+            }
+        );
+    }
+
+
+    /* ============================================================
        INITIAL LOAD
     ============================================================ */
 
     await loadOverview();
+
     await loadTeachers();
+
     await loadStudents();
+
     await loadApplications();
+
     await loadNotifications();
 
 });
