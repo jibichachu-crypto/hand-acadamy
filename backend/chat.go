@@ -15,30 +15,92 @@ import (
 	"github.com/gorilla/websocket"
 )
 
-/* ============================================================
-   CHAT DATABASE TABLE SETUP
-============================================================ */
+// ============================================================
+// CHAT CONSTANTS
+// ============================================================
 
-var (
-	chatTableMu    sync.Mutex
-	chatTablesReady bool
+const (
+	maxChatMessageLength = 2000
+	chatHistoryLimit     = 200
+
+	userChatCookieName  = "hih_session"
+	adminChatCookieName = "hih_admin_session"
 )
 
-func ensureChatTables(ctx context.Context) error {
-	chatTableMu.Lock()
-	defer chatTableMu.Unlock()
+// ============================================================
+// CHAT MESSAGE
+// ============================================================
 
-	if chatTablesReady {
-		return nil
-	}
+type ChatMessage struct {
+	ID           int64     `json:"id"`
+	SenderType   string    `json:"sender_type"`
+	SenderID     int64     `json:"sender_id"`
+	ReceiverType string    `json:"receiver_type"`
+	ReceiverID   int64     `json:"receiver_id"`
+	Message      string    `json:"message"`
+	IsRead       bool      `json:"is_read"`
+	CreatedAt    time.Time `json:"created_at"`
+}
+
+// ============================================================
+// USER CHAT REQUEST
+// ============================================================
+
+type UserChatSendRequest struct {
+	Message string `json:"message"`
+}
+
+// ============================================================
+// ADMIN CHAT REQUEST
+// ============================================================
+
+type AdminChatSendRequest struct {
+	UserID  int64  `json:"user_id"`
+	Message string `json:"message"`
+}
+
+// ============================================================
+// WEBSOCKET CLIENT
+// ============================================================
+
+type chatClient struct {
+	conn *websocket.Conn
+
+	writeMu sync.Mutex
+}
+
+// ============================================================
+// WEBSOCKET HUBS
+// ============================================================
+
+var (
+	userChatClients = make(map[int64]map[*chatClient]struct{})
+	adminChatClients = make(map[int64]map[*chatClient]struct{})
+
+	chatClientsMu sync.RWMutex
+)
+
+// ============================================================
+// WEBSOCKET UPGRADER
+// ============================================================
+
+var chatUpgrader = websocket.Upgrader{
+	ReadBufferSize:  4096,
+	WriteBufferSize: 4096,
+	HandshakeTimeout: 10 * time.Second,
+
+	CheckOrigin: chatCheckOrigin,
+}
+
+// ============================================================
+// CHAT TABLES
+// ============================================================
+
+func ensureChatTables(ctx context.Context) error {
 
 	if db == nil {
-		return fmt.Errorf("user database connection is nil")
+		return fmt.Errorf("database connection is nil")
 	}
-
-	/* ========================================================
-	   CHAT MESSAGES
-	======================================================== */
 
 	_, err := db.Exec(
 		ctx,
@@ -59,73 +121,27 @@ func ensureChatTables(ctx context.Context) error {
 			created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
 			CONSTRAINT chat_sender_type_check
-				CHECK (
-					sender_type IN ('user', 'admin', 'system')
-				),
+				CHECK (sender_type IN ('user', 'admin', 'system')),
 
 			CONSTRAINT chat_receiver_type_check
-				CHECK (
-					receiver_type IN ('user', 'admin')
-				)
-		)
-		`,
-	)
+				CHECK (receiver_type IN ('user', 'admin'))
+		);
 
-	if err != nil {
-		return err
-	}
+		CREATE INDEX IF NOT EXISTS idx_chat_sender
+			ON public.chat_messages(sender_type, sender_id);
 
-	/* ========================================================
-	   CHAT INDEXES
-	======================================================== */
+		CREATE INDEX IF NOT EXISTS idx_chat_receiver
+			ON public.chat_messages(receiver_type, receiver_id);
 
-	_, err = db.Exec(
-		ctx,
-		`
-		CREATE INDEX IF NOT EXISTS idx_chat_messages_sender
-		ON public.chat_messages(sender_type, sender_id)
-		`,
-	)
+		CREATE INDEX IF NOT EXISTS idx_chat_created_at
+			ON public.chat_messages(created_at);
 
-	if err != nil {
-		return err
-	}
-
-	_, err = db.Exec(
-		ctx,
-		`
-		CREATE INDEX IF NOT EXISTS idx_chat_messages_receiver
-		ON public.chat_messages(receiver_type, receiver_id)
-		`,
-	)
-
-	if err != nil {
-		return err
-	}
-
-	_, err = db.Exec(
-		ctx,
-		`
-		CREATE INDEX IF NOT EXISTS idx_chat_messages_created_at
-		ON public.chat_messages(created_at DESC)
-		`,
-	)
-
-	if err != nil {
-		return err
-	}
-
-	/* ========================================================
-	   USER NOTIFICATIONS
-	======================================================== */
-
-	_, err = db.Exec(
-		ctx,
-		`
 		CREATE TABLE IF NOT EXISTS public.user_notifications (
 			id BIGSERIAL PRIMARY KEY,
 
 			user_id BIGINT NOT NULL,
+
+			type VARCHAR(50) NOT NULL DEFAULT 'general',
 
 			title VARCHAR(200) NOT NULL,
 
@@ -139,110 +155,101 @@ func ensureChatTables(ctx context.Context) error {
 				FOREIGN KEY (user_id)
 				REFERENCES public.users(id)
 				ON DELETE CASCADE
-		)
-		`,
-	)
+		);
 
-	if err != nil {
-		return err
-	}
-
-	/* ========================================================
-	   USER NOTIFICATION INDEXES
-	======================================================== */
-
-	_, err = db.Exec(
-		ctx,
-		`
 		CREATE INDEX IF NOT EXISTS idx_user_notifications_user
-		ON public.user_notifications(user_id)
+			ON public.user_notifications(user_id);
+
+		CREATE INDEX IF NOT EXISTS idx_user_notifications_read
+			ON public.user_notifications(user_id, is_read);
+
+		CREATE INDEX IF NOT EXISTS idx_user_notifications_created
+			ON public.user_notifications(created_at);
 		`,
 	)
 
 	if err != nil {
-		return err
+		return fmt.Errorf("chat tables creation failed: %w", err)
 	}
-
-	_, err = db.Exec(
-		ctx,
-		`
-		CREATE INDEX IF NOT EXISTS idx_user_notifications_unread
-		ON public.user_notifications(user_id, is_read)
-		`,
-	)
-
-	if err != nil {
-		return err
-	}
-
-	chatTablesReady = true
-
-	log.Println("Chat tables ready")
 
 	return nil
 }
 
-/* ============================================================
-   CHAT MESSAGE TYPES
-============================================================ */
+// ============================================================
+// MESSAGE CLIENT WRITE
+// ============================================================
 
-type ChatMessage struct {
-	ID           int64     `json:"id"`
-	SenderType   string    `json:"sender_type"`
-	SenderID     int64     `json:"sender_id"`
-	ReceiverType string    `json:"receiver_type"`
-	ReceiverID   int64     `json:"receiver_id"`
-	Message      string    `json:"message"`
-	IsRead       bool      `json:"is_read"`
-	CreatedAt    time.Time `json:"created_at"`
-}
+func (c *chatClient) writeJSON(value interface{}) error {
 
-type UserChatSendRequest struct {
-	Message string `json:"message"`
-	AdminID int64  `json:"admin_id"`
-}
+	c.writeMu.Lock()
+	defer c.writeMu.Unlock()
 
-type AdminChatSendRequest struct {
-	UserID  int64  `json:"user_id"`
-	Message string `json:"message"`
-}
-
-/* ============================================================
-   WEBSOCKET CLIENT
-============================================================ */
-
-type chatClient struct {
-	conn *websocket.Conn
-
-	writeMu sync.Mutex
-
-	done chan struct{}
-}
-
-/* ============================================================
-   CONNECTED CLIENTS
-============================================================ */
-
-var (
-	chatClientsMu sync.RWMutex
-
-	userChatClients = make(
-		map[int64]map[*chatClient]struct{},
+	_ = c.conn.SetWriteDeadline(
+		time.Now().Add(10 * time.Second),
 	)
 
-	adminChatClients = make(
-		map[int64]map[*chatClient]struct{},
-	)
-)
+	return c.conn.WriteJSON(value)
+}
 
-/* ============================================================
-   REGISTER USER CLIENT
-============================================================ */
+// ============================================================
+// PING LOOP
+// ============================================================
+
+func (c *chatClient) pingLoop() {
+
+	ticker := time.NewTicker(25 * time.Second)
+	defer ticker.Stop()
+
+	for range ticker.C {
+
+		_ = c.conn.SetWriteDeadline(
+			time.Now().Add(10 * time.Second),
+		)
+
+		err := c.conn.WriteControl(
+			websocket.PingMessage,
+			nil,
+			time.Now().Add(10*time.Second),
+		)
+
+		if err != nil {
+			return
+		}
+	}
+}
+
+// ============================================================
+// ORIGIN CHECK
+// ============================================================
+
+func chatCheckOrigin(r *http.Request) bool {
+
+	origin := strings.TrimSpace(
+		r.Header.Get("Origin"),
+	)
+
+	if origin == "" {
+		return true
+	}
+
+	parsed, err := url.Parse(origin)
+
+	if err != nil {
+		return false
+	}
+
+	return parsed.Host == r.Host
+}
+
+// ============================================================
+// REGISTER USER CLIENT
+// ============================================================
 
 func registerUserChatClient(
 	userID int64,
 	client *chatClient,
 ) {
+
 	chatClientsMu.Lock()
 	defer chatClientsMu.Unlock()
 
@@ -254,45 +261,40 @@ func registerUserChatClient(
 	userChatClients[userID][client] = struct{}{}
 }
 
-/* ============================================================
-   UNREGISTER USER CLIENT
-============================================================ */
+// ============================================================
+// UNREGISTER USER CLIENT
+// ============================================================
 
 func unregisterUserChatClient(
 	userID int64,
 	client *chatClient,
 ) {
+
 	chatClientsMu.Lock()
 	defer chatClientsMu.Unlock()
 
-	clients :=
-		userChatClients[userID]
+	clients := userChatClients[userID]
 
 	if clients == nil {
 		return
 	}
 
-	delete(
-		clients,
-		client,
-	)
+	delete(clients, client)
 
 	if len(clients) == 0 {
-		delete(
-			userChatClients,
-			userID,
-		)
+		delete(userChatClients, userID)
 	}
 }
 
-/* ============================================================
-   REGISTER ADMIN CLIENT
-============================================================ */
+// ============================================================
+// REGISTER ADMIN CLIENT
+// ============================================================
 
 func registerAdminChatClient(
 	adminID int64,
 	client *chatClient,
 ) {
+
 	chatClientsMu.Lock()
 	defer chatClientsMu.Unlock()
 
@@ -304,209 +306,185 @@ func registerAdminChatClient(
 	adminChatClients[adminID][client] = struct{}{}
 }
 
-/* ============================================================
-   UNREGISTER ADMIN CLIENT
-============================================================ */
+// ============================================================
+// UNREGISTER ADMIN CLIENT
+// ============================================================
 
 func unregisterAdminChatClient(
 	adminID int64,
 	client *chatClient,
 ) {
+
 	chatClientsMu.Lock()
 	defer chatClientsMu.Unlock()
 
-	clients :=
-		adminChatClients[adminID]
+	clients := adminChatClients[adminID]
 
 	if clients == nil {
 		return
 	}
 
-	delete(
-		clients,
-		client,
-	)
+	delete(clients, client)
 
 	if len(clients) == 0 {
-		delete(
-			adminChatClients,
-			adminID,
-		)
+		delete(adminChatClients, adminID)
 	}
 }
 
-/* ============================================================
-   CLIENT WRITE
-============================================================ */
-
-func (client *chatClient) writeJSON(
-	value interface{},
-) error {
-	client.writeMu.Lock()
-	defer client.writeMu.Unlock()
-
-	return client.conn.WriteJSON(value)
-}
-
-/* ============================================================
-   CLIENT PING LOOP
-============================================================ */
-
-func (client *chatClient) pingLoop() {
-	ticker :=
-		time.NewTicker(25 * time.Second)
-
-	defer ticker.Stop()
-
-	for {
-		select {
-
-		case <-ticker.C:
-
-			_ = client.conn.WriteControl(
-				websocket.PingMessage,
-				[]byte("ping"),
-				time.Now().Add(5*time.Second),
-			)
-
-		case <-client.done:
-
-			return
-		}
-	}
-}
-
-/* ============================================================
-   BROADCAST TO USER
-============================================================ */
+// ============================================================
+// BROADCAST TO USER
+// ============================================================
 
 func broadcastToUser(
 	userID int64,
 	message ChatMessage,
 ) {
-	chatClientsMu.RLock()
 
-	clientsMap := userChatClients[userID]
+	chatClientsMu.RLock()
 
 	clients := make(
 		[]*chatClient,
 		0,
-		len(clientsMap),
+		len(userChatClients[userID]),
 	)
 
-	for client := range clientsMap {
-		clients = append(
-			clients,
-			client,
-		)
+	for client := range userChatClients[userID] {
+		clients = append(clients, client)
 	}
 
 	chatClientsMu.RUnlock()
 
+	// IMPORTANT:
+	// Frontend expects:
+	// {
+	//   "type": "message",
+	//   "message": { ... }
+	// }
+
 	for _, client := range clients {
+
 		if err := client.writeJSON(
-			message,
+			map[string]interface{}{
+				"type":    "message",
+				"message": message,
+			},
 		); err != nil {
+
 			_ = client.conn.Close()
 		}
 	}
 }
 
-/* ============================================================
-   BROADCAST TO ADMIN
-============================================================ */
+// ============================================================
+// BROADCAST TO ADMIN
+// ============================================================
 
 func broadcastToAdmin(
 	adminID int64,
 	message ChatMessage,
 ) {
-	chatClientsMu.RLock()
 
-	clientsMap := adminChatClients[adminID]
+	chatClientsMu.RLock()
 
 	clients := make(
 		[]*chatClient,
 		0,
-		len(clientsMap),
+		len(adminChatClients[adminID]),
 	)
 
-	for client := range clientsMap {
-		clients = append(
-			clients,
-			client,
-		)
+	for client := range adminChatClients[adminID] {
+		clients = append(clients, client)
 	}
 
 	chatClientsMu.RUnlock()
 
+	// IMPORTANT:
+	// Frontend expects:
+	// {
+	//   "type": "message",
+	//   "message": { ... }
+	// }
+
 	for _, client := range clients {
+
 		if err := client.writeJSON(
-			message,
+			map[string]interface{}{
+				"type":    "message",
+				"message": message,
+			},
 		); err != nil {
+
 			_ = client.conn.Close()
 		}
 	}
 }
 
-/* ============================================================
-   BROADCAST MESSAGE
-============================================================ */
+// ============================================================
+// BROADCAST MESSAGE
+// ============================================================
 
 func broadcastChatMessage(
 	message ChatMessage,
 ) {
-	switch message.SenderType {
 
-	case "user":
+	if message.ReceiverType == "user" {
 
 		broadcastToUser(
-			message.SenderID,
+			message.ReceiverID,
 			message,
 		)
 
-		if message.ReceiverType == "admin" {
+		return
+	}
+
+	if message.ReceiverType == "admin" {
+
+		if message.ReceiverID > 0 {
+
 			broadcastToAdmin(
 				message.ReceiverID,
 				message,
 			)
+
+			return
 		}
 
-	case "admin":
+		// Receiver ID 0 = all admins
 
-		broadcastToAdmin(
-			message.SenderID,
-			message,
+		chatClientsMu.RLock()
+
+		adminIDs := make(
+			[]int64,
+			0,
+			len(adminChatClients),
 		)
 
-		if message.ReceiverType == "user" {
-			broadcastToUser(
-				message.ReceiverID,
-				message,
-			)
+		for adminID := range adminChatClients {
+			adminIDs = append(adminIDs, adminID)
 		}
 
-	case "system":
+		chatClientsMu.RUnlock()
 
-		if message.ReceiverType == "user" {
-			broadcastToUser(
-				message.ReceiverID,
+		for _, adminID := range adminIDs {
+
+			broadcastToAdmin(
+				adminID,
 				message,
 			)
 		}
 	}
 }
 
-/* ============================================================
-   ACTIVE ADMIN
-============================================================ */
+// ============================================================
+// ACTIVE ADMIN ID
+// ============================================================
 
 func getActiveAdminID(
 	ctx context.Context,
-) (int64, error) {
+) int64 {
+
 	if adminDB == nil {
-		return 0, fmt.Errorf(
-			"admin database connection is nil",
-		)
+		return 0
 	}
 
 	var adminID int64
@@ -516,40 +494,30 @@ func getActiveAdminID(
 		`
 		SELECT id
 		FROM admin.admins
-		WHERE status = 'active'
-		ORDER BY id
+		ORDER BY id ASC
 		LIMIT 1
 		`,
 	).Scan(&adminID)
 
 	if err != nil {
-		return 0, err
+		return 0
 	}
 
-	return adminID, nil
+	return adminID
 }
 
-/* ============================================================
-   SAVE CHAT MESSAGE
-============================================================ */
+// ============================================================
+// SAVE CHAT MESSAGE
+// ============================================================
 
 func saveChatMessage(
 	ctx context.Context,
-
 	senderType string,
 	senderID int64,
-
 	receiverType string,
 	receiverID int64,
-
 	message string,
 ) (ChatMessage, error) {
-
-	if err := ensureChatTables(
-		ctx,
-	); err != nil {
-		return ChatMessage{}, err
-	}
 
 	message = strings.TrimSpace(message)
 
@@ -558,11 +526,9 @@ func saveChatMessage(
 			fmt.Errorf("message is empty")
 	}
 
-	if len(message) > 2000 {
+	if len(message) > maxChatMessageLength {
 		return ChatMessage{},
-			fmt.Errorf(
-				"message is too long",
-			)
+			fmt.Errorf("message is too long")
 	}
 
 	var result ChatMessage
@@ -613,49 +579,84 @@ func saveChatMessage(
 	)
 
 	if err != nil {
-		return ChatMessage{}, err
+		return ChatMessage{},
+			fmt.Errorf("save chat message failed: %w", err)
 	}
 
 	return result, nil
 }
 
-/* ============================================================
-   USER CHAT MESSAGE API
-============================================================ */
+// ============================================================
+// USER SESSION FROM REQUEST
+// ============================================================
+
+func getUserChatSession(
+	r *http.Request,
+) (Session, bool) {
+
+	cookie, err := r.Cookie(
+		userChatCookieName,
+	)
+
+	if err != nil ||
+		cookie.Value == "" {
+
+		return Session{}, false
+	}
+
+	session, ok := getSession(
+		cookie.Value,
+	)
+
+	if !ok {
+		return Session{}, false
+	}
+
+	return session, true
+}
+
+// ============================================================
+// ADMIN SESSION FROM REQUEST
+// ============================================================
+
+func getAdminChatSession(
+	r *http.Request,
+) (AdminSession, bool) {
+
+	cookie, err := r.Cookie(
+		adminChatCookieName,
+	)
+
+	if err != nil ||
+		cookie.Value == "" {
+
+		return AdminSession{}, false
+	}
+
+	session, ok := getAdminSession(
+		cookie.Value,
+	)
+
+	if !ok {
+		return AdminSession{}, false
+	}
+
+	return session, true
+}
+
+// ============================================================
+// USER CHAT MESSAGES
+// ============================================================
 
 func userChatMessagesHandler(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
-	if r.Method != http.MethodGet &&
-		r.Method != http.MethodPost {
 
-		http.Error(
-			w,
-			"Method not allowed",
-			http.StatusMethodNotAllowed,
-		)
-
-		return
-	}
-
-	cookie, err :=
-		r.Cookie("hih_session")
-
-	if err != nil || cookie.Value == "" {
-		http.Error(
-			w,
-			"Unauthorized",
-			http.StatusUnauthorized,
-		)
-
-		return
-	}
-
-	session, ok :=
-		getSession(cookie.Value)
+	session, ok := getUserChatSession(r)
 
 	if !ok {
+
 		http.Error(
 			w,
 			"Unauthorized",
@@ -665,351 +666,278 @@ func userChatMessagesHandler(
 		return
 	}
 
-	ctx, cancel :=
-		context.WithTimeout(
-			r.Context(),
-			5*time.Second,
-		)
+	ctx, cancel := context.WithTimeout(
+		r.Context(),
+		5*time.Second,
+	)
 
 	defer cancel()
 
-	if r.Method == http.MethodGet {
-		getUserChatMessages(
-			w,
+	switch r.Method {
+
+	case http.MethodGet:
+
+		rows, err := db.Query(
 			ctx,
+			`
+			SELECT
+				id,
+				sender_type,
+				sender_id,
+				receiver_type,
+				receiver_id,
+				message,
+				is_read,
+				created_at
+			FROM public.chat_messages
+			WHERE
+				(
+					sender_type = 'user'
+					AND sender_id = $1
+				)
+				OR
+				(
+					receiver_type = 'user'
+					AND receiver_id = $1
+				)
+			ORDER BY id ASC
+			LIMIT $2
+			`,
 			session.UserID,
+			chatHistoryLimit,
 		)
-
-		return
-	}
-
-	sendUserChatMessage(
-		w,
-		ctx,
-		session.UserID,
-		r,
-	)
-}
-
-/* ============================================================
-   GET USER CHAT HISTORY
-============================================================ */
-
-func getUserChatMessages(
-	w http.ResponseWriter,
-	ctx context.Context,
-	userID int64,
-) {
-	if err := ensureChatTables(
-		ctx,
-	); err != nil {
-
-		log.Println(
-			"Chat table error:",
-			err,
-		)
-
-		http.Error(
-			w,
-			"Chat service unavailable",
-			http.StatusInternalServerError,
-		)
-
-		return
-	}
-
-	/* ========================================================
-	   MARK ADMIN MESSAGES AS READ
-	======================================================== */
-
-	_, _ = db.Exec(
-		ctx,
-		`
-		UPDATE public.chat_messages
-		SET is_read = TRUE
-		WHERE receiver_type = 'user'
-		  AND receiver_id = $1
-		  AND is_read = FALSE
-		`,
-		userID,
-	)
-
-	rows, err := db.Query(
-		ctx,
-		`
-		SELECT
-			id,
-			sender_type,
-			sender_id,
-			receiver_type,
-			receiver_id,
-			message,
-			is_read,
-			created_at
-		FROM public.chat_messages
-		WHERE
-			(
-				sender_type = 'user'
-				AND sender_id = $1
-			)
-			OR
-			(
-				receiver_type = 'user'
-				AND receiver_id = $1
-			)
-		ORDER BY id ASC
-		LIMIT 500
-		`,
-		userID,
-	)
-
-	if err != nil {
-		log.Println(
-			"User chat query error:",
-			err,
-		)
-
-		http.Error(
-			w,
-			"Unable to load chat",
-			http.StatusInternalServerError,
-		)
-
-		return
-	}
-
-	defer rows.Close()
-
-	messages := make(
-		[]ChatMessage,
-		0,
-	)
-
-	for rows.Next() {
-
-		var message ChatMessage
-
-		if err := rows.Scan(
-			&message.ID,
-			&message.SenderType,
-			&message.SenderID,
-			&message.ReceiverType,
-			&message.ReceiverID,
-			&message.Message,
-			&message.IsRead,
-			&message.CreatedAt,
-		); err != nil {
-
-			continue
-		}
-
-		messages = append(
-			messages,
-			message,
-		)
-	}
-
-	var unreadCount int64
-
-	_ = db.QueryRow(
-		ctx,
-		`
-		SELECT COUNT(*)
-		FROM public.chat_messages
-		WHERE receiver_type = 'user'
-		  AND receiver_id = $1
-		  AND is_read = FALSE
-		`,
-		userID,
-	).Scan(&unreadCount)
-
-	w.Header().Set(
-		"Content-Type",
-		"application/json",
-	)
-
-	json.NewEncoder(w).Encode(
-		map[string]interface{}{
-			"messages":     messages,
-			"unread_count": unreadCount,
-		},
-	)
-}
-
-/* ============================================================
-   SEND USER MESSAGE
-============================================================ */
-
-func sendUserChatMessage(
-	w http.ResponseWriter,
-	ctx context.Context,
-	userID int64,
-	r *http.Request,
-) {
-	var req UserChatSendRequest
-
-	r.Body =
-		http.MaxBytesReader(
-			w,
-			r.Body,
-			16<<10,
-		)
-
-	if err := json.NewDecoder(
-		r.Body,
-	).Decode(&req); err != nil {
-
-		http.Error(
-			w,
-			"Invalid request",
-			http.StatusBadRequest,
-		)
-
-		return
-	}
-
-	req.Message =
-		strings.TrimSpace(
-			req.Message,
-		)
-
-	if req.Message == "" {
-		http.Error(
-			w,
-			"Message is required",
-			http.StatusBadRequest,
-		)
-
-		return
-	}
-
-	adminID := req.AdminID
-
-	if adminID <= 0 {
-
-		var err error
-
-		adminID, err =
-			getActiveAdminID(ctx)
 
 		if err != nil {
 
 			log.Println(
-				"Active admin lookup error:",
+				"User chat history error:",
 				err,
 			)
 
 			http.Error(
 				w,
-				"No active admin available",
-				http.StatusServiceUnavailable,
+				"Unable to load messages",
+				http.StatusInternalServerError,
 			)
 
 			return
 		}
-	}
 
-	/* ========================================================
-	   CHECK ADMIN EXISTS
-	======================================================== */
+		defer rows.Close()
 
-	var exists bool
-
-	err := adminDB.QueryRow(
-		ctx,
-		`
-		SELECT EXISTS(
-			SELECT 1
-			FROM admin.admins
-			WHERE id = $1
-			  AND status = 'active'
+		messages := make(
+			[]ChatMessage,
+			0,
 		)
-		`,
-		adminID,
-	).Scan(&exists)
 
-	if err != nil || !exists {
+		for rows.Next() {
 
-		http.Error(
-			w,
-			"Admin not available",
-			http.StatusServiceUnavailable,
+			var message ChatMessage
+
+			err := rows.Scan(
+				&message.ID,
+				&message.SenderType,
+				&message.SenderID,
+				&message.ReceiverType,
+				&message.ReceiverID,
+				&message.Message,
+				&message.IsRead,
+				&message.CreatedAt,
+			)
+
+			if err != nil {
+
+				log.Println(
+					"User chat scan error:",
+					err,
+				)
+
+				http.Error(
+					w,
+					"Unable to load messages",
+					http.StatusInternalServerError,
+				)
+
+				return
+			}
+
+			messages = append(
+				messages,
+				message,
+			)
+		}
+
+		if err := rows.Err(); err != nil {
+
+			log.Println(
+				"User chat rows error:",
+				err,
+			)
+
+			http.Error(
+				w,
+				"Unable to load messages",
+				http.StatusInternalServerError,
+			)
+
+			return
+		}
+
+		_, _ = db.Exec(
+			ctx,
+			`
+			UPDATE public.chat_messages
+			SET is_read = TRUE
+			WHERE
+				receiver_type = 'user'
+				AND receiver_id = $1
+				AND is_read = FALSE
+			`,
+			session.UserID,
+		)
+
+		w.Header().Set(
+			"Content-Type",
+			"application/json",
+		)
+
+		_ = json.NewEncoder(w).Encode(
+			map[string]interface{}{
+				"messages": messages,
+			},
 		)
 
 		return
-	}
 
-	message, err :=
-		saveChatMessage(
-			ctx,
-			"user",
-			userID,
-			"admin",
-			adminID,
+	case http.MethodPost:
+
+		r.Body = http.MaxBytesReader(
+			w,
+			r.Body,
+			8<<10,
+		)
+
+		var req UserChatSendRequest
+
+		if err := json.NewDecoder(
+			r.Body,
+		).Decode(&req); err != nil {
+
+			http.Error(
+				w,
+				"Invalid request",
+				http.StatusBadRequest,
+			)
+
+			return
+		}
+
+		messageText := strings.TrimSpace(
 			req.Message,
 		)
 
-	if err != nil {
+		if messageText == "" {
 
-		log.Println(
-			"User chat save error:",
-			err,
+			http.Error(
+				w,
+				"Message is required",
+				http.StatusBadRequest,
+			)
+
+			return
+		}
+
+		if len(messageText) > maxChatMessageLength {
+
+			http.Error(
+				w,
+				"Message is too long",
+				http.StatusBadRequest,
+			)
+
+			return
+		}
+
+		adminID := getActiveAdminID(ctx)
+
+		message, err := saveChatMessage(
+			ctx,
+			"user",
+			session.UserID,
+			"admin",
+			adminID,
+			messageText,
 		)
+
+		if err != nil {
+
+			log.Println(
+				"User chat send error:",
+				err,
+			)
+
+			http.Error(
+				w,
+				"Unable to send message",
+				http.StatusInternalServerError,
+			)
+
+			return
+		}
+
+		broadcastChatMessage(message)
+
+		w.Header().Set(
+			"Content-Type",
+			"application/json",
+		)
+
+		_ = json.NewEncoder(w).Encode(
+			map[string]interface{}{
+				"message": message,
+			},
+		)
+
+		return
+
+	default:
 
 		http.Error(
 			w,
-			"Unable to send message",
-			http.StatusInternalServerError,
+			"Method not allowed",
+			http.StatusMethodNotAllowed,
 		)
 
 		return
 	}
-
-	/* ========================================================
-	   ADMIN NOTIFICATION
-	======================================================== */
-
-	userIDCopy := userID
-
-	recordAdminNotification(
-		ctx,
-		&userIDCopy,
-		"chat_message",
-		"New Chat Message",
-		"A student sent a new chat message.",
-	)
-
-	broadcastChatMessage(
-		message,
-	)
-
-	w.Header().Set(
-		"Content-Type",
-		"application/json",
-	)
-
-	json.NewEncoder(w).Encode(
-		map[string]interface{}{
-			"message":    "Message sent successfully",
-			"id":         message.ID,
-			"created_at": message.CreatedAt,
-			"sender_type": message.SenderType,
-			"sender_id":   message.SenderID,
-			"receiver_type": message.ReceiverType,
-			"receiver_id":   message.ReceiverID,
-		},
-	)
 }
 
-/* ============================================================
-   ADMIN CHAT USERS
-============================================================ */
+// ============================================================
+// ADMIN CHAT USERS
+// ============================================================
 
 func adminChatUsersHandler(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
+
+	adminSession, ok := getAdminChatSession(r)
+
+	if !ok {
+
+		http.Error(
+			w,
+			"Unauthorized",
+			http.StatusUnauthorized,
+		)
+
+		return
+	}
+
+	_ = adminSession
+
 	if r.Method != http.MethodGet {
+
 		http.Error(
 			w,
 			"Method not allowed",
@@ -1019,56 +947,12 @@ func adminChatUsersHandler(
 		return
 	}
 
-	if !requireAdmin(w, r) {
-		return
-	}
-
-	cookie, err :=
-		r.Cookie("hih_admin_session")
-
-	if err != nil || cookie.Value == "" {
-		http.Error(
-			w,
-			"Unauthorized",
-			http.StatusUnauthorized,
-		)
-
-		return
-	}
-
-	adminSession, ok :=
-		getAdminSession(cookie.Value)
-
-	if !ok {
-		http.Error(
-			w,
-			"Unauthorized",
-			http.StatusUnauthorized,
-		)
-
-		return
-	}
-
-	ctx, cancel :=
-		context.WithTimeout(
-			r.Context(),
-			5*time.Second,
-		)
+	ctx, cancel := context.WithTimeout(
+		r.Context(),
+		5*time.Second,
+	)
 
 	defer cancel()
-
-	if err := ensureChatTables(
-		ctx,
-	); err != nil {
-
-		http.Error(
-			w,
-			"Chat service unavailable",
-			http.StatusInternalServerError,
-		)
-
-		return
-	}
 
 	rows, err := adminDB.Query(
 		ctx,
@@ -1077,28 +961,32 @@ func adminChatUsersHandler(
 			u.id,
 			u.name,
 			u.email,
-			u.phone,
-			COALESCE(
-				MAX(cm.created_at),
-				u.created_at
-			) AS last_activity,
 
-			COUNT(
-				CASE
-					WHEN cm.sender_type = 'user'
-					 AND cm.sender_id = u.id
-					 AND cm.receiver_type = 'admin'
-					 AND cm.receiver_id = $1
-					 AND cm.is_read = FALSE
-					THEN 1
-				END
+			COALESCE(last_chat.message, '') AS last_message,
+
+			last_chat.created_at AS last_message_at,
+
+			(
+				SELECT COUNT(*)
+				FROM public.chat_messages cm2
+				WHERE
+					cm2.sender_type = 'user'
+					AND cm2.sender_id = u.id
+					AND cm2.receiver_type = 'admin'
+					AND cm2.is_read = FALSE
 			) AS unread_count
 
 		FROM public.users u
 
-		LEFT JOIN public.chat_messages cm
-			ON
-			(
+		LEFT JOIN LATERAL
+		(
+			SELECT
+				cm.message,
+				cm.created_at
+
+			FROM public.chat_messages cm
+
+			WHERE
 				(
 					cm.sender_type = 'user'
 					AND cm.sender_id = u.id
@@ -1108,24 +996,27 @@ func adminChatUsersHandler(
 					cm.receiver_type = 'user'
 					AND cm.receiver_id = u.id
 				)
-			)
 
-		GROUP BY
-			u.id,
-			u.name,
-			u.email,
-			u.phone,
-			u.created_at
+			ORDER BY cm.id DESC
+			LIMIT 1
+
+		) AS last_chat
+		ON TRUE
 
 		ORDER BY
-			last_activity DESC
+			COALESCE(
+				last_chat.created_at,
+				TIMESTAMP '1970-01-01'
+			) DESC,
+
+			u.id DESC
 		`,
-		adminSession.AdminID,
 	)
 
 	if err != nil {
+
 		log.Println(
-			"Admin chat users query error:",
+			"Admin chat users error:",
 			err,
 		)
 
@@ -1141,12 +1032,12 @@ func adminChatUsersHandler(
 	defer rows.Close()
 
 	type ChatUser struct {
-		UserID      int64     `json:"user_id"`
-		Name        string    `json:"name"`
-		Email       string    `json:"email"`
-		Phone       string    `json:"phone"`
-		LastActivity time.Time `json:"last_activity"`
-		UnreadCount int64     `json:"unread_count"`
+		ID            int64      `json:"id"`
+		Name          string     `json:"name"`
+		Email         string     `json:"email"`
+		LastMessage   string     `json:"last_message"`
+		LastMessageAt *time.Time `json:"last_message_at"`
+		UnreadCount   int64      `json:"unread_count"`
 	}
 
 	users := make(
@@ -1158,16 +1049,29 @@ func adminChatUsersHandler(
 
 		var user ChatUser
 
-		if err := rows.Scan(
-			&user.UserID,
+		err := rows.Scan(
+			&user.ID,
 			&user.Name,
 			&user.Email,
-			&user.Phone,
-			&user.LastActivity,
+			&user.LastMessage,
+			&user.LastMessageAt,
 			&user.UnreadCount,
-		); err != nil {
+		)
 
-			continue
+		if err != nil {
+
+			log.Println(
+				"Admin chat user scan error:",
+				err,
+			)
+
+			http.Error(
+				w,
+				"Unable to load chat users",
+				http.StatusInternalServerError,
+			)
+
+			return
 		}
 
 		users = append(
@@ -1176,58 +1080,44 @@ func adminChatUsersHandler(
 		)
 	}
 
+	if err := rows.Err(); err != nil {
+
+		log.Println(
+			"Admin chat users rows error:",
+			err,
+		)
+
+		http.Error(
+			w,
+			"Unable to load chat users",
+			http.StatusInternalServerError,
+		)
+
+		return
+	}
+
 	w.Header().Set(
 		"Content-Type",
 		"application/json",
 	)
 
-	json.NewEncoder(w).Encode(
+	_ = json.NewEncoder(w).Encode(
 		map[string]interface{}{
 			"users": users,
 		},
 	)
 }
 
-/* ============================================================
-   ADMIN CHAT MESSAGES
-============================================================ */
+// ============================================================
+// ADMIN CHAT MESSAGES
+// ============================================================
 
 func adminChatMessagesHandler(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
-	if r.Method != http.MethodGet &&
-		r.Method != http.MethodPost {
 
-		http.Error(
-			w,
-			"Method not allowed",
-			http.StatusMethodNotAllowed,
-		)
-
-		return
-	}
-
-	if !requireAdmin(w, r) {
-		return
-	}
-
-	cookie, err :=
-		r.Cookie("hih_admin_session")
-
-	if err != nil || cookie.Value == "" {
-
-		http.Error(
-			w,
-			"Unauthorized",
-			http.StatusUnauthorized,
-		)
-
-		return
-	}
-
-	adminSession, ok :=
-		getAdminSession(cookie.Value)
+	adminSession, ok := getAdminChatSession(r)
 
 	if !ok {
 
@@ -1240,368 +1130,400 @@ func adminChatMessagesHandler(
 		return
 	}
 
-	ctx, cancel :=
-		context.WithTimeout(
-			r.Context(),
-			5*time.Second,
-		)
+	ctx, cancel := context.WithTimeout(
+		r.Context(),
+		5*time.Second,
+	)
 
 	defer cancel()
 
-	if r.Method == http.MethodGet {
+	switch r.Method {
 
-		getAdminChatMessages(
-			w,
-			ctx,
-			adminSession.AdminID,
-			r,
-		)
+	case http.MethodGet:
 
-		return
-	}
-
-	sendAdminChatMessage(
-		w,
-		ctx,
-		adminSession.AdminID,
-		r,
-	)
-}
-
-/* ============================================================
-   GET ADMIN CHAT HISTORY
-============================================================ */
-
-func getAdminChatMessages(
-	w http.ResponseWriter,
-	ctx context.Context,
-	adminID int64,
-	r *http.Request,
-) {
-	userIDText :=
-		strings.TrimSpace(
+		userIDText := strings.TrimSpace(
 			r.URL.Query().Get("user_id"),
 		)
 
-	if userIDText == "" {
-		http.Error(
-			w,
-			"User ID is required",
-			http.StatusBadRequest,
-		)
+		if userIDText == "" {
 
-		return
-	}
+			http.Error(
+				w,
+				"User ID is required",
+				http.StatusBadRequest,
+			)
 
-	userID, err :=
-		strconv.ParseInt(
+			return
+		}
+
+		userID, err := strconv.ParseInt(
 			userIDText,
 			10,
 			64,
 		)
 
-	if err != nil || userID <= 0 {
-		http.Error(
-			w,
-			"Invalid User ID",
-			http.StatusBadRequest,
-		)
+		if err != nil || userID <= 0 {
 
-		return
-	}
-
-	if err := ensureChatTables(
-		ctx,
-	); err != nil {
-
-		http.Error(
-			w,
-			"Chat service unavailable",
-			http.StatusInternalServerError,
-		)
-
-		return
-	}
-
-	/* ========================================================
-	   MARK USER MESSAGES AS READ
-	======================================================== */
-
-	_, _ = db.Exec(
-		ctx,
-		`
-		UPDATE public.chat_messages
-		SET is_read = TRUE
-		WHERE sender_type = 'user'
-		  AND sender_id = $1
-		  AND receiver_type = 'admin'
-		  AND receiver_id = $2
-		  AND is_read = FALSE
-		`,
-		userID,
-		adminID,
-	)
-
-	rows, err := db.Query(
-		ctx,
-		`
-		SELECT
-			id,
-			sender_type,
-			sender_id,
-			receiver_type,
-			receiver_id,
-			message,
-			is_read,
-			created_at
-		FROM public.chat_messages
-		WHERE
-			(
-				sender_type = 'user'
-				AND sender_id = $1
+			http.Error(
+				w,
+				"Invalid User ID",
+				http.StatusBadRequest,
 			)
-			OR
-			(
-				receiver_type = 'user'
-				AND receiver_id = $1
-			)
-		ORDER BY id ASC
-		LIMIT 500
-		`,
-		userID,
-	)
 
-	if err != nil {
-		log.Println(
-			"Admin chat query error:",
-			err,
-		)
-
-		http.Error(
-			w,
-			"Unable to load chat",
-			http.StatusInternalServerError,
-		)
-
-		return
-	}
-
-	defer rows.Close()
-
-	messages := make(
-		[]ChatMessage,
-		0,
-	)
-
-	for rows.Next() {
-
-		var message ChatMessage
-
-		if err := rows.Scan(
-			&message.ID,
-			&message.SenderType,
-			&message.SenderID,
-			&message.ReceiverType,
-			&message.ReceiverID,
-			&message.Message,
-			&message.IsRead,
-			&message.CreatedAt,
-		); err != nil {
-
-			continue
+			return
 		}
 
-		messages = append(
-			messages,
-			message,
+		var exists bool
+
+		err = adminDB.QueryRow(
+			ctx,
+			`
+			SELECT EXISTS(
+				SELECT 1
+				FROM public.users
+				WHERE id = $1
+			)
+			`,
+			userID,
+		).Scan(&exists)
+
+		if err != nil {
+
+			log.Println(
+				"Admin chat user check error:",
+				err,
+			)
+
+			http.Error(
+				w,
+				"Unable to load chat",
+				http.StatusInternalServerError,
+			)
+
+			return
+		}
+
+		if !exists {
+
+			http.Error(
+				w,
+				"User not found",
+				http.StatusNotFound,
+			)
+
+			return
+		}
+
+		rows, err := adminDB.Query(
+			ctx,
+			`
+			SELECT
+				id,
+				sender_type,
+				sender_id,
+				receiver_type,
+				receiver_id,
+				message,
+				is_read,
+				created_at
+			FROM public.chat_messages
+			WHERE
+				(
+					sender_type = 'user'
+					AND sender_id = $1
+				)
+				OR
+				(
+					receiver_type = 'user'
+					AND receiver_id = $1
+				)
+			ORDER BY id ASC
+			LIMIT $2
+			`,
+			userID,
+			chatHistoryLimit,
 		)
-	}
 
-	var unreadCount int64
+		if err != nil {
 
-	_ = db.QueryRow(
-		ctx,
-		`
-		SELECT COUNT(*)
-		FROM public.chat_messages
-		WHERE sender_type = 'user'
-		  AND sender_id = $1
-		  AND receiver_type = 'admin'
-		  AND receiver_id = $2
-		  AND is_read = FALSE
-		`,
-		userID,
-		adminID,
-	).Scan(&unreadCount)
+			log.Println(
+				"Admin chat history error:",
+				err,
+			)
 
-	w.Header().Set(
-		"Content-Type",
-		"application/json",
-	)
+			http.Error(
+				w,
+				"Unable to load messages",
+				http.StatusInternalServerError,
+			)
 
-	json.NewEncoder(w).Encode(
-		map[string]interface{}{
-			"messages":     messages,
-			"unread_count": unreadCount,
-			"user_id":      userID,
-		},
-	)
-}
+			return
+		}
 
-/* ============================================================
-   SEND ADMIN MESSAGE
-============================================================ */
+		defer rows.Close()
 
-func sendAdminChatMessage(
-	w http.ResponseWriter,
-	ctx context.Context,
-	adminID int64,
-	r *http.Request,
-) {
-	r.Body =
-		http.MaxBytesReader(
+		messages := make(
+			[]ChatMessage,
+			0,
+		)
+
+		for rows.Next() {
+
+			var message ChatMessage
+
+			err := rows.Scan(
+				&message.ID,
+				&message.SenderType,
+				&message.SenderID,
+				&message.ReceiverType,
+				&message.ReceiverID,
+				&message.Message,
+				&message.IsRead,
+				&message.CreatedAt,
+			)
+
+			if err != nil {
+
+				log.Println(
+					"Admin chat scan error:",
+					err,
+				)
+
+				http.Error(
+					w,
+					"Unable to load messages",
+					http.StatusInternalServerError,
+				)
+
+				return
+			}
+
+			messages = append(
+				messages,
+				message,
+			)
+		}
+
+		if err := rows.Err(); err != nil {
+
+			log.Println(
+				"Admin chat rows error:",
+				err,
+			)
+
+			http.Error(
+				w,
+				"Unable to load messages",
+				http.StatusInternalServerError,
+			)
+
+			return
+		}
+
+		_, _ = adminDB.Exec(
+			ctx,
+			`
+			UPDATE public.chat_messages
+			SET is_read = TRUE
+			WHERE
+				sender_type = 'user'
+				AND sender_id = $1
+				AND receiver_type = 'admin'
+				AND is_read = FALSE
+			`,
+			userID,
+		)
+
+		w.Header().Set(
+			"Content-Type",
+			"application/json",
+		)
+
+		_ = json.NewEncoder(w).Encode(
+			map[string]interface{}{
+				"messages": messages,
+			},
+		)
+
+		return
+
+	case http.MethodPost:
+
+		r.Body = http.MaxBytesReader(
 			w,
 			r.Body,
-			16<<10,
+			8<<10,
 		)
 
-	var req AdminChatSendRequest
+		var req AdminChatSendRequest
 
-	if err := json.NewDecoder(
-		r.Body,
-	).Decode(&req); err != nil {
+		if err := json.NewDecoder(
+			r.Body,
+		).Decode(&req); err != nil {
 
-		http.Error(
-			w,
-			"Invalid request",
-			http.StatusBadRequest,
-		)
+			http.Error(
+				w,
+				"Invalid request",
+				http.StatusBadRequest,
+			)
 
-		return
-	}
+			return
+		}
 
-	req.Message =
-		strings.TrimSpace(
+		if req.UserID <= 0 {
+
+			http.Error(
+				w,
+				"Invalid User ID",
+				http.StatusBadRequest,
+			)
+
+			return
+		}
+
+		messageText := strings.TrimSpace(
 			req.Message,
 		)
 
-	if req.UserID <= 0 {
-		http.Error(
-			w,
-			"User ID is required",
-			http.StatusBadRequest,
-		)
+		if messageText == "" {
 
-		return
-	}
+			http.Error(
+				w,
+				"Message is required",
+				http.StatusBadRequest,
+			)
 
-	if req.Message == "" {
-		http.Error(
-			w,
-			"Message is required",
-			http.StatusBadRequest,
-		)
+			return
+		}
 
-		return
-	}
+		if len(messageText) > maxChatMessageLength {
 
-	/* ========================================================
-	   CHECK USER
-	======================================================== */
+			http.Error(
+				w,
+				"Message is too long",
+				http.StatusBadRequest,
+			)
 
-	var userExists bool
+			return
+		}
 
-	err := db.QueryRow(
-		ctx,
-		`
-		SELECT EXISTS(
-			SELECT 1
-			FROM public.users
-			WHERE id = $1
-		)
-		`,
-		req.UserID,
-	).Scan(&userExists)
+		var exists bool
 
-	if err != nil || !userExists {
+		err := adminDB.QueryRow(
+			ctx,
+			`
+			SELECT EXISTS(
+				SELECT 1
+				FROM public.users
+				WHERE id = $1
+			)
+			`,
+			req.UserID,
+		).Scan(&exists)
 
-		http.Error(
-			w,
-			"User not found",
-			http.StatusNotFound,
-		)
+		if err != nil {
 
-		return
-	}
+			log.Println(
+				"Admin chat user validation error:",
+				err,
+			)
 
-	message, err :=
-		saveChatMessage(
+			http.Error(
+				w,
+				"Unable to send message",
+				http.StatusInternalServerError,
+			)
+
+			return
+		}
+
+		if !exists {
+
+			http.Error(
+				w,
+				"User not found",
+				http.StatusNotFound,
+			)
+
+			return
+		}
+
+		message, err := saveChatMessage(
 			ctx,
 			"admin",
-			adminID,
+			adminSession.AdminID,
 			"user",
 			req.UserID,
-			req.Message,
+			messageText,
 		)
 
-	if err != nil {
+		if err != nil {
 
-		log.Println(
-			"Admin chat save error:",
-			err,
+			log.Println(
+				"Admin chat send error:",
+				err,
+			)
+
+			http.Error(
+				w,
+				"Unable to send message",
+				http.StatusInternalServerError,
+			)
+
+			return
+		}
+
+		broadcastChatMessage(message)
+
+		w.Header().Set(
+			"Content-Type",
+			"application/json",
 		)
+
+		_ = json.NewEncoder(w).Encode(
+			map[string]interface{}{
+				"message": message,
+			},
+		)
+
+		return
+
+	default:
 
 		http.Error(
 			w,
-			"Unable to send message",
-			http.StatusInternalServerError,
+			"Method not allowed",
+			http.StatusMethodNotAllowed,
 		)
 
 		return
 	}
-
-	/* ========================================================
-	   USER NOTIFICATION
-	======================================================== */
-
-	createUserNotification(
-		ctx,
-		req.UserID,
-		"New message from Hand In Hand Academy",
-		req.Message,
-	)
-
-	broadcastChatMessage(
-		message,
-	)
-
-	w.Header().Set(
-		"Content-Type",
-		"application/json",
-	)
-
-	json.NewEncoder(w).Encode(
-		map[string]interface{}{
-			"message":      "Message sent successfully",
-			"id":           message.ID,
-			"created_at":   message.CreatedAt,
-			"sender_type":  message.SenderType,
-			"sender_id":    message.SenderID,
-			"receiver_type": message.ReceiverType,
-			"receiver_id":   message.ReceiverID,
-		},
-	)
 }
 
-/* ============================================================
-   USER NOTIFICATIONS
-============================================================ */
+// ============================================================
+// USER NOTIFICATIONS
+// ============================================================
 
 func userNotificationsHandler(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
+
+	session, ok := getUserChatSession(r)
+
+	if !ok {
+
+		http.Error(
+			w,
+			"Unauthorized",
+			http.StatusUnauthorized,
+		)
+
+		return
+	}
+
 	if r.Method != http.MethodGet {
+
 		http.Error(
 			w,
 			"Method not allowed",
@@ -1611,68 +1533,19 @@ func userNotificationsHandler(
 		return
 	}
 
-	cookie, err :=
-		r.Cookie("hih_session")
-
-	if err != nil || cookie.Value == "" {
-		http.Error(
-			w,
-			"Unauthorized",
-			http.StatusUnauthorized,
-		)
-
-		return
-	}
-
-	session, ok :=
-		getSession(cookie.Value)
-
-	if !ok {
-		http.Error(
-			w,
-			"Unauthorized",
-			http.StatusUnauthorized,
-		)
-
-		return
-	}
-
-	ctx, cancel :=
-		context.WithTimeout(
-			r.Context(),
-			5*time.Second,
-		)
+	ctx, cancel := context.WithTimeout(
+		r.Context(),
+		5*time.Second,
+	)
 
 	defer cancel()
-
-	if err := ensureChatTables(
-		ctx,
-	); err != nil {
-
-		http.Error(
-			w,
-			"Notification service unavailable",
-			http.StatusInternalServerError,
-		)
-
-		return
-	}
-
-	type UserNotification struct {
-		ID        int64     `json:"id"`
-		UserID    int64     `json:"user_id"`
-		Title     string    `json:"title"`
-		Message   string    `json:"message"`
-		IsRead    bool      `json:"is_read"`
-		CreatedAt time.Time `json:"created_at"`
-	}
 
 	rows, err := db.Query(
 		ctx,
 		`
 		SELECT
 			id,
-			user_id,
+			type,
 			title,
 			message,
 			is_read,
@@ -1686,8 +1559,9 @@ func userNotificationsHandler(
 	)
 
 	if err != nil {
+
 		log.Println(
-			"User notifications query error:",
+			"User notifications error:",
 			err,
 		)
 
@@ -1702,6 +1576,15 @@ func userNotificationsHandler(
 
 	defer rows.Close()
 
+	type UserNotification struct {
+		ID        int64     `json:"id"`
+		Type      string    `json:"type"`
+		Title     string    `json:"title"`
+		Message   string    `json:"message"`
+		IsRead    bool      `json:"is_read"`
+		CreatedAt time.Time `json:"created_at"`
+	}
+
 	notifications := make(
 		[]UserNotification,
 		0,
@@ -1711,60 +1594,89 @@ func userNotificationsHandler(
 
 		var notification UserNotification
 
-		if err := rows.Scan(
+		err := rows.Scan(
 			&notification.ID,
-			&notification.UserID,
+			&notification.Type,
 			&notification.Title,
 			&notification.Message,
 			&notification.IsRead,
 			&notification.CreatedAt,
-		); err != nil {
+		)
 
-			continue
+		if err != nil {
+
+			log.Println(
+				"Notification scan error:",
+				err,
+			)
+
+			http.Error(
+				w,
+				"Unable to load notifications",
+				http.StatusInternalServerError,
+			)
+
+			return
 		}
 
-		notifications =
-			append(
-				notifications,
-				notification,
-			)
+		notifications = append(
+			notifications,
+			notification,
+		)
 	}
 
-	var unreadCount int64
+	if err := rows.Err(); err != nil {
 
-	_ = db.QueryRow(
-		ctx,
-		`
-		SELECT COUNT(*)
-		FROM public.user_notifications
-		WHERE user_id = $1
-		  AND is_read = FALSE
-		`,
-		session.UserID,
-	).Scan(&unreadCount)
+		log.Println(
+			"Notification rows error:",
+			err,
+		)
+
+		http.Error(
+			w,
+			"Unable to load notifications",
+			http.StatusInternalServerError,
+		)
+
+		return
+	}
 
 	w.Header().Set(
 		"Content-Type",
 		"application/json",
 	)
 
-	json.NewEncoder(w).Encode(
+	_ = json.NewEncoder(w).Encode(
 		map[string]interface{}{
 			"notifications": notifications,
-			"unread_count":  unreadCount,
 		},
 	)
 }
 
-/* ============================================================
-   MARK USER NOTIFICATIONS READ
-============================================================ */
+// ============================================================
+// MARK USER NOTIFICATIONS READ
+// ============================================================
 
 func markUserNotificationsReadHandler(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
+
+	session, ok := getUserChatSession(r)
+
+	if !ok {
+
+		http.Error(
+			w,
+			"Unauthorized",
+			http.StatusUnauthorized,
+		)
+
+		return
+	}
+
 	if r.Method != http.MethodPost {
+
 		http.Error(
 			w,
 			"Method not allowed",
@@ -1774,71 +1686,94 @@ func markUserNotificationsReadHandler(
 		return
 	}
 
-	cookie, err :=
-		r.Cookie("hih_session")
-
-	if err != nil || cookie.Value == "" {
-		http.Error(
-			w,
-			"Unauthorized",
-			http.StatusUnauthorized,
-		)
-
-		return
-	}
-
-	session, ok :=
-		getSession(cookie.Value)
-
-	if !ok {
-		http.Error(
-			w,
-			"Unauthorized",
-			http.StatusUnauthorized,
-		)
-
-		return
-	}
-
-	ctx, cancel :=
-		context.WithTimeout(
-			r.Context(),
-			5*time.Second,
-		)
+	ctx, cancel := context.WithTimeout(
+		r.Context(),
+		5*time.Second,
+	)
 
 	defer cancel()
 
-	if err := ensureChatTables(
-		ctx,
-	); err != nil {
-
-		http.Error(
-			w,
-			"Notification service unavailable",
-			http.StatusInternalServerError,
-		)
-
-		return
+	var req struct {
+		ID int64 `json:"id"`
 	}
 
-	_, err = db.Exec(
-		ctx,
-		`
-		UPDATE public.user_notifications
-		SET is_read = TRUE
-		WHERE user_id = $1
-		`,
-		session.UserID,
-	)
+	if r.Body != nil {
 
-	if err != nil {
-		http.Error(
+		r.Body = http.MaxBytesReader(
 			w,
-			"Unable to update notifications",
-			http.StatusInternalServerError,
+			r.Body,
+			4<<10,
 		)
 
-		return
+		err := json.NewDecoder(
+			r.Body,
+		).Decode(&req)
+
+		if err != nil {
+
+			// Empty body is allowed.
+			req.ID = 0
+		}
+	}
+
+	if req.ID > 0 {
+
+		_, err := db.Exec(
+			ctx,
+			`
+			UPDATE public.user_notifications
+			SET is_read = TRUE
+			WHERE
+				id = $1
+				AND user_id = $2
+			`,
+			req.ID,
+			session.UserID,
+		)
+
+		if err != nil {
+
+			log.Println(
+				"Mark notification read error:",
+				err,
+			)
+
+			http.Error(
+				w,
+				"Unable to update notification",
+				http.StatusInternalServerError,
+			)
+
+			return
+		}
+
+	} else {
+
+		_, err := db.Exec(
+			ctx,
+			`
+			UPDATE public.user_notifications
+			SET is_read = TRUE
+			WHERE user_id = $1
+			`,
+			session.UserID,
+		)
+
+		if err != nil {
+
+			log.Println(
+				"Mark all notifications read error:",
+				err,
+			)
+
+			http.Error(
+				w,
+				"Unable to update notifications",
+				http.StatusInternalServerError,
+			)
+
+			return
+		}
 	}
 
 	w.Header().Set(
@@ -1846,36 +1781,48 @@ func markUserNotificationsReadHandler(
 		"application/json",
 	)
 
-	json.NewEncoder(w).Encode(
+	_ = json.NewEncoder(w).Encode(
 		map[string]interface{}{
 			"message": "Notifications marked as read",
 		},
 	)
 }
 
-/* ============================================================
-   CREATE USER NOTIFICATION
-============================================================ */
+// ============================================================
+// CREATE USER NOTIFICATION
+// ============================================================
 
 func createUserNotification(
 	ctx context.Context,
 	userID int64,
+	notificationType string,
 	title string,
 	message string,
-) {
+) error {
+
 	if db == nil {
-		return
+		return fmt.Errorf("database connection is nil")
 	}
 
-	if err := ensureChatTables(
-		ctx,
-	); err != nil {
-		log.Println(
-			"User notification table error:",
-			err,
-		)
+	notificationType =
+		strings.TrimSpace(notificationType)
 
-		return
+	title =
+		strings.TrimSpace(title)
+
+	message =
+		strings.TrimSpace(message)
+
+	if notificationType == "" {
+		notificationType = "general"
+	}
+
+	if title == "" {
+		title = "Notification"
+	}
+
+	if message == "" {
+		return fmt.Errorf("notification message is empty")
 	}
 
 	_, err := db.Exec(
@@ -1884,6 +1831,7 @@ func createUserNotification(
 		INSERT INTO public.user_notifications
 		(
 			user_id,
+			type,
 			title,
 			message
 		)
@@ -1891,142 +1839,80 @@ func createUserNotification(
 		(
 			$1,
 			$2,
-			$3
+			$3,
+			$4
 		)
 		`,
 		userID,
+		notificationType,
 		title,
 		message,
 	)
 
-	if err != nil {
-		log.Println(
-			"User notification insert error:",
-			err,
-		)
-	}
+	return err
 }
 
-/* ============================================================
-   COURSE APPLICATION AUTO REPLY
-
-   Call this after a successful course application.
-============================================================ */
+// ============================================================
+// CREATE COURSE APPLICATION AUTO REPLY
+// ============================================================
 
 func createCourseApplicationAutoReply(
 	ctx context.Context,
 	userID int64,
 ) {
-	adminID, err :=
-		getActiveAdminID(ctx)
 
-	if err != nil {
-		log.Println(
-			"Auto-reply admin lookup error:",
-			err,
-		)
-
-		return
-	}
-
-	const autoReply =
+	autoReply :=
 		"Your course application has been received successfully.\n" +
 			"Our team will review it and contact you soon."
 
-	message, err :=
-		saveChatMessage(
-			ctx,
-			"admin",
-			adminID,
-			"user",
-			userID,
-			autoReply,
-		)
+	message, err := saveChatMessage(
+		ctx,
+		"system",
+		0,
+		"user",
+		userID,
+		autoReply,
+	)
 
 	if err != nil {
+
 		log.Println(
-			"Auto-reply chat save error:",
+			"Course application auto-reply error:",
 			err,
 		)
 
 		return
 	}
 
-	createUserNotification(
+	broadcastChatMessage(message)
+
+	err = createUserNotification(
 		ctx,
 		userID,
+		"course_application",
 		"Course Application Received",
 		autoReply,
 	)
 
-	broadcastChatMessage(
-		message,
-	)
-}
-
-/* ============================================================
-   WEBSOCKET ORIGIN CHECK
-============================================================ */
-
-func chatCheckOrigin(
-	r *http.Request,
-) bool {
-	origin := strings.TrimSpace(
-		r.Header.Get("Origin"),
-	)
-
-	if origin == "" {
-		return true
-	}
-
-	parsed, err :=
-		url.Parse(origin)
-
 	if err != nil {
-		return false
+
+		log.Println(
+			"Course application notification error:",
+			err,
+		)
 	}
-
-	return strings.EqualFold(
-		parsed.Host,
-		r.Host,
-	)
 }
 
-/* ============================================================
-   WEBSOCKET UPGRADER
-============================================================ */
-
-var chatUpgrader = websocket.Upgrader{
-	ReadBufferSize:  4096,
-	WriteBufferSize: 4096,
-
-	CheckOrigin: chatCheckOrigin,
-}
-
-/* ============================================================
-   USER WEBSOCKET
-============================================================ */
+// ============================================================
+// USER WEBSOCKET
+// ============================================================
 
 func userChatWebSocketHandler(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
-	cookie, err :=
-		r.Cookie("hih_session")
 
-	if err != nil || cookie.Value == "" {
-
-		http.Error(
-			w,
-			"Unauthorized",
-			http.StatusUnauthorized,
-		)
-
-		return
-	}
-
-	session, ok :=
-		getSession(cookie.Value)
+	session, ok := getUserChatSession(r)
 
 	if !ok {
 
@@ -2039,35 +1925,14 @@ func userChatWebSocketHandler(
 		return
 	}
 
-	ctx, cancel :=
-		context.WithTimeout(
-			r.Context(),
-			5*time.Second,
-		)
-
-	defer cancel()
-
-	if err := ensureChatTables(
-		ctx,
-	); err != nil {
-
-		http.Error(
-			w,
-			"Chat service unavailable",
-			http.StatusInternalServerError,
-		)
-
-		return
-	}
-
-	conn, err :=
-		chatUpgrader.Upgrade(
-			w,
-			r,
-			nil,
-		)
+	conn, err := chatUpgrader.Upgrade(
+		w,
+		r,
+		nil,
+	)
 
 	if err != nil {
+
 		log.Println(
 			"User websocket upgrade error:",
 			err,
@@ -2078,7 +1943,6 @@ func userChatWebSocketHandler(
 
 	client := &chatClient{
 		conn: conn,
-		done: make(chan struct{}),
 	}
 
 	registerUserChatClient(
@@ -2088,58 +1952,115 @@ func userChatWebSocketHandler(
 
 	defer func() {
 
-		close(client.done)
-
 		unregisterUserChatClient(
 			session.UserID,
 			client,
 		)
 
-		_ = client.conn.Close()
+		_ = conn.Close()
 
 	}()
 
-	_ = client.writeJSON(
-		map[string]interface{}{
-			"type":          "connected",
-			"authenticated": true,
-			"user_id":      session.UserID,
+	go client.pingLoop()
+
+	conn.SetReadLimit(
+		16 << 10,
+	)
+
+	_ = conn.SetReadDeadline(
+		time.Now().Add(90 * time.Second),
+	)
+
+	conn.SetPongHandler(
+		func(string) error {
+
+			return conn.SetReadDeadline(
+				time.Now().Add(90 * time.Second),
+			)
 		},
 	)
 
-	go client.pingLoop()
+	for {
 
-	chatWebSocketReadLoop(
-		client,
-		"user",
-		session.UserID,
-	)
+		var payload struct {
+			Type    string `json:"type"`
+			Message string `json:"message"`
+		}
+
+		err := conn.ReadJSON(
+			&payload,
+		)
+
+		if err != nil {
+
+			return
+		}
+
+		if strings.TrimSpace(
+			payload.Type,
+		) != "message" {
+
+			continue
+		}
+
+		messageText :=
+			strings.TrimSpace(
+				payload.Message,
+			)
+
+		if messageText == "" {
+			continue
+		}
+
+		if len(messageText) >
+			maxChatMessageLength {
+
+			continue
+		}
+
+		ctx, cancel := context.WithTimeout(
+			r.Context(),
+			5*time.Second,
+		)
+
+		adminID :=
+			getActiveAdminID(ctx)
+
+		message, err := saveChatMessage(
+			ctx,
+			"user",
+			session.UserID,
+			"admin",
+			adminID,
+			messageText,
+		)
+
+		cancel()
+
+		if err != nil {
+
+			log.Println(
+				"User websocket message save error:",
+				err,
+			)
+
+			continue
+		}
+
+		broadcastChatMessage(message)
+	}
 }
 
-/* ============================================================
-   ADMIN WEBSOCKET
-============================================================ */
+// ============================================================
+// ADMIN WEBSOCKET
+// ============================================================
 
 func adminChatWebSocketHandler(
 	w http.ResponseWriter,
 	r *http.Request,
 ) {
-	cookie, err :=
-		r.Cookie("hih_admin_session")
 
-	if err != nil || cookie.Value == "" {
-
-		http.Error(
-			w,
-			"Unauthorized",
-			http.StatusUnauthorized,
-		)
-
-		return
-	}
-
-	adminSession, ok :=
-		getAdminSession(cookie.Value)
+	session, ok := getAdminChatSession(r)
 
 	if !ok {
 
@@ -2152,35 +2073,14 @@ func adminChatWebSocketHandler(
 		return
 	}
 
-	ctx, cancel :=
-		context.WithTimeout(
-			r.Context(),
-			5*time.Second,
-		)
-
-	defer cancel()
-
-	if err := ensureChatTables(
-		ctx,
-	); err != nil {
-
-		http.Error(
-			w,
-			"Chat service unavailable",
-			http.StatusInternalServerError,
-		)
-
-		return
-	}
-
-	conn, err :=
-		chatUpgrader.Upgrade(
-			w,
-			r,
-			nil,
-		)
+	conn, err := chatUpgrader.Upgrade(
+		w,
+		r,
+		nil,
+	)
 
 	if err != nil {
+
 		log.Println(
 			"Admin websocket upgrade error:",
 			err,
@@ -2191,262 +2091,136 @@ func adminChatWebSocketHandler(
 
 	client := &chatClient{
 		conn: conn,
-		done: make(chan struct{}),
 	}
 
 	registerAdminChatClient(
-		adminSession.AdminID,
+		session.AdminID,
 		client,
 	)
 
 	defer func() {
 
-		close(client.done)
-
 		unregisterAdminChatClient(
-			adminSession.AdminID,
+			session.AdminID,
 			client,
 		)
 
-		_ = client.conn.Close()
+		_ = conn.Close()
 
 	}()
 
-	_ = client.writeJSON(
-		map[string]interface{}{
-			"type":          "connected",
-			"authenticated": true,
-			"admin_id":      adminSession.AdminID,
-		},
-	)
-
 	go client.pingLoop()
 
-	chatWebSocketReadLoop(
-		client,
-		"admin",
-		adminSession.AdminID,
-	)
-}
-
-/* ============================================================
-   WEBSOCKET INCOMING MESSAGE
-============================================================ */
-
-type chatWebSocketIncoming struct {
-	Type    string `json:"type"`
-	Message string `json:"message"`
-	UserID  int64  `json:"user_id"`
-	AdminID int64  `json:"admin_id"`
-}
-
-/* ============================================================
-   WEBSOCKET READ LOOP
-============================================================ */
-
-func chatWebSocketReadLoop(
-	client *chatClient,
-	senderType string,
-	senderID int64,
-) {
-	client.conn.SetReadLimit(
-		8 << 10,
+	conn.SetReadLimit(
+		16 << 10,
 	)
 
-	_ = client.conn.SetReadDeadline(
-		time.Now().Add(
-			90 * time.Second,
-		),
+	_ = conn.SetReadDeadline(
+		time.Now().Add(90 * time.Second),
 	)
 
-	client.conn.SetPongHandler(
+	conn.SetPongHandler(
 		func(string) error {
 
-			return client.conn.SetReadDeadline(
-				time.Now().Add(
-					90 * time.Second,
-				),
+			return conn.SetReadDeadline(
+				time.Now().Add(90 * time.Second),
 			)
 		},
 	)
 
+	queryUserID := int64(0)
+
+	queryUserIDText :=
+		strings.TrimSpace(
+			r.URL.Query().Get("user_id"),
+		)
+
+	if queryUserIDText != "" {
+
+		if parsed, err := strconv.ParseInt(
+			queryUserIDText,
+			10,
+			64,
+		); err == nil && parsed > 0 {
+
+			queryUserID = parsed
+		}
+	}
+
 	for {
 
-		_, data, err :=
-			client.conn.ReadMessage()
+		var payload struct {
+			Type    string `json:"type"`
+			Message string `json:"message"`
+			UserID  int64  `json:"user_id"`
+		}
+
+		err := conn.ReadJSON(
+			&payload,
+		)
 
 		if err != nil {
 			return
 		}
 
-		var incoming chatWebSocketIncoming
-
-		if err := json.Unmarshal(
-			data,
-			&incoming,
-		); err != nil {
-
-			_ = client.writeJSON(
-				map[string]interface{}{
-					"type":  "error",
-					"error": "Invalid message format.",
-				},
-			)
-
-			continue
-		}
-
-		if strings.ToLower(
-			strings.TrimSpace(
-				incoming.Type,
-			),
+		if strings.TrimSpace(
+			payload.Type,
 		) != "message" {
 
 			continue
 		}
 
-		incoming.Message =
+		userID := payload.UserID
+
+		if userID <= 0 {
+			userID = queryUserID
+		}
+
+		if userID <= 0 {
+			continue
+		}
+
+		messageText :=
 			strings.TrimSpace(
-				incoming.Message,
+				payload.Message,
 			)
 
-		if incoming.Message == "" {
+		if messageText == "" {
 			continue
 		}
 
-		ctx, cancel :=
-			context.WithTimeout(
-				context.Background(),
-				5*time.Second,
-			)
-
-		if senderType == "user" {
-
-			adminID := incoming.AdminID
-
-			if adminID <= 0 {
-
-				adminID, err =
-					getActiveAdminID(ctx)
-
-				if err != nil {
-
-					cancel()
-
-					_ = client.writeJSON(
-						map[string]interface{}{
-							"type": "error",
-							"error":
-								"No active admin available.",
-						},
-					)
-
-					continue
-				}
-			}
-
-			message, saveErr :=
-				saveChatMessage(
-					ctx,
-					"user",
-					senderID,
-					"admin",
-					adminID,
-					incoming.Message,
-				)
-
-			if saveErr != nil {
-
-				cancel()
-
-				_ = client.writeJSON(
-					map[string]interface{}{
-						"type": "error",
-						"error":
-							"Unable to send message.",
-					},
-				)
-
-				continue
-			}
-
-			userIDCopy := senderID
-
-			recordAdminNotification(
-				ctx,
-				&userIDCopy,
-				"chat_message",
-				"New Chat Message",
-				"A student sent a new chat message.",
-			)
-
-			cancel()
-
-			broadcastChatMessage(
-				message,
-			)
+		if len(messageText) >
+			maxChatMessageLength {
 
 			continue
 		}
 
-		if senderType == "admin" {
+		ctx, cancel := context.WithTimeout(
+			r.Context(),
+			5*time.Second,
+		)
 
-			if incoming.UserID <= 0 {
-
-				cancel()
-
-				_ = client.writeJSON(
-					map[string]interface{}{
-						"type": "error",
-						"error":
-							"User ID is required.",
-					},
-				)
-
-				continue
-			}
-
-			message, saveErr :=
-				saveChatMessage(
-					ctx,
-					"admin",
-					senderID,
-					"user",
-					incoming.UserID,
-					incoming.Message,
-				)
-
-			if saveErr != nil {
-
-				cancel()
-
-				_ = client.writeJSON(
-					map[string]interface{}{
-						"type": "error",
-						"error":
-							"Unable to send message.",
-					},
-				)
-
-				continue
-			}
-
-			createUserNotification(
-				ctx,
-				incoming.UserID,
-				"New message from Hand In Hand Academy",
-				incoming.Message,
-			)
-
-			cancel()
-
-			broadcastChatMessage(
-				message,
-			)
-
-			continue
-		}
+		message, err := saveChatMessage(
+			ctx,
+			"admin",
+			session.AdminID,
+			"user",
+			userID,
+			messageText,
+		)
 
 		cancel()
+
+		if err != nil {
+
+			log.Println(
+				"Admin websocket message save error:",
+				err,
+			)
+
+			continue
+		}
+
+		broadcastChatMessage(message)
 	}
 }
