@@ -254,10 +254,11 @@ func requireTeacher(
 // ============================================================
 
 func generateTemporaryPassword() (string, error) {
-	const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZ" +
-		"abcdefghijkmnopqrstuvwxyz" +
-		"23456789" +
-		"@#$%"
+	const alphabet =
+		"ABCDEFGHJKLMNPQRSTUVWXYZ" +
+			"abcdefghijkmnopqrstuvwxyz" +
+			"23456789" +
+			"@#$%"
 
 	const length = 10
 
@@ -363,7 +364,7 @@ func adminRegisterHandler(
 
 	var adminID int64
 
-	err = db.QueryRow(
+	err = adminDB.QueryRow(
 		ctx,
 		`
 		INSERT INTO admin.admins
@@ -476,7 +477,7 @@ func adminLoginHandler(
 	var passwordHash string
 	var status string
 
-	err := db.QueryRow(
+	err := adminDB.QueryRow(
 		ctx,
 		`
 		SELECT
@@ -660,9 +661,7 @@ func adminSessionHandler(
 	}
 
 	session, ok :=
-		getAdminSession(
-			cookie.Value,
-		)
+		getAdminSession(cookie.Value)
 
 	if !ok {
 		http.Error(
@@ -788,7 +787,7 @@ func addTeacherHandler(
 
 	var teacherDBID int64
 
-	err = db.QueryRow(
+	err = adminDB.QueryRow(
 		ctx,
 		`
 		INSERT INTO admin.teachers
@@ -841,7 +840,7 @@ func addTeacherHandler(
 		teacherDBID,
 	)
 
-	_, err = db.Exec(
+	_, err = adminDB.Exec(
 		ctx,
 		`
 		UPDATE admin.teachers
@@ -932,7 +931,7 @@ func deleteTeacherHandler(
 
 	defer cancel()
 
-	result, err := db.Exec(
+	result, err := adminDB.Exec(
 		ctx,
 		`
 		DELETE FROM admin.teachers
@@ -1009,7 +1008,7 @@ func getTeachersHandler(
 
 	defer cancel()
 
-	rows, err := db.Query(
+	rows, err := adminDB.Query(
 		ctx,
 		`
 		SELECT
@@ -1044,14 +1043,14 @@ func getTeachersHandler(
 	defer rows.Close()
 
 	type Teacher struct {
-		TeacherID string     `json:"teacher_id"`
-		Name      string     `json:"name"`
-		Email     *string    `json:"email"`
-		Phone     *string    `json:"phone"`
-		Subject   string     `json:"subject"`
-		Status    string     `json:"status"`
-		CreatedAt time.Time  `json:"created_at"`
-		UpdatedAt time.Time  `json:"updated_at"`
+		TeacherID string    `json:"teacher_id"`
+		Name      string    `json:"name"`
+		Email     *string   `json:"email"`
+		Phone     *string   `json:"phone"`
+		Subject   string    `json:"subject"`
+		Status    string    `json:"status"`
+		CreatedAt time.Time `json:"created_at"`
+		UpdatedAt time.Time `json:"updated_at"`
 	}
 
 	teachers := make([]Teacher, 0)
@@ -1132,7 +1131,7 @@ func getStudentsHandler(
 
 	defer cancel()
 
-	rows, err := db.Query(
+	rows, err := adminDB.Query(
 		ctx,
 		`
 		SELECT
@@ -1143,7 +1142,7 @@ func getStudentsHandler(
 			status,
 			created_at,
 			updated_at
-		FROM users
+		FROM public.users
 		ORDER BY id DESC
 		`,
 	)
@@ -1278,7 +1277,7 @@ func deleteStudentHandler(
 
 	defer cancel()
 
-	tx, err := db.Begin(ctx)
+	tx, err := adminDB.Begin(ctx)
 
 	if err != nil {
 		log.Println(
@@ -1300,7 +1299,7 @@ func deleteStudentHandler(
 	_, err = tx.Exec(
 		ctx,
 		`
-		DELETE FROM course_applications
+		DELETE FROM public.course_applications
 		WHERE user_id = $1
 		`,
 		userID,
@@ -1324,7 +1323,7 @@ func deleteStudentHandler(
 	result, err := tx.Exec(
 		ctx,
 		`
-		DELETE FROM users
+		DELETE FROM public.users
 		WHERE id = $1
 		`,
 		userID,
@@ -1457,10 +1456,10 @@ func deleteApplicationHandler(
 
 	defer cancel()
 
-	result, err := db.Exec(
+	result, err := adminDB.Exec(
 		ctx,
 		`
-		DELETE FROM course_applications
+		DELETE FROM public.course_applications
 		WHERE user_id = $1
 		  AND course_type = $2
 		  AND course_name = $3
@@ -1543,7 +1542,7 @@ func getApplicationsHandler(
 
 	defer cancel()
 
-	rows, err := db.Query(
+	rows, err := adminDB.Query(
 		ctx,
 		`
 		SELECT
@@ -1553,8 +1552,8 @@ func getApplicationsHandler(
 			u.phone,
 			ca.course_type,
 			ca.course_name
-		FROM course_applications ca
-		INNER JOIN users u
+		FROM public.course_applications ca
+		INNER JOIN public.users u
 			ON u.id = ca.user_id
 		ORDER BY ca.user_id DESC
 		`,
@@ -1643,7 +1642,16 @@ func ensureAdminNotificationTable(
 
 	notificationTableOnce.Do(
 		func() {
-			_, tableErr = db.Exec(
+
+			if adminDB == nil {
+				tableErr = fmt.Errorf(
+					"admin database connection is nil",
+				)
+
+				return
+			}
+
+			_, tableErr = adminDB.Exec(
 				ctx,
 				`
 				CREATE TABLE IF NOT EXISTS admin.notifications
@@ -1697,7 +1705,11 @@ func recordAdminNotification(
 	title string,
 	message string,
 ) {
-	if db == nil {
+	if adminDB == nil {
+		log.Println(
+			"Admin notification skipped: adminDB is nil",
+		)
+
 		return
 	}
 
@@ -1707,7 +1719,7 @@ func recordAdminNotification(
 		return
 	}
 
-	_, err := db.Exec(
+	_, err := adminDB.Exec(
 		ctx,
 		`
 		INSERT INTO admin.notifications
@@ -1782,7 +1794,7 @@ func getNotificationsHandler(
 		return
 	}
 
-	rows, err := db.Query(
+	rows, err := adminDB.Query(
 		ctx,
 		`
 		SELECT
@@ -1903,15 +1915,20 @@ func adminOverviewHandler(
 	var applications int64
 	var notifications int64
 
-	err := db.QueryRow(
+	err := adminDB.QueryRow(
 		ctx,
 		`
 		SELECT COUNT(*)
-		FROM users
+		FROM public.users
 		`,
 	).Scan(&students)
 
 	if err != nil {
+		log.Println(
+			"Overview students query error:",
+			err,
+		)
+
 		http.Error(
 			w,
 			"Overview loading failed",
@@ -1921,7 +1938,7 @@ func adminOverviewHandler(
 		return
 	}
 
-	err = db.QueryRow(
+	err = adminDB.QueryRow(
 		ctx,
 		`
 		SELECT COUNT(*)
@@ -1930,6 +1947,11 @@ func adminOverviewHandler(
 	).Scan(&teachers)
 
 	if err != nil {
+		log.Println(
+			"Overview teachers query error:",
+			err,
+		)
+
 		http.Error(
 			w,
 			"Overview loading failed",
@@ -1939,15 +1961,20 @@ func adminOverviewHandler(
 		return
 	}
 
-	err = db.QueryRow(
+	err = adminDB.QueryRow(
 		ctx,
 		`
 		SELECT COUNT(*)
-		FROM course_applications
+		FROM public.course_applications
 		`,
 	).Scan(&applications)
 
 	if err != nil {
+		log.Println(
+			"Overview applications query error:",
+			err,
+		)
+
 		http.Error(
 			w,
 			"Overview loading failed",
@@ -1961,7 +1988,7 @@ func adminOverviewHandler(
 		ctx,
 	); err == nil {
 
-		_ = db.QueryRow(
+		_ = adminDB.QueryRow(
 			ctx,
 			`
 			SELECT COUNT(*)
@@ -2052,7 +2079,7 @@ func teacherLoginHandler(
 	var status string
 	var mustChangePassword bool
 
-	err := db.QueryRow(
+	err := adminDB.QueryRow(
 		ctx,
 		`
 		SELECT
@@ -2250,7 +2277,7 @@ func teacherChangePasswordHandler(
 
 	defer cancel()
 
-	result, err := db.Exec(
+	result, err := adminDB.Exec(
 		ctx,
 		`
 		UPDATE admin.teachers
@@ -2344,7 +2371,7 @@ func teacherProfileHandler(
 	var updatedAt time.Time
 	var mustChangePassword bool
 
-	err := db.QueryRow(
+	err := adminDB.QueryRow(
 		ctx,
 		`
 		SELECT
