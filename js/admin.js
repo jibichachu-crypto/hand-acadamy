@@ -2,16 +2,17 @@
 
 document.addEventListener("DOMContentLoaded", async function () {
 
-    // ============================================================
-    // ADMIN SESSION
-    // ============================================================
+    /* ============================================================
+       ADMIN SESSION
+    ============================================================ */
 
     try {
         const response = await fetch(
             "/admin/session",
             {
                 method: "GET",
-                credentials: "include"
+                credentials: "include",
+                cache: "no-store"
             }
         );
 
@@ -19,14 +20,25 @@ document.addEventListener("DOMContentLoaded", async function () {
             window.location.replace("/admin-login.html");
             return;
         }
+
+        const data = await response.json().catch(function () {
+            return {};
+        });
+
+        if (data.authenticated === false) {
+            window.location.replace("/admin-login.html");
+            return;
+        }
+
     } catch (error) {
         window.location.replace("/admin-login.html");
         return;
     }
 
-    // ============================================================
-    // ELEMENTS
-    // ============================================================
+
+    /* ============================================================
+       ELEMENTS
+    ============================================================ */
 
     const navItems =
         document.querySelectorAll(".nav-item");
@@ -70,9 +82,10 @@ document.addEventListener("DOMContentLoaded", async function () {
     const chatMessageInput =
         document.getElementById("chatMessageInput");
 
-    // ============================================================
-    // HELPERS
-    // ============================================================
+
+    /* ============================================================
+       HELPERS
+    ============================================================ */
 
     function escapeHTML(value) {
         return String(value ?? "")
@@ -82,6 +95,7 @@ document.addEventListener("DOMContentLoaded", async function () {
             .replaceAll('"', "&quot;")
             .replaceAll("'", "&#039;");
     }
+
 
     function showMessage(
         element,
@@ -100,6 +114,7 @@ document.addEventListener("DOMContentLoaded", async function () {
             (isError ? "error" : "success");
     }
 
+
     function clearMessage(element) {
         if (!element) {
             return;
@@ -110,6 +125,7 @@ document.addEventListener("DOMContentLoaded", async function () {
         element.className = "form-message";
     }
 
+
     async function getJSON(
         url,
         options = {}
@@ -118,30 +134,49 @@ document.addEventListener("DOMContentLoaded", async function () {
             url,
             {
                 credentials: "include",
+                cache: "no-store",
                 ...options
             }
         );
 
-        const text = await response.text();
+
+        const responseText =
+            await response.text();
+
 
         let data = {};
 
+
         try {
-            data = text ? JSON.parse(text) : {};
+            data = responseText
+                ? JSON.parse(responseText)
+                : {};
         } catch (error) {
             data = {};
         }
 
-        if (!response.ok) {
+
+        if (response.status === 401) {
+            window.location.replace("/admin-login.html");
             throw new Error(
-                data.error ||
-                text.trim() ||
-                "Request failed"
+                "Admin session expired."
             );
         }
 
+
+        if (!response.ok) {
+            throw new Error(
+                data.error ||
+                data.message ||
+                responseText.trim() ||
+                "Request failed."
+            );
+        }
+
+
         return data;
     }
+
 
     function formatLabel(key) {
         return String(key)
@@ -154,14 +189,21 @@ document.addEventListener("DOMContentLoaded", async function () {
             );
     }
 
-    // ============================================================
-    // NAVIGATION
-    // ============================================================
+
+    /* ============================================================
+       NAVIGATION
+    ============================================================ */
 
     function activateSection(
         sectionId,
         clickedNav
     ) {
+
+        if (!sectionId) {
+            return;
+        }
+
+
         sections.forEach(
             function (section) {
                 section.classList.toggle(
@@ -170,6 +212,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                 );
             }
         );
+
 
         navItems.forEach(
             function (item) {
@@ -180,24 +223,30 @@ document.addEventListener("DOMContentLoaded", async function () {
             }
         );
 
-        if (sectionId === "add-teacher") {
+
+        if (sectionId === "addTeacherSection") {
             clearMessage(teacherMessage);
         }
     }
 
+
     navItems.forEach(
         function (button) {
+
             button.addEventListener(
                 "click",
                 function () {
+
                     const targetId =
                         this.getAttribute(
                             "data-section"
                         );
 
+
                     if (!targetId) {
                         return;
                     }
+
 
                     activateSection(
                         targetId,
@@ -208,20 +257,26 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     );
 
+
     clearMessage(teacherMessage);
 
-    // ============================================================
-    // LOAD OVERVIEW
-    // ============================================================
+
+    /* ============================================================
+       OVERVIEW
+    ============================================================ */
 
     async function loadOverview() {
+
         try {
+
             const data =
                 await getJSON(
                     "/admin/overview"
                 );
 
+
             const values = {
+
                 totalStudents:
                     data.total_students ?? 0,
 
@@ -247,10 +302,13 @@ document.addEventListener("DOMContentLoaded", async function () {
                     data.total_notifications ?? 0
             };
 
+
             Object.entries(values).forEach(
                 function ([id, value]) {
+
                     const element =
                         document.getElementById(id);
+
 
                     if (element) {
                         element.textContent = value;
@@ -258,7 +316,9 @@ document.addEventListener("DOMContentLoaded", async function () {
                 }
             );
 
+
         } catch (error) {
+
             console.error(
                 "Overview loading failed:",
                 error
@@ -266,9 +326,10 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     }
 
-    // ============================================================
-    // ADD TEACHER
-    // ============================================================
+
+    /* ============================================================
+       ADD TEACHER
+    ============================================================ */
 
     if (addTeacherForm) {
 
@@ -277,6 +338,9 @@ document.addEventListener("DOMContentLoaded", async function () {
             async function (event) {
 
                 event.preventDefault();
+
+                clearMessage(teacherMessage);
+
 
                 const nameInput =
                     document.getElementById(
@@ -288,34 +352,42 @@ document.addEventListener("DOMContentLoaded", async function () {
                         "teacherSubject"
                     );
 
+
                 const name =
                     nameInput
                         ? nameInput.value.trim()
                         : "";
+
 
                 const subject =
                     subjectInput
                         ? subjectInput.value.trim()
                         : "";
 
+
                 if (!name || !subject) {
+
                     showMessage(
                         teacherMessage,
                         "Teacher name and subject are required.",
                         true
                     );
+
                     return;
                 }
+
 
                 const button =
                     addTeacherForm.querySelector(
                         'button[type="submit"]'
                     );
 
+
                 if (button) {
                     button.disabled = true;
                     button.textContent = "Adding...";
                 }
+
 
                 try {
 
@@ -324,10 +396,12 @@ document.addEventListener("DOMContentLoaded", async function () {
                             "/admin/teachers",
                             {
                                 method: "POST",
+
                                 headers: {
                                     "Content-Type":
                                         "application/json"
                                 },
+
                                 body: JSON.stringify({
                                     name: name,
                                     subject: subject
@@ -335,30 +409,48 @@ document.addEventListener("DOMContentLoaded", async function () {
                             }
                         );
 
+
                     addTeacherForm.reset();
+
+
+                    let successText =
+                        result.message ||
+                        "Teacher added successfully.";
+
+
+                    if (result.teacher_id) {
+                        successText +=
+                            " User ID: " +
+                            String(result.teacher_id);
+                    }
+
+
+                    if (result.temporary_password) {
+                        successText +=
+                            " | Temporary Password: " +
+                            String(
+                                result.temporary_password
+                            );
+                    }
+
 
                     showMessage(
                         teacherMessage,
-                        "Teacher added successfully. " +
-                        "User ID: " +
-                        (
-                            result.teacher_id || "—"
-                        ) +
-                        " | Temporary Password: " +
-                        (
-                            result.temporary_password || "—"
-                        ),
+                        successText,
                         false
                     );
+
 
                     await Promise.all([
                         loadTeachers(),
                         loadOverview()
                     ]);
 
+
                     if (nameInput) {
                         nameInput.focus();
                     }
+
 
                 } catch (error) {
 
@@ -369,26 +461,30 @@ document.addEventListener("DOMContentLoaded", async function () {
                         true
                     );
 
+
                 } finally {
 
                     if (button) {
                         button.disabled = false;
-                        button.textContent = "Add Teacher";
+                        button.textContent =
+                            "Add Teacher";
                     }
                 }
             }
         );
     }
 
-    // ============================================================
-    // LOAD TEACHERS
-    // ============================================================
+
+    /* ============================================================
+       LOAD TEACHERS
+    ============================================================ */
 
     async function loadTeachers() {
 
         if (!teacherList) {
             return;
         }
+
 
         try {
 
@@ -397,20 +493,26 @@ document.addEventListener("DOMContentLoaded", async function () {
                     "/admin/teachers"
                 );
 
+
             const teachers =
                 Array.isArray(data.teachers)
                     ? data.teachers
                     : [];
 
+
             teacherList.innerHTML = "";
 
+
             if (teachers.length === 0) {
+
                 teacherList.innerHTML =
                     '<div class="empty-state">' +
                     "No teachers added yet." +
                     "</div>";
+
                 return;
             }
+
 
             teachers.forEach(
                 function (teacher) {
@@ -418,11 +520,16 @@ document.addEventListener("DOMContentLoaded", async function () {
                     const card =
                         document.createElement("div");
 
-                    card.className = "data-card";
+
+                    card.className =
+                        "data-card";
+
 
                     card.innerHTML = `
                         <div class="data-card-top">
+
                             <div>
+
                                 <div class="data-card-title">
                                     ${escapeHTML(
                                         teacher.name
@@ -434,16 +541,20 @@ document.addEventListener("DOMContentLoaded", async function () {
                                         teacher.subject
                                     )}
                                 </div>
+
                             </div>
 
                             <span class="status-badge">
                                 ${escapeHTML(
-                                    teacher.status || "active"
+                                    teacher.status ||
+                                    "active"
                                 )}
                             </span>
+
                         </div>
 
                         <div class="data-card-meta">
+
                             <span>
                                 User ID:
                                 ${escapeHTML(
@@ -457,12 +568,15 @@ document.addEventListener("DOMContentLoaded", async function () {
                                     teacher.created_at
                                 )}
                             </span>
+
                         </div>
                     `;
+
 
                     card.addEventListener(
                         "click",
                         function () {
+
                             openDetails(
                                 "Teacher Details",
                                 teacher,
@@ -471,9 +585,11 @@ document.addEventListener("DOMContentLoaded", async function () {
                         }
                     );
 
+
                     teacherList.appendChild(card);
                 }
             );
+
 
         } catch (error) {
 
@@ -487,15 +603,17 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     }
 
-    // ============================================================
-    // LOAD STUDENTS
-    // ============================================================
+
+    /* ============================================================
+       LOAD STUDENTS
+    ============================================================ */
 
     async function loadStudents() {
 
         if (!studentList) {
             return;
         }
+
 
         try {
 
@@ -504,20 +622,26 @@ document.addEventListener("DOMContentLoaded", async function () {
                     "/admin/students"
                 );
 
+
             const students =
                 Array.isArray(data.students)
                     ? data.students
                     : [];
 
+
             studentList.innerHTML = "";
 
+
             if (students.length === 0) {
+
                 studentList.innerHTML =
                     '<div class="empty-state">' +
                     "No students registered yet." +
                     "</div>";
+
                 return;
             }
+
 
             students.forEach(
                 function (student) {
@@ -525,11 +649,16 @@ document.addEventListener("DOMContentLoaded", async function () {
                     const card =
                         document.createElement("div");
 
-                    card.className = "data-card";
+
+                    card.className =
+                        "data-card";
+
 
                     card.innerHTML = `
                         <div class="data-card-top">
+
                             <div>
+
                                 <div class="data-card-title">
                                     ${escapeHTML(
                                         student.name
@@ -542,16 +671,20 @@ document.addEventListener("DOMContentLoaded", async function () {
                                         student.user_id
                                     )}
                                 </div>
+
                             </div>
 
                             <span class="status-badge">
                                 ${escapeHTML(
-                                    student.status || "active"
+                                    student.status ||
+                                    "active"
                                 )}
                             </span>
+
                         </div>
 
                         <div class="data-card-meta">
+
                             <span>
                                 ${escapeHTML(
                                     student.email
@@ -563,12 +696,15 @@ document.addEventListener("DOMContentLoaded", async function () {
                                     student.phone
                                 )}
                             </span>
+
                         </div>
                     `;
+
 
                     card.addEventListener(
                         "click",
                         function () {
+
                             openDetails(
                                 "Student Details",
                                 student,
@@ -577,9 +713,11 @@ document.addEventListener("DOMContentLoaded", async function () {
                         }
                     );
 
+
                     studentList.appendChild(card);
                 }
             );
+
 
         } catch (error) {
 
@@ -593,15 +731,17 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     }
 
-    // ============================================================
-    // LOAD COURSE APPLICATIONS
-    // ============================================================
+
+    /* ============================================================
+       LOAD APPLICATIONS
+    ============================================================ */
 
     async function loadApplications() {
 
         if (!applicationsList) {
             return;
         }
+
 
         try {
 
@@ -610,6 +750,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                     "/admin/applications"
                 );
 
+
             const applications =
                 Array.isArray(
                     data.applications
@@ -617,15 +758,20 @@ document.addEventListener("DOMContentLoaded", async function () {
                     ? data.applications
                     : [];
 
+
             applicationsList.innerHTML = "";
 
+
             if (applications.length === 0) {
+
                 applicationsList.innerHTML =
                     '<div class="empty-state">' +
                     "No course applications yet." +
                     "</div>";
+
                 return;
             }
+
 
             applications.forEach(
                 function (application) {
@@ -633,11 +779,16 @@ document.addEventListener("DOMContentLoaded", async function () {
                     const card =
                         document.createElement("div");
 
-                    card.className = "data-card";
+
+                    card.className =
+                        "data-card";
+
 
                     card.innerHTML = `
                         <div class="data-card-top">
+
                             <div>
+
                                 <div class="data-card-title">
                                     ${escapeHTML(
                                         application.student_name ||
@@ -650,6 +801,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                                         application.course_name
                                     )}
                                 </div>
+
                             </div>
 
                             <span class="status-badge">
@@ -658,9 +810,11 @@ document.addEventListener("DOMContentLoaded", async function () {
                                     "Pending"
                                 )}
                             </span>
+
                         </div>
 
                         <div class="data-card-meta">
+
                             <span>
                                 User ID:
                                 ${escapeHTML(
@@ -674,12 +828,15 @@ document.addEventListener("DOMContentLoaded", async function () {
                                     application.course_type
                                 )}
                             </span>
+
                         </div>
                     `;
+
 
                     card.addEventListener(
                         "click",
                         function () {
+
                             openDetails(
                                 "Course Application",
                                 application,
@@ -688,9 +845,11 @@ document.addEventListener("DOMContentLoaded", async function () {
                         }
                     );
 
+
                     applicationsList.appendChild(card);
                 }
             );
+
 
         } catch (error) {
 
@@ -704,15 +863,17 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     }
 
-    // ============================================================
-    // LOAD NOTIFICATIONS
-    // ============================================================
+
+    /* ============================================================
+       LOAD NOTIFICATIONS
+    ============================================================ */
 
     async function loadNotifications() {
 
         if (!notificationsList) {
             return;
         }
+
 
         try {
 
@@ -721,6 +882,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                     "/admin/notifications"
                 );
 
+
             const notifications =
                 Array.isArray(
                     data.notifications
@@ -728,15 +890,20 @@ document.addEventListener("DOMContentLoaded", async function () {
                     ? data.notifications
                     : [];
 
+
             notificationsList.innerHTML = "";
 
+
             if (notifications.length === 0) {
+
                 notificationsList.innerHTML =
                     '<div class="empty-state">' +
                     "No new notifications." +
                     "</div>";
+
                 return;
             }
+
 
             notifications.forEach(
                 function (notification) {
@@ -744,7 +911,10 @@ document.addEventListener("DOMContentLoaded", async function () {
                     const card =
                         document.createElement("div");
 
-                    card.className = "data-card";
+
+                    card.className =
+                        "data-card";
+
 
                     card.innerHTML = `
                         <div class="data-card-title">
@@ -757,22 +927,40 @@ document.addEventListener("DOMContentLoaded", async function () {
 
                         <div class="data-card-subtitle">
                             ${escapeHTML(
-                                notification.message
+                                notification.message ||
+                                ""
                             )}
                         </div>
 
                         <div class="data-card-meta">
+
                             <span>
                                 ${escapeHTML(
                                     notification.created_at
                                 )}
                             </span>
+
                         </div>
                     `;
+
+
+                    card.addEventListener(
+                        "click",
+                        function () {
+
+                            openDetails(
+                                "Notification Details",
+                                notification,
+                                "notification"
+                            );
+                        }
+                    );
+
 
                     notificationsList.appendChild(card);
                 }
             );
+
 
         } catch (error) {
 
@@ -786,9 +974,10 @@ document.addEventListener("DOMContentLoaded", async function () {
         }
     }
 
-    // ============================================================
-    // DETAILS MODAL
-    // ============================================================
+
+    /* ============================================================
+       DETAILS MODAL
+    ============================================================ */
 
     function openDetails(
         title,
@@ -803,16 +992,20 @@ document.addEventListener("DOMContentLoaded", async function () {
             return;
         }
 
+
         const hiddenKeys = new Set([
             "password",
             "password_hash",
             "temporary_password"
         ]);
 
+
         const removalConfig = {
 
             teacher: {
+
                 label: "Remove Teacher",
+
                 confirmLabel: "Confirm Remove",
 
                 url: function (item) {
@@ -827,6 +1020,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                 },
 
                 refresh: async function () {
+
                     await Promise.all([
                         loadTeachers(),
                         loadOverview()
@@ -834,8 +1028,11 @@ document.addEventListener("DOMContentLoaded", async function () {
                 }
             },
 
+
             student: {
+
                 label: "Remove Student",
+
                 confirmLabel: "Confirm Remove",
 
                 url: function (item) {
@@ -850,6 +1047,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                 },
 
                 refresh: async function () {
+
                     await Promise.all([
                         loadStudents(),
                         loadApplications(),
@@ -858,11 +1056,15 @@ document.addEventListener("DOMContentLoaded", async function () {
                 }
             },
 
+
             application: {
+
                 label: "Remove Application",
+
                 confirmLabel: "Confirm Remove",
 
                 url: function (item) {
+
                     return (
                         "/admin/applications?user_id=" +
                         encodeURIComponent(
@@ -886,6 +1088,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                 },
 
                 refresh: async function () {
+
                     await Promise.all([
                         loadApplications(),
                         loadOverview()
@@ -894,11 +1097,13 @@ document.addEventListener("DOMContentLoaded", async function () {
             }
         };
 
+
         let html = `
             <h2>
                 ${escapeHTML(title)}
             </h2>
         `;
+
 
         Object.entries(
             data || {}
@@ -909,6 +1114,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                     return;
                 }
 
+
                 if (
                     value === null ||
                     value === undefined ||
@@ -916,6 +1122,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                 ) {
                     value = "—";
                 }
+
 
                 html += `
                     <div class="detail-row">
@@ -935,8 +1142,10 @@ document.addEventListener("DOMContentLoaded", async function () {
             }
         );
 
+
         const config =
             removalConfig[detailType];
+
 
         const canRemove =
             !!config &&
@@ -956,10 +1165,12 @@ document.addEventListener("DOMContentLoaded", async function () {
                 )
             );
 
+
         if (canRemove) {
 
             html += `
                 <div
+                    class="remove-area"
                     style="
                         margin-top:24px;
                         padding-top:18px;
@@ -972,6 +1183,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                         id="removeEntityButton"
                         style="
                             width:100%;
+                            min-height:44px;
                             padding:12px 16px;
                             border:0;
                             border-radius:10px;
@@ -985,6 +1197,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                             config.label
                         )}
                     </button>
+
 
                     <div
                         id="removeConfirmHint"
@@ -1004,18 +1217,25 @@ document.addEventListener("DOMContentLoaded", async function () {
             `;
         }
 
-        detailsModalContent.innerHTML = html;
+
+        detailsModalContent.innerHTML =
+            html;
+
+
         detailsModal.hidden = false;
+
 
         const removeButton =
             document.getElementById(
                 "removeEntityButton"
             );
 
+
         const removeConfirmHint =
             document.getElementById(
                 "removeConfirmHint"
             );
+
 
         if (
             !removeButton ||
@@ -1024,11 +1244,11 @@ document.addEventListener("DOMContentLoaded", async function () {
             return;
         }
 
+
         removeButton.addEventListener(
             "click",
             async function () {
 
-                // FIRST CLICK
                 if (
                     removeButton.dataset.confirmed !==
                     "true"
@@ -1043,18 +1263,22 @@ document.addEventListener("DOMContentLoaded", async function () {
                     removeButton.style.background =
                         "#991b1b";
 
+
                     if (removeConfirmHint) {
                         removeConfirmHint.hidden =
                             false;
                     }
 
+
                     return;
                 }
 
-                // SECOND CLICK
+
                 removeButton.disabled = true;
+
                 removeButton.textContent =
                     "Removing...";
+
 
                 try {
 
@@ -1066,14 +1290,18 @@ document.addEventListener("DOMContentLoaded", async function () {
                             }
                         );
 
+
                     detailsModal.hidden = true;
 
+
                     await config.refresh();
+
 
                     window.alert(
                         result.message ||
                         "Removed successfully."
                     );
+
 
                 } catch (error) {
 
@@ -1081,6 +1309,7 @@ document.addEventListener("DOMContentLoaded", async function () {
                         error.message ||
                         "Unable to remove."
                     );
+
 
                     removeButton.disabled =
                         false;
@@ -1095,9 +1324,10 @@ document.addEventListener("DOMContentLoaded", async function () {
         );
     }
 
-    // ============================================================
-    // CLOSE DETAILS MODAL
-    // ============================================================
+
+    /* ============================================================
+       CLOSE MODAL
+    ============================================================ */
 
     if (closeDetailsModal) {
 
@@ -1111,6 +1341,7 @@ document.addEventListener("DOMContentLoaded", async function () {
             }
         );
     }
+
 
     if (detailsModal) {
 
@@ -1128,9 +1359,24 @@ document.addEventListener("DOMContentLoaded", async function () {
         );
     }
 
-    // ============================================================
-    // LOGOUT
-    // ============================================================
+
+    document.addEventListener(
+        "keydown",
+        function (event) {
+
+            if (event.key === "Escape") {
+
+                if (detailsModal) {
+                    detailsModal.hidden = true;
+                }
+            }
+        }
+    );
+
+
+    /* ============================================================
+       LOGOUT
+    ============================================================ */
 
     if (adminLogoutButton) {
 
@@ -1144,19 +1390,22 @@ document.addEventListener("DOMContentLoaded", async function () {
                 adminLogoutButton.textContent =
                     "Logging out...";
 
+
                 try {
 
                     await fetch(
                         "/admin/logout",
                         {
                             method: "POST",
-                            credentials: "include"
+                            credentials: "include",
+                            cache: "no-store"
                         }
                     );
 
                 } catch (error) {
-                    // Redirect anyway.
+                    // Redirect even if logout request fails.
                 }
+
 
                 window.location.replace(
                     "/admin-login.html"
@@ -1165,9 +1414,10 @@ document.addEventListener("DOMContentLoaded", async function () {
         );
     }
 
-    // ============================================================
-    // CHAT UI
-    // ============================================================
+
+    /* ============================================================
+       CHAT UI
+    ============================================================ */
 
     if (
         sendChatButton &&
@@ -1181,19 +1431,49 @@ document.addEventListener("DOMContentLoaded", async function () {
                 const message =
                     chatMessageInput.value.trim();
 
+
                 if (!message) {
                     return;
                 }
 
-                // Chat backend will be connected later.
+
+                /*
+                    Chat backend is not connected yet.
+                    Keep the UI ready without pretending
+                    the message was sent.
+                */
+
+                console.log(
+                    "Chat message not sent:",
+                    message
+                );
+
                 chatMessageInput.value = "";
+            }
+        );
+
+
+        chatMessageInput.addEventListener(
+            "keydown",
+            function (event) {
+
+                if (
+                    event.key === "Enter" &&
+                    !event.shiftKey
+                ) {
+
+                    event.preventDefault();
+
+                    sendChatButton.click();
+                }
             }
         );
     }
 
-    // ============================================================
-    // INITIAL LOAD
-    // ============================================================
+
+    /* ============================================================
+       INITIAL LOAD
+    ============================================================ */
 
     await loadOverview();
     await loadTeachers();
