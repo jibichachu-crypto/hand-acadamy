@@ -1,680 +1,788 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>Admin Dashboard - Hand In Hand Academy</title>
 
-    <meta name="referrer" content="no-referrer">
+    <meta
+        name="referrer"
+        content="no-referrer"
+    >
 
-    <meta http-equiv="Content-Security-Policy"
-          content="default-src 'none';
-                   img-src 'self';
-                   style-src 'self';
-                   script-src 'self';
-                   connect-src 'self';
-                   base-uri 'none';
-                   form-action 'none';
-                   object-src 'none';">
+    <meta
+        http-equiv="Content-Security-Policy"
+        content="
+            default-src 'none';
+            img-src 'self';
+            style-src 'self';
+            script-src 'self';
+            connect-src 'self';
+            base-uri 'none';
+            form-action 'none';
+            object-src 'none';
+        "
+    >
 
-    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta
+        http-equiv="X-Content-Type-Options"
+        content="nosniff"
+    >
 
-    <link rel="stylesheet" href="css/admin.css">
+    <link
+        rel="stylesheet"
+        href="css/admin.css"
+    >
 </head>
+
 
 <body>
 
-<header class="admin-topbar">
-
-    <div class="admin-brand">
-
-        <div class="brand-icon">
-            HIH
-        </div>
-
-        <div>
-            <h1>Hand In Hand Academy</h1>
-            <p>Admin Dashboard</p>
-        </div>
-
-    </div>
-
-    <button
-        type="button"
-        id="adminLogoutButton"
-        class="logout-button">
-        Logout
-    </button>
-
-</header>
-
-
-<div class="admin-layout">
-
     <!-- =====================================================
-         SIDEBAR
+         TOPBAR
     ====================================================== -->
 
-    <aside class="admin-sidebar">
+    <header class="admin-topbar">
 
-        <nav class="admin-nav">
+        <div class="admin-brand">
 
-            <button
-                type="button"
-                class="nav-item active"
-                data-section="overviewSection">
-                Overview
-            </button>
+            <div class="brand-icon">
+                HIH
+            </div>
 
-            <button
-                type="button"
-                class="nav-item"
-                data-section="addTeacherSection">
-                Add Teacher
-            </button>
+            <div>
+                <h1>
+                    Hand In Hand Academy
+                </h1>
 
-            <button
-                type="button"
-                class="nav-item"
-                data-section="teachersSection">
-
-                Teachers
-
-                <span
-                    id="teacherCount"
-                    class="nav-badge">
-                    0
-                </span>
-
-            </button>
-
-            <button
-                type="button"
-                class="nav-item"
-                data-section="studentsSection">
-
-                Students
-
-                <span
-                    id="studentCount"
-                    class="nav-badge">
-                    0
-                </span>
-
-            </button>
-
-            <button
-                type="button"
-                class="nav-item"
-                data-section="applicationsSection">
-
-                Course Applications
-
-                <span
-                    id="applicationCount"
-                    class="nav-badge">
-                    0
-                </span>
-
-            </button>
-
-            <button
-                type="button"
-                class="nav-item"
-                data-section="notificationsSection">
-
-                Notifications
-
-                <span
-                    id="notificationCount"
-                    class="nav-badge">
-                    0
-                </span>
-
-            </button>
-
-            <button
-                type="button"
-                class="nav-item"
-                data-section="chatSection">
-                Chat
-            </button>
-
-        </nav>
-
-    </aside>
-
-
-    <!-- =====================================================
-         MAIN CONTENT
-    ====================================================== -->
-
-    <main class="admin-content">
-
-
-        <!-- =================================================
-             OVERVIEW
-        ================================================== -->
-
-        <section
-            id="overviewSection"
-            class="admin-section active-section">
-
-            <div class="page-heading">
-
-                <span class="page-label">
-                    Administration
-                </span>
-
-                <h2>
+                <p>
                     Admin Dashboard
-                </h2>
-
-                <p>
-                    Manage teachers, students, applications,
-                    notifications and communication.
                 </p>
-
             </div>
 
+        </div>
 
-            <div class="stats-grid">
-
-                <div class="stat-card">
-
-                    <span class="stat-title">
-                        Total Students
-                    </span>
-
-                    <strong
-                        id="totalStudents"
-                        class="stat-number">
-                        0
-                    </strong>
-
-                </div>
-
-
-                <div class="stat-card">
-
-                    <span class="stat-title">
-                        Total Teachers
-                    </span>
-
-                    <strong
-                        id="totalTeachers"
-                        class="stat-number">
-                        0
-                    </strong>
-
-                </div>
-
-
-                <div class="stat-card">
-
-                    <span class="stat-title">
-                        Course Applications
-                    </span>
-
-                    <strong
-                        id="totalApplications"
-                        class="stat-number">
-                        0
-                    </strong>
-
-                </div>
-
-
-                <div class="stat-card">
-
-                    <span class="stat-title">
-                        Notifications
-                    </span>
-
-                    <strong
-                        id="totalNotifications"
-                        class="stat-number">
-                        0
-                    </strong>
-
-                </div>
-
-            </div>
-
-
-            <div class="welcome-panel">
-
-                <h3>
-                    Admin Control Center
-                </h3>
-
-                <p>
-                    Manage all teachers and students from one place.
-                </p>
-
-            </div>
-
-        </section>
-
-
-        <!-- =================================================
-             ADD TEACHER
-        ================================================== -->
-
-        <section
-            id="addTeacherSection"
-            class="admin-section">
-
-            <div class="page-heading">
-
-                <span class="page-label">
-                    Staff
-                </span>
-
-                <h2>
-                    Add Teacher
-                </h2>
-
-                <p>
-                    Create a teacher account and assign a subject.
-                </p>
-
-            </div>
-
-
-            <div class="form-panel teacher-add-panel">
-
-                <form id="addTeacherForm">
-
-                    <div class="teacher-add-grid">
-
-                        <div class="form-group">
-
-                            <label for="teacherName">
-                                Teacher Name
-                            </label>
-
-                            <input
-                                type="text"
-                                id="teacherName"
-                                maxlength="100"
-                                placeholder="Enter teacher name"
-                                required>
-
-                        </div>
-
-
-                        <div class="form-group">
-
-                            <label for="teacherSubject">
-                                Subject
-                            </label>
-
-                            <select
-                                id="teacherSubject"
-                                required>
-
-                                <option value="">
-                                    Select Subject
-                                </option>
-
-                                <option value="Malayalam">
-                                    Malayalam
-                                </option>
-
-                                <option value="English">
-                                    English
-                                </option>
-
-                                <option value="Mathematics">
-                                    Mathematics
-                                </option>
-
-                                <option value="General Science">
-                                    General Science
-                                </option>
-
-                                <option value="Hindi">
-                                    Hindi
-                                </option>
-
-                                <option value="Biology Science">
-                                    Biology Science
-                                </option>
-
-                                <option value="Commerce">
-                                    Commerce
-                                </option>
-
-                                <option value="Humanities">
-                                    Humanities
-                                </option>
-
-                                <option value="Computer Science">
-                                    Computer Science
-                                </option>
-
-                            </select>
-
-                        </div>
-
-                    </div>
-
-
-                    <p
-                        id="teacherMessage"
-                        class="form-message"
-                        hidden>
-                    </p>
-
-
-                    <div class="form-actions">
-
-                        <button
-                            type="submit"
-                            class="primary-button">
-                            Add Teacher
-                        </button>
-
-                    </div>
-
-                </form>
-
-            </div>
-
-        </section>
-
-
-        <!-- =================================================
-             TEACHERS
-        ================================================== -->
-
-        <section
-            id="teachersSection"
-            class="admin-section">
-
-            <div class="page-heading">
-
-                <span class="page-label">
-                    Staff
-                </span>
-
-                <h2>
-                    Teachers
-                </h2>
-
-                <p>
-                    View all teachers added by the admin.
-                </p>
-
-            </div>
-
-
-            <div
-                id="teacherList"
-                class="data-list">
-
-                <div class="empty-state">
-                    No teachers loaded.
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- =================================================
-             STUDENTS
-        ================================================== -->
-
-        <section
-            id="studentsSection"
-            class="admin-section">
-
-            <div class="page-heading">
-
-                <span class="page-label">
-                    Students
-                </span>
-
-                <h2>
-                    Students
-                </h2>
-
-                <p>
-                    View all registered students.
-                </p>
-
-            </div>
-
-
-            <div
-                id="studentList"
-                class="data-list">
-
-                <div class="empty-state">
-                    No students loaded.
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- =================================================
-             COURSE APPLICATIONS
-        ================================================== -->
-
-        <section
-            id="applicationsSection"
-            class="admin-section">
-
-            <div class="page-heading">
-
-                <span class="page-label">
-                    Applications
-                </span>
-
-                <h2>
-                    Course Applications
-                </h2>
-
-                <p>
-                    View complete submitted course applications.
-                </p>
-
-            </div>
-
-
-            <div
-                id="applicationsList"
-                class="data-list">
-
-                <div class="empty-state">
-                    No course applications yet.
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- =================================================
-             NOTIFICATIONS
-        ================================================== -->
-
-        <section
-            id="notificationsSection"
-            class="admin-section">
-
-            <div class="page-heading">
-
-                <span class="page-label">
-                    Alerts
-                </span>
-
-                <h2>
-                    Notifications
-                </h2>
-
-                <p>
-                    Student registration, login and application events.
-                </p>
-
-            </div>
-
-
-            <div
-                id="notificationsList"
-                class="data-list">
-
-                <div class="empty-state">
-                    No new notifications.
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- =================================================
-             CHAT
-        ================================================== -->
-
-        <section
-            id="chatSection"
-            class="admin-section">
-
-            <div class="page-heading">
-
-                <span class="page-label">
-                    Communication
-                </span>
-
-                <h2>
-                    Chat
-                </h2>
-
-                <p>
-                    Communication between students and teachers.
-                </p>
-
-            </div>
-
-
-            <div class="chat-layout">
-
-
-                <div class="chat-users">
-
-                    <div class="chat-search">
-
-                        <input
-                            type="search"
-                            id="chatSearch"
-                            placeholder="Search User ID">
-
-                    </div>
-
-
-                    <div
-                        id="chatUserList"
-                        class="chat-user-list">
-
-                        <div class="empty-state">
-                            No conversations yet.
-                        </div>
-
-                    </div>
-
-                </div>
-
-
-                <div class="chat-window">
-
-                    <div class="chat-header">
-
-                        <div>
-
-                            <strong id="chatPersonName">
-                                Select a conversation
-                            </strong>
-
-                            <span id="chatPersonId">
-                                —
-                            </span>
-
-                        </div>
-
-                    </div>
-
-
-                    <div
-                        id="chatMessages"
-                        class="chat-messages">
-
-                        <div class="empty-state">
-                            Select a conversation to start chatting.
-                        </div>
-
-                    </div>
-
-
-                    <div class="chat-input-area">
-
-                        <input
-                            type="text"
-                            id="chatMessageInput"
-                            placeholder="Type your message..."
-                            maxlength="1000"
-                            autocomplete="off">
-
-                        <button
-                            type="button"
-                            id="sendChatButton">
-                            Send
-                        </button>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </section>
-
-    </main>
-
-</div>
-
-
-<!-- =========================================================
-     DETAILS MODAL
-========================================================== -->
-
-<div
-    id="detailsModal"
-    class="details-modal"
-    hidden>
-
-    <div class="details-modal-card">
 
         <button
             type="button"
-            id="closeDetailsModal"
-            class="modal-close">
-            ×
+            id="adminLogoutButton"
+            class="logout-button"
+        >
+            Logout
         </button>
 
-        <div id="detailsModalContent"></div>
+    </header>
+
+
+    <!-- =====================================================
+         ADMIN LAYOUT
+    ====================================================== -->
+
+    <div class="admin-layout">
+
+
+        <!-- =================================================
+             SIDEBAR
+        ================================================== -->
+
+        <aside class="admin-sidebar">
+
+            <nav
+                class="admin-nav"
+                aria-label="Admin navigation"
+            >
+
+                <button
+                    type="button"
+                    class="nav-item active"
+                    data-section="overviewSection"
+                >
+                    <span>
+                        Overview
+                    </span>
+                </button>
+
+
+                <button
+                    type="button"
+                    class="nav-item"
+                    data-section="addTeacherSection"
+                >
+                    <span>
+                        Add Teacher
+                    </span>
+                </button>
+
+
+                <button
+                    type="button"
+                    class="nav-item"
+                    data-section="teachersSection"
+                >
+                    <span>
+                        Teachers
+                    </span>
+
+                    <span
+                        id="teacherCount"
+                        class="nav-badge"
+                    >
+                        0
+                    </span>
+                </button>
+
+
+                <button
+                    type="button"
+                    class="nav-item"
+                    data-section="studentsSection"
+                >
+                    <span>
+                        Students
+                    </span>
+
+                    <span
+                        id="studentCount"
+                        class="nav-badge"
+                    >
+                        0
+                    </span>
+                </button>
+
+
+                <button
+                    type="button"
+                    class="nav-item"
+                    data-section="applicationsSection"
+                >
+                    <span>
+                        Course Applications
+                    </span>
+
+                    <span
+                        id="applicationCount"
+                        class="nav-badge"
+                    >
+                        0
+                    </span>
+                </button>
+
+
+                <button
+                    type="button"
+                    class="nav-item"
+                    data-section="notificationsSection"
+                >
+                    <span>
+                        Notifications
+                    </span>
+
+                    <span
+                        id="notificationCount"
+                        class="nav-badge"
+                    >
+                        0
+                    </span>
+                </button>
+
+
+                <button
+                    type="button"
+                    class="nav-item"
+                    data-section="chatSection"
+                >
+                    <span>
+                        Chat
+                    </span>
+                </button>
+
+            </nav>
+
+        </aside>
+
+
+        <!-- =================================================
+             MAIN CONTENT
+        ================================================== -->
+
+        <main class="admin-content">
+
+
+            <!-- =============================================
+                 OVERVIEW
+            ============================================== -->
+
+            <section
+                id="overviewSection"
+                class="admin-section active-section"
+            >
+
+                <div class="page-heading">
+
+                    <span class="page-label">
+                        Administration
+                    </span>
+
+                    <h2>
+                        Admin Dashboard
+                    </h2>
+
+                    <p>
+                        Manage teachers, students, applications,
+                        notifications and communication.
+                    </p>
+
+                </div>
+
+
+                <div class="stats-grid">
+
+
+                    <div class="stat-card">
+
+                        <span class="stat-title">
+                            Total Students
+                        </span>
+
+                        <strong
+                            id="totalStudents"
+                            class="stat-number"
+                        >
+                            0
+                        </strong>
+
+                    </div>
+
+
+                    <div class="stat-card">
+
+                        <span class="stat-title">
+                            Total Teachers
+                        </span>
+
+                        <strong
+                            id="totalTeachers"
+                            class="stat-number"
+                        >
+                            0
+                        </strong>
+
+                    </div>
+
+
+                    <div class="stat-card">
+
+                        <span class="stat-title">
+                            Course Applications
+                        </span>
+
+                        <strong
+                            id="totalApplications"
+                            class="stat-number"
+                        >
+                            0
+                        </strong>
+
+                    </div>
+
+
+                    <div class="stat-card">
+
+                        <span class="stat-title">
+                            Notifications
+                        </span>
+
+                        <strong
+                            id="totalNotifications"
+                            class="stat-number"
+                        >
+                            0
+                        </strong>
+
+                    </div>
+
+                </div>
+
+
+                <div class="welcome-panel">
+
+                    <h3>
+                        Admin Control Center
+                    </h3>
+
+                    <p>
+                        Manage all teachers and students from one place.
+                    </p>
+
+                </div>
+
+            </section>
+
+
+            <!-- =============================================
+                 ADD TEACHER
+            ============================================== -->
+
+            <section
+                id="addTeacherSection"
+                class="admin-section"
+            >
+
+                <div class="page-heading">
+
+                    <span class="page-label">
+                        Staff
+                    </span>
+
+                    <h2>
+                        Add Teacher
+                    </h2>
+
+                    <p>
+                        Create a teacher account and assign a subject.
+                    </p>
+
+                </div>
+
+
+                <div class="form-panel teacher-add-panel">
+
+                    <form
+                        id="addTeacherForm"
+                        novalidate
+                    >
+
+                        <div class="teacher-add-grid">
+
+
+                            <div class="form-group">
+
+                                <label for="teacherName">
+                                    Teacher Name
+                                </label>
+
+                                <input
+                                    type="text"
+                                    id="teacherName"
+                                    name="name"
+                                    maxlength="100"
+                                    placeholder="Enter teacher name"
+                                    autocomplete="name"
+                                    required
+                                >
+
+                            </div>
+
+
+                            <div class="form-group">
+
+                                <label for="teacherSubject">
+                                    Subject
+                                </label>
+
+                                <select
+                                    id="teacherSubject"
+                                    name="subject"
+                                    required
+                                >
+
+                                    <option value="">
+                                        Select Subject
+                                    </option>
+
+                                    <option value="Malayalam">
+                                        Malayalam
+                                    </option>
+
+                                    <option value="English">
+                                        English
+                                    </option>
+
+                                    <option value="Mathematics">
+                                        Mathematics
+                                    </option>
+
+                                    <option value="General Science">
+                                        General Science
+                                    </option>
+
+                                    <option value="Hindi">
+                                        Hindi
+                                    </option>
+
+                                    <option value="Biology Science">
+                                        Biology Science
+                                    </option>
+
+                                    <option value="Commerce">
+                                        Commerce
+                                    </option>
+
+                                    <option value="Humanities">
+                                        Humanities
+                                    </option>
+
+                                    <option value="Computer Science">
+                                        Computer Science
+                                    </option>
+
+                                </select>
+
+                            </div>
+
+                        </div>
+
+
+                        <p
+                            id="teacherMessage"
+                            class="form-message"
+                            hidden
+                        >
+                        </p>
+
+
+                        <div class="form-actions">
+
+                            <button
+                                type="submit"
+                                class="primary-button"
+                            >
+                                Add Teacher
+                            </button>
+
+                        </div>
+
+                    </form>
+
+                </div>
+
+            </section>
+
+
+            <!-- =============================================
+                 TEACHERS
+            ============================================== -->
+
+            <section
+                id="teachersSection"
+                class="admin-section"
+            >
+
+                <div class="page-heading">
+
+                    <span class="page-label">
+                        Staff
+                    </span>
+
+                    <h2>
+                        Teachers
+                    </h2>
+
+                    <p>
+                        View all teachers added by the admin.
+                    </p>
+
+                </div>
+
+
+                <div
+                    id="teacherList"
+                    class="data-list"
+                >
+
+                    <div class="empty-state">
+                        No teachers loaded.
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =============================================
+                 STUDENTS
+            ============================================== -->
+
+            <section
+                id="studentsSection"
+                class="admin-section"
+            >
+
+                <div class="page-heading">
+
+                    <span class="page-label">
+                        Students
+                    </span>
+
+                    <h2>
+                        Students
+                    </h2>
+
+                    <p>
+                        View all registered students.
+                    </p>
+
+                </div>
+
+
+                <div
+                    id="studentList"
+                    class="data-list"
+                >
+
+                    <div class="empty-state">
+                        No students loaded.
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =============================================
+                 COURSE APPLICATIONS
+            ============================================== -->
+
+            <section
+                id="applicationsSection"
+                class="admin-section"
+            >
+
+                <div class="page-heading">
+
+                    <span class="page-label">
+                        Applications
+                    </span>
+
+                    <h2>
+                        Course Applications
+                    </h2>
+
+                    <p>
+                        View complete submitted course applications.
+                    </p>
+
+                </div>
+
+
+                <div
+                    id="applicationsList"
+                    class="data-list"
+                >
+
+                    <div class="empty-state">
+                        No course applications yet.
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =============================================
+                 NOTIFICATIONS
+            ============================================== -->
+
+            <section
+                id="notificationsSection"
+                class="admin-section"
+            >
+
+                <div class="page-heading">
+
+                    <span class="page-label">
+                        Alerts
+                    </span>
+
+                    <h2>
+                        Notifications
+                    </h2>
+
+                    <p>
+                        Student registration, login and application events.
+                    </p>
+
+                </div>
+
+
+                <div
+                    id="notificationsList"
+                    class="data-list"
+                >
+
+                    <div class="empty-state">
+                        No new notifications.
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- =============================================
+                 CHAT
+            ============================================== -->
+
+            <section
+                id="chatSection"
+                class="admin-section"
+            >
+
+                <div class="page-heading">
+
+                    <span class="page-label">
+                        Communication
+                    </span>
+
+                    <h2>
+                        Chat
+                    </h2>
+
+                    <p>
+                        Communication between students and teachers.
+                    </p>
+
+                </div>
+
+
+                <div class="chat-layout">
+
+
+                    <!-- CHAT USERS -->
+
+                    <div class="chat-users">
+
+                        <div class="chat-search">
+
+                            <input
+                                type="search"
+                                id="chatSearch"
+                                placeholder="Search User ID"
+                                autocomplete="off"
+                            >
+
+                        </div>
+
+
+                        <div
+                            id="chatUserList"
+                            class="chat-user-list"
+                        >
+
+                            <div class="empty-state">
+                                No conversations yet.
+                            </div>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- CHAT WINDOW -->
+
+                    <div class="chat-window">
+
+                        <div class="chat-header">
+
+                            <div>
+
+                                <strong id="chatPersonName">
+                                    Select a conversation
+                                </strong>
+
+                                <span id="chatPersonId">
+                                    —
+                                </span>
+
+                            </div>
+
+                        </div>
+
+
+                        <div
+                            id="chatMessages"
+                            class="chat-messages"
+                        >
+
+                            <div class="empty-state">
+                                Select a conversation to start chatting.
+                            </div>
+
+                        </div>
+
+
+                        <div class="chat-input-area">
+
+                            <input
+                                type="text"
+                                id="chatMessageInput"
+                                placeholder="Type your message..."
+                                maxlength="1000"
+                                autocomplete="off"
+                            >
+
+                            <button
+                                type="button"
+                                id="sendChatButton"
+                            >
+                                Send
+                            </button>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </section>
+
+        </main>
 
     </div>
 
-</div>
+
+    <!-- =====================================================
+         DETAILS MODAL
+    ====================================================== -->
+
+    <div
+        id="detailsModal"
+        class="details-modal"
+        hidden
+    >
+
+        <div class="details-modal-card">
+
+            <button
+                type="button"
+                id="closeDetailsModal"
+                class="modal-close"
+                aria-label="Close details"
+            >
+                ×
+            </button>
+
+            <div id="detailsModalContent"></div>
+
+        </div>
+
+    </div>
 
 
-<script src="js/admin.js"></script>
+    <!-- =====================================================
+         ADMIN JAVASCRIPT
+    ====================================================== -->
+
+    <script
+        src="js/admin.js"
+        defer
+    ></script>
 
 </body>
 </html>
