@@ -20,6 +20,7 @@
  - Remove Application
  - Live User <-> Admin Chat
  - WebSocket + REST fallback
+ - Responsive chat handling
 ============================================================
 */
 
@@ -45,7 +46,6 @@ document.addEventListener(
                         }
                     }
                 );
-
 
             if (!response.ok) {
 
@@ -75,66 +75,55 @@ document.addEventListener(
                 ".nav-item"
             );
 
-
         const sections =
             document.querySelectorAll(
                 ".admin-section"
             );
-
 
         const teacherList =
             document.getElementById(
                 "teacherList"
             );
 
-
         const studentList =
             document.getElementById(
                 "studentList"
             );
-
 
         const applicationsList =
             document.getElementById(
                 "applicationsList"
             );
 
-
         const notificationsList =
             document.getElementById(
                 "notificationsList"
             );
-
 
         const addTeacherForm =
             document.getElementById(
                 "addTeacherForm"
             );
 
-
         const teacherMessage =
             document.getElementById(
                 "teacherMessage"
             );
-
 
         const detailsModal =
             document.getElementById(
                 "detailsModal"
             );
 
-
         const detailsModalContent =
             document.getElementById(
                 "detailsModalContent"
             );
 
-
         const closeDetailsModal =
             document.getElementById(
                 "closeDetailsModal"
             );
-
 
         const adminLogoutButton =
             document.getElementById(
@@ -151,36 +140,30 @@ document.addEventListener(
                 "chatSearch"
             );
 
-
         const chatUserList =
             document.getElementById(
                 "chatUserList"
             );
-
 
         const chatPersonName =
             document.getElementById(
                 "chatPersonName"
             );
 
-
         const chatPersonId =
             document.getElementById(
                 "chatPersonId"
             );
-
 
         const chatMessages =
             document.getElementById(
                 "chatMessages"
             );
 
-
         const chatMessageInput =
             document.getElementById(
                 "chatMessageInput"
             );
-
 
         const sendChatButton =
             document.getElementById(
@@ -199,8 +182,6 @@ document.addEventListener(
         let chatSocket = null;
 
         let chatReconnectTimer = null;
-
-        let chatOpening = false;
 
         let renderedMessageKeys =
             new Set();
@@ -260,10 +241,8 @@ document.addEventListener(
                 return "—";
             }
 
-
             const date =
                 new Date(value);
-
 
             if (
                 Number.isNaN(
@@ -273,7 +252,6 @@ document.addEventListener(
 
                 return String(value);
             }
-
 
             return date.toLocaleString(
                 undefined,
@@ -297,12 +275,10 @@ document.addEventListener(
                 return;
             }
 
-
             element.hidden = false;
 
             element.textContent =
                 text;
-
 
             element.className =
                 "form-message " +
@@ -322,7 +298,6 @@ document.addEventListener(
                 return;
             }
 
-
             element.hidden = true;
 
             element.textContent =
@@ -333,48 +308,86 @@ document.addEventListener(
         }
 
 
+        /* ====================================================
+           JSON / TEXT REQUEST HELPER
+        ==================================================== */
+
         async function getJSON(
             url,
             options = {}
         ) {
 
+            const requestOptions = {
+                credentials:
+                    "include",
+
+                ...options,
+
+                headers: {
+                    "Accept":
+                        "application/json",
+
+                    ...(options.body
+                        ? {
+                            "Content-Type":
+                                "application/json"
+                        }
+                        : {}),
+
+                    ...(options.headers ||
+                        {})
+                }
+            };
+
+
             const response =
                 await fetch(
                     url,
-                    {
-                        credentials:
-                            "include",
-
-                        ...options,
-
-                        headers: {
-                            "Accept":
-                                "application/json",
-
-                            ...(options.body
-                                ? {
-                                    "Content-Type":
-                                        "application/json"
-                                }
-                                : {}),
-
-                            ...(options.headers ||
-                                {})
-                        }
-                    }
+                    requestOptions
                 );
+
+
+            const contentType =
+                (
+                    response.headers.get(
+                        "content-type"
+                    ) ||
+                    ""
+                ).toLowerCase();
 
 
             let data = {};
 
-            try {
+            let textData = "";
 
-                data =
-                    await response.json();
 
-            } catch (error) {
+            if (
+                contentType.includes(
+                    "application/json"
+                )
+            ) {
 
-                data = {};
+                try {
+
+                    data =
+                        await response.json();
+
+                } catch (error) {
+
+                    data = {};
+                }
+
+            } else {
+
+                try {
+
+                    textData =
+                        await response.text();
+
+                } catch (error) {
+
+                    textData = "";
+                }
             }
 
 
@@ -383,12 +396,20 @@ document.addEventListener(
                 throw new Error(
                     data.error ||
                     data.message ||
+                    textData.trim() ||
                     "Request failed"
                 );
             }
 
 
-            return data;
+            return (
+                Object.keys(data).length
+                    ? data
+                    : {
+                        text:
+                            textData
+                    }
+            );
         }
 
 
@@ -457,11 +478,9 @@ document.addEventListener(
                                 "data-section"
                             );
 
-
                         if (!targetId) {
                             return;
                         }
-
 
                         activateSection(
                             targetId,
@@ -534,7 +553,6 @@ document.addEventListener(
                             document.getElementById(
                                 id
                             );
-
 
                         if (element) {
 
@@ -1832,15 +1850,12 @@ document.addEventListener(
             message
         ) {
 
-            const sender =
+            return (
                 String(
                     message?.sender_type ||
                     ""
-                ).toLowerCase();
-
-
-            return (
-                sender === "admin"
+                ).toLowerCase() ===
+                "admin"
             );
         }
 
@@ -1881,11 +1896,13 @@ document.addEventListener(
             );
 
 
-            if (
+            const emptyState =
                 chatMessages.querySelector(
                     ".empty-state"
-                )
-            ) {
+                );
+
+
+            if (emptyState) {
 
                 chatMessages.innerHTML =
                     "";
@@ -1899,16 +1916,12 @@ document.addEventListener(
 
 
             wrapper.className =
-                "chat-message";
-
-
-            wrapper.classList.add(
-                isAdminMessage(
-                    message
-                )
-                    ? "chat-message-admin"
-                    : "chat-message-user"
-            );
+                "chat-message " +
+                (
+                    isAdminMessage(message)
+                        ? "chat-message-admin"
+                        : "chat-message-user"
+                );
 
 
             const bubble =
@@ -2060,13 +2073,14 @@ document.addEventListener(
                         data.users
                     )
                         ? data.users
-                        : Array.isArray(data)
+                        : Array.isArray(
+                            data
+                        )
                             ? data
                             : [];
 
 
                 renderChatUserList();
-
 
             } catch (error) {
 
@@ -2233,6 +2247,27 @@ document.addEventListener(
                         `
                                 : ""
                         }
+
+                        ${
+                            Number(
+                                user?.unread_count || 0
+                            ) > 0
+                                ? `
+                            <div
+                                style="
+                                    margin-top:6px;
+                                    font-size:11px;
+                                    font-weight:700;
+                                    color:#dc2626;
+                                "
+                            >
+                                ${escapeHTML(
+                                    user.unread_count
+                                )} unread
+                            </div>
+                        `
+                                : ""
+                        }
                     `;
 
 
@@ -2270,7 +2305,6 @@ document.addEventListener(
 
 
             if (!userId) {
-
                 return;
             }
 
@@ -2379,7 +2413,7 @@ document.addEventListener(
 
 
         /* ====================================================
-           CLOSE OLD CHAT SOCKET
+           CLOSE OLD SOCKET
         ==================================================== */
 
         function closeChatSocket() {
@@ -2402,6 +2436,19 @@ document.addEventListener(
 
 
                 chatSocket =
+                    null;
+            }
+
+
+            if (
+                chatReconnectTimer
+            ) {
+
+                clearTimeout(
+                    chatReconnectTimer
+                );
+
+                chatReconnectTimer =
                     null;
             }
         }
@@ -2437,8 +2484,9 @@ document.addEventListener(
                     "open",
                     function () {
 
-                        chatOpening =
-                            false;
+                        console.log(
+                            "Admin chat WebSocket connected"
+                        );
                     }
                 );
 
@@ -2447,8 +2495,7 @@ document.addEventListener(
                     "message",
                     function (event) {
 
-                        let data =
-                            null;
+                        let data = null;
 
 
                         try {
@@ -2480,7 +2527,10 @@ document.addEventListener(
                             data &&
                             data.type ===
                                 "message" &&
-                            data.message
+                            data.message &&
+                            typeof
+                                data.message ===
+                                "object"
                         ) {
 
                             incoming =
@@ -2504,19 +2554,39 @@ document.addEventListener(
                         }
 
 
-                        const incomingUserId =
-                            String(
-                                incoming.sender_type ===
-                                    "user"
-                                    ? incoming.sender_id
-                                    : incoming.receiver_id
-                            );
-
-
                         /*
-                        Show only selected user's
-                        conversation.
+                        Determine conversation user.
                         */
+
+                        let incomingUserId =
+                            "";
+
+
+                        if (
+                            String(
+                                incoming.sender_type
+                            ).toLowerCase() ===
+                            "user"
+                        ) {
+
+                            incomingUserId =
+                                String(
+                                    incoming.sender_id
+                                );
+
+                        } else if (
+                            String(
+                                incoming.receiver_type
+                            ).toLowerCase() ===
+                            "user"
+                        ) {
+
+                            incomingUserId =
+                                String(
+                                    incoming.receiver_id
+                                );
+                        }
+
 
                         if (
                             String(
@@ -2533,8 +2603,7 @@ document.addEventListener(
 
 
                         /*
-                        Refresh users so a newly
-                        active student remains visible.
+                        Keep left user list updated.
                         */
 
                         loadChatUsers();
@@ -2675,7 +2744,7 @@ document.addEventListener(
 
             if (
                 message.length >
-                1000
+                2000
             ) {
 
                 window.alert(
@@ -2706,8 +2775,9 @@ document.addEventListener(
             try {
 
                 /*
-                Preferred:
-                WebSocket
+                ==============================================
+                WEBSOCKET SEND
+                ==============================================
                 */
 
                 if (
@@ -2732,10 +2802,60 @@ document.addEventListener(
                     );
 
 
+                    /*
+                    Backend currently sends the WebSocket
+                    message to the USER receiver. Therefore
+                    show the admin's own message locally.
+                    */
+
+                    renderChatMessage(
+                        {
+                            id:
+                                "local-" +
+                                Date.now() +
+                                "-" +
+                                Math.random()
+                                    .toString(
+                                        36
+                                    )
+                                    .slice(
+                                        2
+                                    ),
+
+                            sender_type:
+                                "admin",
+
+                            sender_id:
+                                0,
+
+                            receiver_type:
+                                "user",
+
+                            receiver_id:
+                                Number(
+                                    userId
+                                ),
+
+                            message:
+                                message,
+
+                            is_read:
+                                false,
+
+                            created_at:
+                                new Date()
+                                    .toISOString()
+                        },
+                        true
+                    );
+
+
                 } else {
 
                     /*
-                    REST fallback
+                    ==========================================
+                    REST FALLBACK
+                    ==========================================
                     */
 
                     const result =
@@ -2785,7 +2905,12 @@ document.addEventListener(
 
                     chatMessageInput.value =
                         "";
+
+                    chatMessageInput.focus();
                 }
+
+
+                await loadChatUsers();
 
 
             } catch (error) {
@@ -2849,9 +2974,15 @@ document.addEventListener(
                 "keydown",
                 function (event) {
 
+                    /*
+                    Shift + Enter = new line
+                    Enter = send
+                    */
+
                     if (
                         event.key ===
-                        "Enter"
+                        "Enter" &&
+                        !event.shiftKey
                     ) {
 
                         event.preventDefault();
@@ -2880,7 +3011,7 @@ document.addEventListener(
 
 
         /* ====================================================
-           CLEANUP SOCKET
+           CLEANUP
         ==================================================== */
 
         window.addEventListener(
