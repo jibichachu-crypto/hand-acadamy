@@ -57,7 +57,6 @@
 
   <!-- =========================
        SMALL LOGO
-       NOT CLICKABLE
   ========================== -->
 
   <div
@@ -89,12 +88,58 @@
       class="dash-nav"
       aria-label="Dashboard navigation"
     >
+
+      <!-- NOTIFICATION BUTTON -->
+
+      <button
+        type="button"
+        class="dash-icon-button"
+        id="notificationButton"
+        aria-label="Notifications"
+        aria-controls="notificationPanel"
+        aria-expanded="false"
+      >
+        🔔
+
+        <span
+          id="notificationBadge"
+          class="notification-badge hidden"
+        >
+          0
+        </span>
+
+      </button>
+
+
+      <!-- CHAT BUTTON -->
+
+      <button
+        type="button"
+        class="dash-icon-button"
+        id="chatButton"
+        aria-label="Chat with Academy"
+        aria-controls="chatPanel"
+        aria-expanded="false"
+      >
+        💬
+
+        <span
+          id="chatBadge"
+          class="notification-badge hidden"
+        >
+          0
+        </span>
+
+      </button>
+
+
       <a
         href="logout.html"
         class="dash-link"
       >
         Logout
       </a>
+
     </nav>
 
   </header>
@@ -149,6 +194,47 @@
         Support
       </div>
 
+
+      <!-- NOTIFICATIONS -->
+
+      <button
+        type="button"
+        class="side-link"
+        id="sidebarNotificationButton"
+      >
+        🔔 Notifications
+
+        <span
+          id="sidebarNotificationBadge"
+          class="side-notification-badge hidden"
+        >
+          0
+        </span>
+
+      </button>
+
+
+      <!-- CHAT -->
+
+      <button
+        type="button"
+        class="side-link"
+        id="sidebarChatButton"
+      >
+        💬 Chat with Academy
+
+        <span
+          id="sidebarChatBadge"
+          class="side-notification-badge hidden"
+        >
+          0
+        </span>
+
+      </button>
+
+
+      <!-- CONTACT -->
+
       <button
         type="button"
         class="side-link"
@@ -156,6 +242,7 @@
       >
         ✉ Contact
       </button>
+
 
       <a
         href="logout.html"
@@ -173,6 +260,168 @@
     ========================== -->
 
     <main class="dash-main">
+
+
+      <!-- =========================
+           NOTIFICATION PANEL
+      ========================== -->
+
+      <section
+        id="notificationPanel"
+        class="dashboard-panel hidden"
+        aria-labelledby="notificationTitle"
+      >
+
+        <div class="panel-header">
+
+          <div>
+
+            <h3
+              id="notificationTitle"
+              class="section-title"
+            >
+              🔔 Notifications
+            </h3>
+
+            <p class="panel-subtitle">
+              Your latest academy updates.
+            </p>
+
+          </div>
+
+          <button
+            type="button"
+            class="close-section-btn"
+            id="closeNotificationButton"
+          >
+            ✕ Close
+          </button>
+
+        </div>
+
+
+        <div
+          id="notificationList"
+          class="notification-list"
+        >
+
+          <div
+            id="notificationEmptyState"
+            class="empty-state"
+          >
+            No new notifications.
+          </div>
+
+        </div>
+
+      </section>
+
+
+      <!-- =========================
+           CHAT PANEL
+      ========================== -->
+
+      <section
+        id="chatPanel"
+        class="dashboard-panel hidden"
+        aria-labelledby="chatTitle"
+      >
+
+        <div class="panel-header">
+
+          <div>
+
+            <h3
+              id="chatTitle"
+              class="section-title"
+            >
+              💬 Chat with Academy
+            </h3>
+
+            <p class="panel-subtitle">
+              Contact Hand In Hand Academy.
+            </p>
+
+          </div>
+
+          <button
+            type="button"
+            class="close-section-btn"
+            id="closeChatButton"
+          >
+            ✕ Close
+          </button>
+
+        </div>
+
+
+        <div
+          id="chatMessages"
+          class="chat-messages"
+          aria-live="polite"
+        >
+
+          <div
+            class="chat-empty-state"
+            id="chatEmptyState"
+          >
+            <div class="chat-empty-icon">
+              💬
+            </div>
+
+            <p>
+              No messages yet.
+            </p>
+
+            <small>
+              Start a conversation with the academy.
+            </small>
+
+          </div>
+
+        </div>
+
+
+        <form
+          id="chatForm"
+          class="chat-input-area"
+          autocomplete="off"
+        >
+
+          <label
+            for="chatMessageInput"
+            class="sr-only"
+          >
+            Message
+          </label>
+
+          <input
+            type="text"
+            id="chatMessageInput"
+            name="message"
+            maxlength="1000"
+            placeholder="Type your message..."
+            autocomplete="off"
+          >
+
+          <button
+            type="submit"
+            id="sendChatButton"
+            class="chat-send-button"
+          >
+            Send
+          </button>
+
+        </form>
+
+        <div
+          id="chatMessageStatus"
+          class="chat-status"
+          role="status"
+          aria-live="polite"
+        ></div>
+
+      </section>
 
 
       <!-- =========================
@@ -658,4 +907,5 @@
 
 
 </body>
+
 </html>
