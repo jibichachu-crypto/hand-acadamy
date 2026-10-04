@@ -1022,7 +1022,6 @@ func securityHeaders(
 	)
 }
 
-
 /* =========================================
    SITEMAP
 ========================================= */
@@ -1056,7 +1055,6 @@ func sitemapHandler(
   </url>
 </urlset>`))
 }
-
 
 func main() {
 	dsn := os.Getenv("DATABASE_URL")
@@ -1163,7 +1161,6 @@ func main() {
 		applyCourseHandler,
 	)
 
-
 	/* =========================================
 	   SITEMAP
 	========================================= */
@@ -1173,12 +1170,11 @@ func main() {
 		sitemapHandler,
 	)
 
-
 	/* =========================================
 	   ADMIN API ROUTES
-	   
+
 	   These remain protected by admin.go.
-	   The private URL is for the admin UI.
+	   The private URL is only for the admin UI.
 	========================================= */
 
 	mux.HandleFunc(
@@ -1262,7 +1258,6 @@ func main() {
 		adminOverviewHandler,
 	)
 
-
 	/* =========================================
 	   TEACHER ROUTES
 	========================================= */
@@ -1292,22 +1287,19 @@ func main() {
 		teacherProfileHandler,
 	)
 
-
 	/* =========================================
 	   PRIVATE ADMIN UI
 	========================================= */
 
 	/*
-		Example:
-
+		Admin Login:
 		/hih-control-84k7/
-		    -> Admin Login
 
+		Admin Register:
 		/hih-control-84k7/register
-		    -> Admin Register
 
+		Admin Dashboard:
 		/hih-control-84k7/dashboard
-		    -> Protected Admin Dashboard
 	*/
 
 	mux.HandleFunc(
@@ -1342,6 +1334,11 @@ func main() {
 				return
 			}
 
+			w.Header().Set(
+				"Cache-Control",
+				"no-store",
+			)
+
 			http.ServeFile(
 				w,
 				r,
@@ -1366,6 +1363,11 @@ func main() {
 
 				return
 			}
+
+			w.Header().Set(
+				"Cache-Control",
+				"no-store",
+			)
 
 			http.ServeFile(
 				w,
@@ -1399,6 +1401,11 @@ func main() {
 				return
 			}
 
+			w.Header().Set(
+				"Cache-Control",
+				"no-store",
+			)
+
 			http.ServeFile(
 				w,
 				r,
@@ -1407,7 +1414,6 @@ func main() {
 		},
 	)
 
-
 	/* =========================================
 	   FILE SERVER
 	========================================= */
@@ -1415,7 +1421,6 @@ func main() {
 	fileServer := http.FileServer(
 		http.Dir("."),
 	)
-
 
 	/* =========================================
 	   ROOT / PUBLIC FILE ROUTER
@@ -1431,7 +1436,6 @@ func main() {
 				r.URL.Path,
 			)
 
-
 			/* =====================================
 			   PUBLIC HOMEPAGE
 			===================================== */
@@ -1446,7 +1450,6 @@ func main() {
 
 				return
 			}
-
 
 			/* =====================================
 			   BLOCK OLD ADMIN UI URLs
@@ -1465,7 +1468,6 @@ func main() {
 
 				return
 			}
-
 
 			/* =====================================
 			   PUBLIC CSS / JS / IMG
@@ -1492,7 +1494,6 @@ func main() {
 				return
 			}
 
-
 			/* =====================================
 			   PUBLIC TOP-LEVEL HTML
 			===================================== */
@@ -1509,14 +1510,13 @@ func main() {
 					"/",
 				) {
 
-				http.NotFound(
+				fileServer.ServeHTTP(
 					w,
 					r,
 				)
 
 				return
 			}
-
 
 			/* =====================================
 			   EVERYTHING ELSE
@@ -1529,7 +1529,6 @@ func main() {
 		},
 	)
 
-
 	/* =========================================
 	   MIDDLEWARE
 	========================================= */
@@ -1540,7 +1539,6 @@ func main() {
 				mux,
 			),
 		)
-
 
 	/* =========================================
 	   PORT
