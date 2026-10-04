@@ -1,48 +1,99 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
 
     <title>Admin Register - Hand In Hand Academy</title>
 
-    <meta name="referrer" content="no-referrer">
+    <meta
+        name="referrer"
+        content="no-referrer"
+    >
 
-    <meta http-equiv="Content-Security-Policy"
-          content="default-src 'none';
-                   img-src 'self';
-                   style-src 'self';
-                   script-src 'self';
-                   connect-src 'self';
-                   base-uri 'none';
-                   form-action 'none';
-                   object-src 'none';">
+    <meta
+        http-equiv="Content-Security-Policy"
+        content="
+            default-src 'none';
+            img-src 'self';
+            style-src 'self';
+            script-src 'self';
+            connect-src 'self';
+            base-uri 'none';
+            form-action 'none';
+            object-src 'none';
+        "
+    >
 
-    <meta http-equiv="X-Content-Type-Options" content="nosniff">
+    <meta
+        http-equiv="X-Content-Type-Options"
+        content="nosniff"
+    >
 
-    <link rel="stylesheet" href="css/admin-auth.css">
+    <link
+        rel="stylesheet"
+        href="css/admin-auth.css"
+    >
 </head>
+
 
 <body>
 
     <main class="auth-page">
 
-        <section class="auth-card">
+        <section
+            class="auth-card"
+            aria-labelledby="adminRegisterTitle"
+        >
 
-            <div class="auth-brand">
+            <!-- BRAND -->
+
+            <div
+                class="auth-brand"
+                aria-hidden="true"
+            >
                 HIH
             </div>
 
+
+            <!-- HEADING -->
+
             <div class="auth-heading">
-                <span>Administration</span>
-                <h1>Admin Register</h1>
-                <p>Create the academy administrator account.</p>
+
+                <span>
+                    Administration
+                </span>
+
+                <h1 id="adminRegisterTitle">
+                    Admin Register
+                </h1>
+
+                <p>
+                    Create the academy administrator account.
+                </p>
+
             </div>
 
-            <form id="adminRegisterForm" novalidate>
+
+            <!-- REGISTER FORM -->
+
+            <form
+                id="adminRegisterForm"
+                novalidate
+            >
+
+                <!-- NAME -->
 
                 <div class="form-group">
-                    <label for="adminName">Name</label>
+
+                    <label for="adminName">
+                        Name
+                    </label>
 
                     <input
                         type="text"
@@ -50,12 +101,20 @@
                         name="name"
                         maxlength="100"
                         autocomplete="name"
-                        required>
+                        placeholder="Enter admin name"
+                        required
+                    >
+
                 </div>
 
 
+                <!-- EMAIL -->
+
                 <div class="form-group">
-                    <label for="adminEmail">Email</label>
+
+                    <label for="adminEmail">
+                        Email
+                    </label>
 
                     <input
                         type="email"
@@ -63,12 +122,20 @@
                         name="email"
                         maxlength="255"
                         autocomplete="email"
-                        required>
+                        placeholder="Enter admin email"
+                        required
+                    >
+
                 </div>
 
 
+                <!-- PHONE -->
+
                 <div class="form-group">
-                    <label for="adminPhone">Phone</label>
+
+                    <label for="adminPhone">
+                        Phone
+                    </label>
 
                     <input
                         type="tel"
@@ -76,12 +143,20 @@
                         name="phone"
                         maxlength="20"
                         autocomplete="tel"
-                        required>
+                        placeholder="Enter phone number"
+                        required
+                    >
+
                 </div>
 
 
+                <!-- PASSWORD -->
+
                 <div class="form-group">
-                    <label for="adminPassword">Password</label>
+
+                    <label for="adminPassword">
+                        Password
+                    </label>
 
                     <input
                         type="password"
@@ -89,11 +164,17 @@
                         name="password"
                         maxlength="128"
                         autocomplete="new-password"
-                        required>
+                        placeholder="Create password"
+                        required
+                    >
+
                 </div>
 
 
+                <!-- CONFIRM PASSWORD -->
+
                 <div class="form-group">
+
                     <label for="adminConfirmPassword">
                         Confirm Password
                     </label>
@@ -104,39 +185,63 @@
                         name="confirm_password"
                         maxlength="128"
                         autocomplete="new-password"
-                        required>
+                        placeholder="Confirm password"
+                        required
+                    >
+
                 </div>
 
+
+                <!-- MESSAGE -->
 
                 <div
                     id="adminRegisterMessage"
                     class="auth-message"
-                    hidden>
+                    hidden
+                    role="alert"
+                    aria-live="polite"
+                >
                 </div>
 
 
+                <!-- SUBMIT -->
+
                 <button
                     type="submit"
-                    class="auth-submit">
+                    class="auth-submit"
+                >
                     Create Admin Account
                 </button>
 
             </form>
 
 
-            <div class="auth-footer">
-                <span>Already have an admin account?</span>
+            <!-- FOOTER -->
 
-                <a href="admin-login.html">
+            <div class="auth-footer">
+
+                <span>
+                    Already have an admin account?
+                </span>
+
+                <a href="/admin-login.html">
                     Admin Login
                 </a>
+
             </div>
 
         </section>
 
     </main>
 
-    <script src="js/admin-register.js"></script>
+
+    <!-- JAVASCRIPT -->
+
+    <script
+        src="js/admin-register.js"
+        defer
+    ></script>
 
 </body>
+
 </html>
