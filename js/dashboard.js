@@ -2,11 +2,9 @@
 
   "use strict";
 
-
   document.addEventListener(
     "DOMContentLoaded",
     async function () {
-
 
       /* =========================
          SESSION CHECK
@@ -24,60 +22,48 @@
         );
 
         if (!response.ok) {
-
-          window.location.href =
-            "login.html";
-
+          window.location.href = "login.html";
           return;
         }
 
       } catch (error) {
 
-        window.location.href =
-          "login.html";
+        console.error("Session check failed:", error);
 
+        window.location.href = "login.html";
         return;
       }
 
 
       /* =========================
-         ELEMENTS
+         MAIN ELEMENTS
       ========================== */
 
       const courses =
         document.getElementById("courses");
 
       const foundationButton =
-        document.getElementById(
-          "foundationButton"
-        );
+        document.getElementById("foundationButton");
 
       const academicButton =
-        document.getElementById(
-          "academicButton"
-        );
+        document.getElementById("academicButton");
 
       const plusTwoButton =
-        document.getElementById(
-          "plusTwoButton"
-        );
-
+        document.getElementById("plusTwoButton");
 
       const foundationList =
-        document.getElementById(
-          "foundationList"
-        );
+        document.getElementById("foundationList");
 
       const academicSelection =
-        document.getElementById(
-          "academicSelection"
-        );
+        document.getElementById("academicSelection");
 
       const plusTwoList =
-        document.getElementById(
-          "plusTwoList"
-        );
+        document.getElementById("plusTwoList");
 
+
+      /* =========================
+         COURSE BUTTONS
+      ========================== */
 
       const foundationButtons =
         document.querySelectorAll(
@@ -94,6 +80,10 @@
           ".plus-two-course-button"
         );
 
+
+      /* =========================
+         FOUNDATION
+      ========================== */
 
       const selectedFoundationArea =
         document.getElementById(
@@ -116,6 +106,10 @@
         );
 
 
+      /* =========================
+         ACADEMIC
+      ========================== */
+
       const selectedClassArea =
         document.getElementById(
           "selectedClassArea"
@@ -136,6 +130,10 @@
           "successMessage"
         );
 
+
+      /* =========================
+         PLUS TWO
+      ========================== */
 
       const selectedPlusTwoArea =
         document.getElementById(
@@ -158,6 +156,10 @@
         );
 
 
+      /* =========================
+         CONTACT
+      ========================== */
+
       const contactLink =
         document.getElementById(
           "contactLink"
@@ -174,41 +176,169 @@
         );
 
 
+      /* =====================================================
+         NOTIFICATION ELEMENTS
+      ===================================================== */
+
+      const notificationButton =
+        document.getElementById(
+          "notificationButton"
+        );
+
+      const notificationPanel =
+        document.getElementById(
+          "notificationPanel"
+        );
+
+      const notificationList =
+        document.getElementById(
+          "notificationList"
+        );
+
+      const notificationEmptyState =
+        document.getElementById(
+          "notificationEmptyState"
+        );
+
+      const closeNotificationButton =
+        document.getElementById(
+          "closeNotificationButton"
+        );
+
+      const notificationBadge =
+        document.getElementById(
+          "notificationBadge"
+        );
+
+      const sidebarNotificationButton =
+        document.getElementById(
+          "sidebarNotificationButton"
+        );
+
+      const sidebarNotificationBadge =
+        document.getElementById(
+          "sidebarNotificationBadge"
+        );
+
+
+      /* =====================================================
+         CHAT ELEMENTS
+      ===================================================== */
+
+      const chatButton =
+        document.getElementById(
+          "chatButton"
+        );
+
+      const chatPanel =
+        document.getElementById(
+          "chatPanel"
+        );
+
+      const closeChatButton =
+        document.getElementById(
+          "closeChatButton"
+        );
+
+      const sidebarChatButton =
+        document.getElementById(
+          "sidebarChatButton"
+        );
+
+      const chatMessages =
+        document.getElementById(
+          "chatMessages"
+        );
+
+      const chatEmptyState =
+        document.getElementById(
+          "chatEmptyState"
+        );
+
+      const chatForm =
+        document.getElementById(
+          "chatForm"
+        );
+
+      const chatMessageInput =
+        document.getElementById(
+          "chatMessageInput"
+        );
+
+      const sendChatButton =
+        document.getElementById(
+          "sendChatButton"
+        );
+
+      const chatMessageStatus =
+        document.getElementById(
+          "chatMessageStatus"
+        );
+
+      const chatBadge =
+        document.getElementById(
+          "chatBadge"
+        );
+
+      const sidebarChatBadge =
+        document.getElementById(
+          "sidebarChatBadge"
+        );
+
+
+      /* =========================
+         STATE
+      ========================== */
+
       let selectedFoundation = "";
 
       let selectedClass = "";
 
       let selectedPlusTwo = "";
 
+      let notifications = [];
+
+      let unreadNotificationCount = 0;
+
+      let unreadChatCount = 0;
+
+
+      /* =====================================================
+         SAFE TEXT
+      ===================================================== */
+
+      function escapeHTML(value) {
+
+        const div = document.createElement("div");
+
+        div.textContent = value == null
+          ? ""
+          : String(value);
+
+        return div.innerHTML;
+      }
+
 
       /* =========================
-         HIDE ALL
+         HIDE ALL COURSE SECTIONS
       ========================== */
 
       function hideAllSections() {
 
         if (foundationList) {
-          foundationList.classList.add(
-            "hidden"
-          );
+          foundationList.classList.add("hidden");
         }
 
         if (academicSelection) {
-          academicSelection.classList.add(
-            "hidden"
-          );
+          academicSelection.classList.add("hidden");
         }
 
         if (plusTwoList) {
-          plusTwoList.classList.add(
-            "hidden"
-          );
+          plusTwoList.classList.add("hidden");
         }
 
         if (contactSection) {
-          contactSection.classList.add(
-            "hidden"
-          );
+          contactSection.classList.add("hidden");
         }
       }
 
@@ -220,33 +350,35 @@
       function resetSelections() {
 
         selectedFoundation = "";
+
         selectedClass = "";
+
         selectedPlusTwo = "";
 
 
         foundationButtons.forEach(
           function (button) {
-            button.classList.remove(
-              "active"
-            );
+
+            button.classList.remove("active");
+
           }
         );
 
 
         classButtons.forEach(
           function (button) {
-            button.classList.remove(
-              "active"
-            );
+
+            button.classList.remove("active");
+
           }
         );
 
 
         plusTwoButtons.forEach(
           function (button) {
-            button.classList.remove(
-              "active"
-            );
+
+            button.classList.remove("active");
+
           }
         );
 
@@ -271,24 +403,21 @@
 
 
         if (selectedFoundationName) {
-          selectedFoundationName.textContent =
-            "";
+          selectedFoundationName.textContent = "";
         }
 
         if (selectedClassName) {
-          selectedClassName.textContent =
-            "";
+          selectedClassName.textContent = "";
         }
 
         if (selectedPlusTwoName) {
-          selectedPlusTwoName.textContent =
-            "";
+          selectedPlusTwoName.textContent = "";
         }
       }
 
 
       /* =========================
-         RESET MESSAGES
+         RESET SUCCESS MESSAGES
       ========================== */
 
       function resetMessages() {
@@ -300,17 +429,16 @@
         ].forEach(
           function (element) {
 
-            if (!element) return;
+            if (!element) {
+              return;
+            }
 
-            element.classList.add(
-              "hidden"
-            );
+            element.classList.add("hidden");
 
             element.textContent = "";
 
           }
         );
-
       }
 
 
@@ -321,38 +449,91 @@
       function resetMainButtons() {
 
         if (foundationButton) {
+
           foundationButton.textContent =
             "Select Course";
 
-          foundationButton.disabled =
-            false;
+          foundationButton.disabled = false;
+
         }
 
         if (academicButton) {
+
           academicButton.textContent =
             "Select Class";
 
-          academicButton.disabled =
-            false;
+          academicButton.disabled = false;
+
         }
 
         if (plusTwoButton) {
+
           plusTwoButton.textContent =
             "Select Course";
 
-          plusTwoButton.disabled =
-            false;
+          plusTwoButton.disabled = false;
+
         }
       }
 
 
       /* =========================
-         GO TO MAIN COURSES
+         CLOSE PANELS
+      ========================== */
+
+      function closeNotificationPanel() {
+
+        if (notificationPanel) {
+
+          notificationPanel.classList.add(
+            "hidden"
+          );
+
+        }
+
+        if (notificationButton) {
+
+          notificationButton.setAttribute(
+            "aria-expanded",
+            "false"
+          );
+
+        }
+      }
+
+
+      function closeChatPanel() {
+
+        if (chatPanel) {
+
+          chatPanel.classList.add(
+            "hidden"
+          );
+
+        }
+
+        if (chatButton) {
+
+          chatButton.setAttribute(
+            "aria-expanded",
+            "false"
+          );
+
+        }
+      }
+
+
+      /* =========================
+         GO TO COURSES
       ========================== */
 
       function goToCourses() {
 
         hideAllSections();
+
+        closeNotificationPanel();
+
+        closeChatPanel();
 
         resetSelections();
 
@@ -369,6 +550,1014 @@
           });
 
         }
+      }
+
+
+      /* =====================================================
+         UPDATE BADGE
+      ===================================================== */
+
+      function updateNotificationBadge(count) {
+
+        const safeCount =
+          Number.isFinite(count)
+            ? Math.max(0, count)
+            : 0;
+
+
+        unreadNotificationCount =
+          safeCount;
+
+
+        [
+          notificationBadge,
+          sidebarNotificationBadge
+        ].forEach(
+          function (badge) {
+
+            if (!badge) {
+              return;
+            }
+
+            if (safeCount > 0) {
+
+              badge.textContent =
+                safeCount > 99
+                  ? "99+"
+                  : String(safeCount);
+
+              badge.classList.remove("hidden");
+
+            } else {
+
+              badge.textContent = "0";
+
+              badge.classList.add("hidden");
+
+            }
+
+          }
+        );
+      }
+
+
+      function updateChatBadge(count) {
+
+        const safeCount =
+          Number.isFinite(count)
+            ? Math.max(0, count)
+            : 0;
+
+
+        unreadChatCount =
+          safeCount;
+
+
+        [
+          chatBadge,
+          sidebarChatBadge
+        ].forEach(
+          function (badge) {
+
+            if (!badge) {
+              return;
+            }
+
+            if (safeCount > 0) {
+
+              badge.textContent =
+                safeCount > 99
+                  ? "99+"
+                  : String(safeCount);
+
+              badge.classList.remove("hidden");
+
+            } else {
+
+              badge.textContent = "0";
+
+              badge.classList.add("hidden");
+
+            }
+
+          }
+        );
+      }
+
+
+      /* =====================================================
+         NOTIFICATION RENDER
+      ===================================================== */
+
+      function renderNotifications() {
+
+        if (!notificationList) {
+          return;
+        }
+
+
+        const oldItems =
+          notificationList.querySelectorAll(
+            ".notification-item"
+          );
+
+
+        oldItems.forEach(
+          function (item) {
+            item.remove();
+          }
+        );
+
+
+        if (
+          !notifications ||
+          notifications.length === 0
+        ) {
+
+          if (notificationEmptyState) {
+
+            notificationEmptyState.textContent =
+              "No notifications yet.";
+
+            notificationEmptyState.classList.remove(
+              "hidden"
+            );
+
+          }
+
+          return;
+        }
+
+
+        if (notificationEmptyState) {
+
+          notificationEmptyState.classList.add(
+            "hidden"
+          );
+
+        }
+
+
+        notifications.forEach(
+          function (notification) {
+
+            const item =
+              document.createElement("article");
+
+            item.className =
+              "notification-item";
+
+
+            if (
+              notification.is_read === false
+            ) {
+
+              item.classList.add(
+                "unread"
+              );
+
+            }
+
+
+            const title =
+              escapeHTML(
+                notification.title ||
+                "Academy Notification"
+              );
+
+
+            const message =
+              escapeHTML(
+                notification.message ||
+                ""
+              );
+
+
+            let dateText = "";
+
+            if (notification.created_at) {
+
+              const date =
+                new Date(
+                  notification.created_at
+                );
+
+              if (!Number.isNaN(
+                date.getTime()
+              )) {
+
+                dateText =
+                  date.toLocaleString();
+
+              }
+
+            }
+
+
+            item.innerHTML = `
+              <div class="notification-item-content">
+                <h4>${title}</h4>
+                <p>${message}</p>
+                ${
+                  dateText
+                    ? `<time>${escapeHTML(dateText)}</time>`
+                    : ""
+                }
+              </div>
+            `;
+
+
+            notificationList.appendChild(
+              item
+            );
+
+          }
+        );
+      }
+
+
+      /* =====================================================
+         LOAD NOTIFICATIONS
+         
+         Backend endpoint will be added in the
+         next chat/notification backend step.
+      ===================================================== */
+
+      async function loadNotifications() {
+
+        try {
+
+          const response =
+            await fetch(
+              "/user/notifications",
+              {
+                method: "GET",
+                credentials: "include",
+                cache: "no-store",
+                headers: {
+                  "Accept":
+                    "application/json"
+                }
+              }
+            );
+
+
+          if (
+            response.status === 401
+          ) {
+
+            window.location.href =
+              "login.html";
+
+            return;
+
+          }
+
+
+          if (!response.ok) {
+
+            throw new Error(
+              "Unable to load notifications."
+            );
+
+          }
+
+
+          const data =
+            await response.json();
+
+
+          notifications =
+            Array.isArray(
+              data.notifications
+            )
+              ? data.notifications
+              : [];
+
+
+          const unread =
+            notifications.filter(
+              function (item) {
+
+                return item.is_read === false;
+
+              }
+            ).length;
+
+
+          updateNotificationBadge(
+            unread
+          );
+
+
+          renderNotifications();
+
+
+        } catch (error) {
+
+          console.warn(
+            "Notifications are not available yet:",
+            error.message
+          );
+
+          notifications = [];
+
+          updateNotificationBadge(0);
+
+          renderNotifications();
+
+        }
+      }
+
+
+      /* =====================================================
+         OPEN NOTIFICATIONS
+      ===================================================== */
+
+      async function openNotifications() {
+
+        closeChatPanel();
+
+        hideAllSections();
+
+        resetSelections();
+
+        resetMessages();
+
+        resetMainButtons();
+
+
+        if (!notificationPanel) {
+          return;
+        }
+
+
+        const wasHidden =
+          notificationPanel.classList.contains(
+            "hidden"
+          );
+
+
+        if (wasHidden) {
+
+          notificationPanel.classList.remove(
+            "hidden"
+          );
+
+          if (notificationButton) {
+
+            notificationButton.setAttribute(
+              "aria-expanded",
+              "true"
+            );
+
+          }
+
+          await loadNotifications();
+
+          notificationPanel.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+          });
+
+        } else {
+
+          closeNotificationPanel();
+
+          goToCourses();
+
+        }
+      }
+
+
+      /* =====================================================
+         CHAT UI
+      ===================================================== */
+
+      function addChatMessage(
+        message,
+        sender = "user",
+        createdAt = null
+      ) {
+
+        if (!chatMessages) {
+          return;
+        }
+
+
+        if (chatEmptyState) {
+
+          chatEmptyState.classList.add(
+            "hidden"
+          );
+
+        }
+
+
+        const wrapper =
+          document.createElement("div");
+
+
+        wrapper.className =
+          "chat-message " +
+          (
+            sender === "admin"
+              ? "chat-message-admin"
+              : "chat-message-user"
+          );
+
+
+        const bubble =
+          document.createElement("div");
+
+
+        bubble.className =
+          "chat-message-bubble";
+
+
+        bubble.textContent =
+          message || "";
+
+
+        wrapper.appendChild(
+          bubble
+        );
+
+
+        if (createdAt) {
+
+          const timeElement =
+            document.createElement("time");
+
+          const date =
+            new Date(createdAt);
+
+          if (!Number.isNaN(
+            date.getTime()
+          )) {
+
+            timeElement.textContent =
+              date.toLocaleTimeString(
+                [],
+                {
+                  hour: "2-digit",
+                  minute: "2-digit"
+                }
+              );
+
+            timeElement.className =
+              "chat-message-time";
+
+            wrapper.appendChild(
+              timeElement
+            );
+
+          }
+
+        }
+
+
+        chatMessages.appendChild(
+          wrapper
+        );
+
+
+        chatMessages.scrollTop =
+          chatMessages.scrollHeight;
+      }
+
+
+      function clearChatMessages() {
+
+        if (!chatMessages) {
+          return;
+        }
+
+
+        const messageElements =
+          chatMessages.querySelectorAll(
+            ".chat-message"
+          );
+
+
+        messageElements.forEach(
+          function (element) {
+            element.remove();
+          }
+        );
+
+
+        if (chatEmptyState) {
+
+          chatEmptyState.classList.remove(
+            "hidden"
+          );
+
+        }
+      }
+
+
+      function setChatStatus(
+        message,
+        type = ""
+      ) {
+
+        if (!chatMessageStatus) {
+          return;
+        }
+
+
+        chatMessageStatus.textContent =
+          message || "";
+
+
+        chatMessageStatus.classList.remove(
+          "success",
+          "error"
+        );
+
+
+        if (type) {
+
+          chatMessageStatus.classList.add(
+            type
+          );
+
+        }
+
+      }
+
+
+      /* =====================================================
+         LOAD CHAT HISTORY
+         
+         Backend endpoint will be added next.
+      ===================================================== */
+
+      async function loadChatHistory() {
+
+        try {
+
+          const response =
+            await fetch(
+              "/user/chat/messages",
+              {
+                method: "GET",
+                credentials: "include",
+                cache: "no-store",
+                headers: {
+                  "Accept":
+                    "application/json"
+                }
+              }
+            );
+
+
+          if (
+            response.status === 401
+          ) {
+
+            window.location.href =
+              "login.html";
+
+            return;
+
+          }
+
+
+          if (!response.ok) {
+
+            throw new Error(
+              "Unable to load chat."
+            );
+
+          }
+
+
+          const data =
+            await response.json();
+
+
+          clearChatMessages();
+
+
+          const messages =
+            Array.isArray(
+              data.messages
+            )
+              ? data.messages
+              : [];
+
+
+          messages.forEach(
+            function (message) {
+
+              addChatMessage(
+                message.message || "",
+                message.sender_type === "admin"
+                  ? "admin"
+                  : "user",
+                message.created_at || null
+              );
+
+            }
+          );
+
+
+          if (
+            typeof data.unread_count ===
+            "number"
+          ) {
+
+            updateChatBadge(
+              data.unread_count
+            );
+
+          } else {
+
+            updateChatBadge(0);
+
+          }
+
+
+        } catch (error) {
+
+          console.warn(
+            "Chat backend is not available yet:",
+            error.message
+          );
+
+          clearChatMessages();
+
+        }
+      }
+
+
+      /* =====================================================
+         OPEN CHAT
+      ===================================================== */
+
+      async function openChat() {
+
+        closeNotificationPanel();
+
+        hideAllSections();
+
+        resetSelections();
+
+        resetMessages();
+
+        resetMainButtons();
+
+
+        if (!chatPanel) {
+          return;
+        }
+
+
+        const wasHidden =
+          chatPanel.classList.contains(
+            "hidden"
+          );
+
+
+        if (wasHidden) {
+
+          chatPanel.classList.remove(
+            "hidden"
+          );
+
+
+          if (chatButton) {
+
+            chatButton.setAttribute(
+              "aria-expanded",
+              "true"
+            );
+
+          }
+
+
+          updateChatBadge(0);
+
+          setChatStatus(
+            "Loading messages..."
+          );
+
+
+          await loadChatHistory();
+
+
+          setChatStatus("");
+
+
+          chatPanel.scrollIntoView({
+            behavior: "smooth",
+            block: "start"
+          });
+
+
+          if (chatMessageInput) {
+
+            setTimeout(
+              function () {
+
+                chatMessageInput.focus();
+
+              },
+              300
+            );
+
+          }
+
+        } else {
+
+          closeChatPanel();
+
+          goToCourses();
+
+        }
+      }
+
+
+      /* =====================================================
+         SEND CHAT MESSAGE
+         
+         Backend endpoint will be added next.
+      ===================================================== */
+
+      async function sendChatMessage() {
+
+        if (!chatMessageInput) {
+          return;
+        }
+
+
+        const message =
+          chatMessageInput.value.trim();
+
+
+        if (!message) {
+
+          setChatStatus(
+            "Please type a message.",
+            "error"
+          );
+
+          chatMessageInput.focus();
+
+          return;
+        }
+
+
+        if (sendChatButton) {
+
+          sendChatButton.disabled =
+            true;
+
+          sendChatButton.textContent =
+            "Sending...";
+
+        }
+
+
+        setChatStatus(
+          ""
+        );
+
+
+        try {
+
+          const response =
+            await fetch(
+              "/user/chat/messages",
+              {
+                method: "POST",
+                credentials: "include",
+                cache: "no-store",
+                headers: {
+                  "Content-Type":
+                    "application/json",
+                  "Accept":
+                    "application/json"
+                },
+                body: JSON.stringify({
+                  message: message
+                })
+              }
+            );
+
+
+          if (
+            response.status === 401
+          ) {
+
+            window.location.href =
+              "login.html";
+
+            return;
+
+          }
+
+
+          const responseText =
+            await response.text();
+
+
+          if (!response.ok) {
+
+            throw new Error(
+              responseText ||
+              "Message could not be sent."
+            );
+
+          }
+
+
+          let data = {};
+
+          try {
+
+            data =
+              JSON.parse(
+                responseText
+              );
+
+          } catch (parseError) {
+
+            data = {};
+
+          }
+
+
+          addChatMessage(
+            message,
+            "user",
+            data.created_at || new Date().toISOString()
+          );
+
+
+          chatMessageInput.value = "";
+
+
+          setChatStatus(
+            "Message sent.",
+            "success"
+          );
+
+
+          setTimeout(
+            function () {
+
+              setChatStatus("");
+
+            },
+            2000
+          );
+
+
+        } catch (error) {
+
+          console.warn(
+            "Chat message sending failed:",
+            error
+          );
+
+
+          setChatStatus(
+            "Chat service is not connected yet.",
+            "error"
+          );
+
+        } finally {
+
+          if (sendChatButton) {
+
+            sendChatButton.disabled =
+              false;
+
+            sendChatButton.textContent =
+              "Send";
+
+          }
+
+        }
+      }
+
+
+      /* =====================================================
+         CHAT FORM
+      ===================================================== */
+
+      if (chatForm) {
+
+        chatForm.addEventListener(
+          "submit",
+          function (event) {
+
+            event.preventDefault();
+
+            sendChatMessage();
+
+          }
+        );
+
+      }
+
+
+      /* =====================================================
+         NOTIFICATION BUTTON EVENTS
+      ===================================================== */
+
+      if (notificationButton) {
+
+        notificationButton.addEventListener(
+          "click",
+          function () {
+
+            openNotifications();
+
+          }
+        );
+
+      }
+
+
+      if (sidebarNotificationButton) {
+
+        sidebarNotificationButton.addEventListener(
+          "click",
+          function () {
+
+            openNotifications();
+
+          }
+        );
+
+      }
+
+
+      if (closeNotificationButton) {
+
+        closeNotificationButton.addEventListener(
+          "click",
+          function () {
+
+            closeNotificationPanel();
+
+            goToCourses();
+
+          }
+        );
+
+      }
+
+
+      /* =====================================================
+         CHAT BUTTON EVENTS
+      ===================================================== */
+
+      if (chatButton) {
+
+        chatButton.addEventListener(
+          "click",
+          function () {
+
+            openChat();
+
+          }
+        );
+
+      }
+
+
+      if (sidebarChatButton) {
+
+        sidebarChatButton.addEventListener(
+          "click",
+          function () {
+
+            openChat();
+
+          }
+        );
+
+      }
+
+
+      if (closeChatButton) {
+
+        closeChatButton.addEventListener(
+          "click",
+          function () {
+
+            closeChatPanel();
+
+            goToCourses();
+
+          }
+        );
+
       }
 
 
@@ -395,11 +1584,11 @@
 
         if (applyElement) {
 
-          applyElement.disabled =
-            true;
+          applyElement.disabled = true;
 
           applyElement.textContent =
             "Applying...";
+
         }
 
 
@@ -411,12 +1600,13 @@
               {
                 method: "POST",
                 credentials: "include",
-
+                cache: "no-store",
                 headers: {
                   "Content-Type":
+                    "application/json",
+                  "Accept":
                     "application/json"
                 },
-
                 body: JSON.stringify({
                   course_type:
                     courseType,
@@ -451,6 +1641,7 @@
               "This course is already applied."
             );
 
+
             if (applyElement) {
 
               applyElement.disabled =
@@ -458,6 +1649,7 @@
 
               applyElement.textContent =
                 "Apply";
+
             }
 
             return;
@@ -470,6 +1662,7 @@
               message ||
               "Application failed."
             );
+
           }
 
 
@@ -482,6 +1675,7 @@
             successElement.textContent =
               "✅ Applied Successfully for " +
               courseName;
+
           }
 
 
@@ -489,7 +1683,16 @@
 
             applyElement.textContent =
               "Applied ✓";
+
           }
+
+
+          /*
+            Refresh notifications after
+            successful course application.
+          */
+
+          await loadNotifications();
 
 
           setTimeout(
@@ -504,6 +1707,12 @@
 
         } catch (error) {
 
+          console.error(
+            "Course application error:",
+            error
+          );
+
+
           alert(
             error.message ||
             "Application failed."
@@ -517,6 +1726,7 @@
 
             applyElement.textContent =
               "Apply";
+
           }
 
         }
@@ -544,6 +1754,10 @@
 
 
             hideAllSections();
+
+            closeNotificationPanel();
+
+            closeChatPanel();
 
             resetSelections();
 
@@ -673,6 +1887,10 @@
 
             hideAllSections();
 
+            closeNotificationPanel();
+
+            closeChatPanel();
+
             resetSelections();
 
             resetMessages();
@@ -801,6 +2019,10 @@
 
             hideAllSections();
 
+            closeNotificationPanel();
+
+            closeChatPanel();
+
             resetSelections();
 
             resetMessages();
@@ -909,7 +2131,7 @@
 
 
       /* =========================
-         CLOSE BUTTONS
+         CLOSE COURSE SECTIONS
       ========================== */
 
       document
@@ -923,7 +2145,22 @@
               button.id ===
               "closeContactButton"
             ) {
+              return;
+            }
 
+
+            if (
+              button.id ===
+              "closeNotificationButton"
+            ) {
+              return;
+            }
+
+
+            if (
+              button.id ===
+              "closeChatButton"
+            ) {
               return;
             }
 
@@ -956,6 +2193,10 @@
 
             event.preventDefault();
 
+
+            closeNotificationPanel();
+
+            closeChatPanel();
 
             hideAllSections();
 
@@ -1001,7 +2242,7 @@
 
 
       /* =========================
-         ESC
+         ESC KEY
       ========================== */
 
       document.addEventListener(
@@ -1009,28 +2250,51 @@
         function (event) {
 
           if (
-            event.key === "Escape"
+            event.key !== "Escape"
           ) {
-
-            goToCourses();
-
+            return;
           }
+
+
+          closeNotificationPanel();
+
+          closeChatPanel();
+
+          goToCourses();
 
         }
       );
 
 
       /* =========================
-         INITIAL
+         INITIAL STATE
       ========================== */
 
       hideAllSections();
+
+      closeNotificationPanel();
+
+      closeChatPanel();
 
       resetSelections();
 
       resetMessages();
 
       resetMainButtons();
+
+      updateNotificationBadge(0);
+
+      updateChatBadge(0);
+
+
+      /*
+        Load notification count silently.
+        If backend endpoint does not exist yet,
+        it safely fails without breaking dashboard.
+      */
+
+      loadNotifications();
+
 
     }
   );
